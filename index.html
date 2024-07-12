@@ -61,10 +61,9 @@
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>You can install the development version of <code>pwr4exp</code> from <a href="https://github.com/yourgithub/pwr4exp" class="external-link">GitHub</a> with:</p>
+<p>You can install the development version of <code>pwr4exp</code> from <a href="https://github.com/WangKai7kkw/pwr4exp" class="external-link">GitHub</a> with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"WangKai7kkw/pwr4exp"</span><span class="op">)</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span>dependencies <span class="op">=</span> <span class="cn">TRUE</span>, build_vignettes <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"WangKai7kkw/pwr4exp"</span>, dependencies <span class="op">=</span> <span class="cn">TRUE</span>, build_vignettes <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="functions">Functions<a class="anchor" aria-label="anchor" href="#functions"></a>
@@ -91,6 +90,18 @@
 <span><span class="fu"><a href="reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span>design <span class="op">=</span> <span class="va">mydesign</span>, specs <span class="op">=</span> <span class="op">~</span> <span class="va">facB</span> <span class="op">|</span> <span class="va">facA</span>, contrast <span class="op">=</span> <span class="st">"pairwise"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span>design <span class="op">=</span> <span class="va">mydesign</span>, specs <span class="op">=</span> <span class="op">~</span> <span class="va">facB</span> <span class="op">*</span> <span class="va">facA</span>, contrast <span class="op">=</span> <span class="st">"pairwise"</span><span class="op">)</span></span></code></pre></div>
 </div>
+</div>
+<div class="section level2">
+<h2 id="learn-more">Learn More<a class="anchor" aria-label="anchor" href="#learn-more"></a>
+</h2>
+<p>To learn more about <code>pwr4exp</code>, read through the <a href="https://github.com/WangKai7kkw/pwr4exp/vignettes/Introduction.Rmd" class="external-link">vignette</a> for <code>pwr4exp</code> which contains:</p>
+<ul>
+<li>Details on how to provide required inputs.</li>
+<li>Examples of calculating power and determining sample size for completely randomized design, random complete block design, Latin Square design.</li>
+<li>Examples using <code>pwr4exp</code> to assess the power of a customized design.</li>
+</ul>
+<p>Additionally, more information is available at the <a href="wangkai7kkw.github.io/pwr4exp/">package website</a>.</p>
+<p>The documentation for this package is being updated. If you have any questions or suggestions, please feel free to contact the package maintainer.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">
