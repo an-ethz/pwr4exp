@@ -27,3 +27,5 @@ Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
+URL: https://github.com/WangKai7kkw/pwr4exp
+BugReports: https://github.com/WangKai7kkw/pwr4exp/issues
