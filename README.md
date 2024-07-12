@@ -14,6 +14,7 @@ You can install the development version of `pwr4exp` from [GitHub](https://githu
 
 ``` r
 devtools::install_github("WangKai7kkw/pwr4exp")
+devtools::install_github(dependencies = TRUE, build_vignettes = TRUE)
 ```
 
 ## Functions
