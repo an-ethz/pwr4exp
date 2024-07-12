@@ -10,11 +10,10 @@ pwr4exp is an R package that provides functions for power calculation and sample
 
 ## Installation
 
-You can install the development version of `pwr4exp` from [GitHub](https://github.com/yourgithub/pwr4exp) with:
+You can install the development version of `pwr4exp` from [GitHub](https://github.com/WangKai7kkw/pwr4exp) with:
 
 ``` r
-devtools::install_github("WangKai7kkw/pwr4exp")
-devtools::install_github(dependencies = TRUE, build_vignettes = TRUE)
+devtools::install_github("WangKai7kkw/pwr4exp", dependencies = TRUE, build_vignettes = TRUE)
 ```
 
 ## Functions
@@ -45,4 +44,18 @@ pwr.anova(design = my_design)
 pwr.contrast(design = mydesign, specs = ~ facB | facA, contrast = "pairwise")
 pwr.contrast(design = mydesign, specs = ~ facB * facA, contrast = "pairwise")
 ```
+
+## Learn More
+
+To learn more about `pwr4exp`, read through the [vignette](https://github.com/WangKai7kkw/pwr4exp/vignettes/Introduction.Rmd) for `pwr4exp` which contains:
+
+- Details on how to provide required inputs.
+- Examples of calculating power and determining sample size for completely randomized design, random complete block design, Latin Square design.
+- Examples using `pwr4exp` to assess the power of a customized design.
+
+Additionally, more information is available at the [package website](wangkai7kkw.github.io/pwr4exp/).
+
+The documentation for this package is being updated. If you have any questions or suggestions, please feel free to contact the package maintainer.
+
+
 
