@@ -1,0 +1,29 @@
+Package: pwr4exp
+Title: Power Analysis for Experiment Designs in Animal Studies
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Kai", family = "Wang", email = "kai.wang@usys.ethz.ch", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-6672-1121"))
+Description: The package provides advanced tools to calculate statistical power and 
+    determine sample size for a variety of experimental designs commonly used in agricultural 
+    and biological research. Supported designs include completely randomized designs, block designs, 
+    and split-plot designs. Emphasizing model specification during power analysis, the package allows
+    users to specify main effects, interactions, and contrasts within the models to accurately calculate power.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports: 
+    car (>= 3.1.2),
+    emmeans (>= 1.10.3),
+    lme4 (>= 1.1.35.4),
+    lmerTest (>= 3.1.3),
+    methods
+Suggests: 
+    agricolae,
+    AlgDesign,
+    crossdes,
+    FrF2,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
