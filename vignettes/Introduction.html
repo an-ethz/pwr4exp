@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Introduction</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Introduction</h1>
+
+
+
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(pwr4exp)</span></code></pre></div>
+<div id="introduction" class="section level3">
+<h3>Introduction</h3>
+<p>Performing power analysis in <em>pwr4exp</em> involves following
+steps: first, create a design object with the desired characteristics;
+then, pass it to either the power calculation function or the sample
+size determination function. Currently, power calculation is doable for
+main effects, interactions, as well as contrasts, whereas sample size
+determination can only be performed for main effects and
+interactions.</p>
+<p>Design objects in <code>pwr4exp</code> can be created using functions
+that generate several standard designs, as well as a function for
+creating customized designs. Generally, creating a design object
+requires specifying all or some of the following arguments:</p>
+<ol style="list-style-type: decimal">
+<li><strong>Treatment Factors and Levels</strong>: Represented in a
+vector, where each value indicates the number of levels for each
+treatment factor. For example, setting the argument
+<code>treatments = c(2, 3)</code> specifies two treatment factors with 2
+and 3 levels, respectively.</li>
+<li><strong>Number of Units or Replications</strong>: Indicated by an
+integer, and the specific function arguments for these parameters depend
+on the design.</li>
+<li><strong>Model Formula (<code>formula</code>)</strong>: Needed to
+capture the fixed effects and variation in the data for the design. Each
+design generating function sets a default formula internally, which can
+be changed based on objectives and assumptions.</li>
+<li><strong>Effect Size (<code>beta</code>)</strong>: Represented by the
+expected values of the main effects and interactions in the model. These
+values can be directly set or transformed from group means. For
+instance, if the expectation of each combination of treatments
+<code>treatments = c(2, 3)</code> are as follows: A1B1 = 10, A1B2 = 8,
+A1B3 = 6, A2B1 = 12, A2B2 = 14, A2B3 = 10. The effect sizes are
+<code>beta = c(10, 2, -2, -4, 4, 2)</code>, representing intercept (the
+mean of the reference group A1B1), main effect of A2 (the difference in
+mean between A2B1 and A1B1), main effect of B2 (the difference in mean
+between A1B2 and A1B1), main effect of B3 (the difference in mean
+between A1B3 and A1B1), interaction effect of A2 and B2 (the additional
+effect when both factors are at their second levels (A2B2) compared to
+what would be expected from the individual main effects), and
+interaction effect of A2 and B3 (the additional effect when of A2B3
+compared to what would be expected from the individual main
+effects).</li>
+<li><strong>Variance-Covariance Components
+(<code>VarCov</code>)</strong>: Required value for designs that use
+models with random effects. If there are multiple grouping factors,
+supply a variance-covariance matrix for each grouping factor in a
+list.</li>
+<li><strong>Error Variance (<code>sigma2</code>)</strong>.</li>
+</ol>
+<p>Once the design object is created, calculating power or determining
+sample size using <code>pwr4exp</code> is straightforward. Simply pass
+the design object to the power calculator for main effects and
+interactions, <code>pwr.anova()</code>, or for contrasts,
+<code>pwr.contrast()</code>. To determine the minimal sample size to
+achieve a target power, a quoted design object can be passed to function
+<code>find_sample_size()</code>. Three types of sum of squares and two
+methods for approximating denominator degrees of freedom can be set;
+however, these settings do not affect the results in balanced designs.
+By default, type III sum of squares and Satterthwaite’s approximation of
+denominator degrees of freedom are applied. The same syntax of the
+<code>emmeans</code> (citation) package is employed to specify types of
+contrast for power calculation of contrast.</p>
+<p>The <code>pwr4exp</code> package offers functionality for power
+analysis and sample size determination for some standard and common
+designs in animal studies, and potentially can be used for various
+design variants. This section provides a brief demonstration of how to
+use functions in <code>pwr4exp</code> to perform power analysis for
+these designs.</p>
+</div>
+<div id="demonstration-scenario-cattle-experiment" class="section level3">
+<h3>Demonstration Scenario: Cattle Experiment</h3>
+<p>Consider a scenario for a cattle experiment, where the cows are fed
+two types of basal diets differing in NDF content (factorA, A1 vs. A2),
+each supplemented with feed additives that influence enteric methane
+emission (factorB, B1 vs. B2). The objective of this experiment is to
+evaluate the effect of diet fiber content and inhibitor on enteric
+methane emissions. The expectation of variance of the response variable
+methane is assumed to be 6400. The expected group means are as follows:
+- <strong>A1_B1</strong>: 470 - <strong>A1_B2</strong>: 415 -
+<strong>A2_B1</strong>: 500 - <strong>A2_B2</strong>: 450</p>
+<p>The vector of effect size required by power analysis is then
+<code>beta = c(470, 30, -55, 5)</code>, representing: - The mean of the
+reference group [A1_B1], - The main effect of A2 [mean difference: A2_B1
+- A1_B1], - The main effect of B2 [mean difference: A1_B2 - A1_B1], -
+The interaction effect of A2 and B2 [the additional effect of the
+combination of A2 and B2 compared to what would be expected from the
+individual main effects].</p>
+<p>Once this treatment design according to our objective is determined,
+we can explore which experimental design to be used.</p>
+</div>
+<div id="completely-randomized-design-crd" class="section level3">
+<h3>Completely Randomized Design (CRD)</h3>
+<p>In a CRD, individual cows are randomly assigned to treatments without
+considering blocking factors. In this setup, cows serve as the
+experimental units in a CRD. Assume that 10 animals are randomly
+assigned to each treatment combination, resulting in 40 units in total.
+The source of variation in CRD is only random error variance, which is
+equal to the total variance of the response variable, assumed to be
+6400.</p>
+<div id="creating-an-r-object-for-crd" class="section level4">
+<h4>Creating an R Object for CRD</h4>
+<p>To create an R object of this design using the
+<code>designCRD()</code> function, you must specify arguments including
+the number of treatment levels (<code>treatments</code>), number of
+replicates (<code>replications</code>), model formula
+(<code>formula</code>), effects (<code>beta</code>), and error variance
+(<code>sigma2</code>). The default formula in <code>designCRD()</code>
+includes both the main effects and the interaction, which can be
+adjusted according to the objectives and assumptions. For instance, a
+formula without an interaction term can be used if it is assumed that
+the interaction is either absent or minimal.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>mydesign <span class="ot">&lt;-</span> <span class="fu">designCRD</span>(</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="at">treatments =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">2</span>),</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="at">replications =</span> <span class="dv">10</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  <span class="at">beta =</span> <span class="fu">c</span>(<span class="dv">470</span>, <span class="dv">30</span>, <span class="sc">-</span><span class="dv">55</span>, <span class="dv">5</span>),</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  <span class="at">sigma2 =</span> <span class="dv">6400</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+<div id="power-calculation-using-the-crd-design" class="section level4">
+<h4>Power Calculation Using the CRD Design</h4>
+<p>After creating the design object with the <code>designCRD()</code>
+function, it can be passed to the power calculation function to assess
+the overall test and specific contrasts.</p>
+</div>
+<div id="power-calculation-for-main-effects-and-interaction" class="section level4">
+<h4>Power Calculation for Main Effects and Interaction</h4>
+<p>The power calculation for the main effects of diet, additive, and
+their interaction can be performed using <code>pwr.anova()</code>
+function:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">pwr.anova</span>(mydesign)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#&gt; Power analysis of Completely randomized design design</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt;           NumDF DenDF non-centrality alpha   power</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co">#&gt; facA          1    36         1.6504  0.05 0.23969</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">#&gt; facB          1    36         4.3066  0.05 0.52386</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt; facA:facB     1    36         0.0098  0.05 0.05106</span></span></code></pre></div>
+</div>
+<div id="power-calculation-for-specific-contrasts" class="section level4">
+<h4>Power Calculation for Specific Contrasts</h4>
+<p>Power calculations can also be performed for specific contrasts, such
+as comparing A2 vs. A1 at each level of factor B. This analysis helps to
+assess whether the differences between these levels are statistically
+significant and to what extent.</p>
+<p>To perform this power calculation, the <code>pwr.contrast()</code>
+function from the <code>pwr4exp</code> package is used. Here’s how to
+execute it:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">pwr.contrast</span>(<span class="at">design =</span> mydesign, <span class="at">specs =</span> <span class="sc">~</span> facB <span class="sc">|</span> facA, <span class="at">contrast =</span> <span class="st">&quot;pairwise&quot;</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="co">#&gt;        contrast facA estimate df non-centrality alpha     power</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co">#&gt; 1 facB1 - facB2    1       55 36       2.363281  0.05 0.3217413</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co">#&gt; 2 facB1 - facB2    2       50 36       1.953125  0.05 0.2748401</span></span></code></pre></div>
+</div>
+</div>
+<div id="randomized-complete-block-design-rcbd" class="section level3">
+<h3>Randomized Complete Block Design (RCBD)</h3>
+<p>A RCBD is beneficial when there’s variability among experimental
+units that could influence the measurement of the response variable.
+This design helps reduce error variance by blocking on factors that may
+contribute to this variability.</p>
+<div id="setting-up-the-rcb" class="section level4">
+<h4>Setting up the RCB</h4>
+<p>In the continuation of our previous example using a CRD, assume now
+we can block the experimental units by one block factor, such as days in
+milk. By using 10 blocks with cows having close days in milk within each
+block, the error variance due to uncontrolled factors is expected to
+reduce. This results in a total of 40 cows distributed evenly across the
+blocks.</p>
+<p>Assuming the variance between blocks is 3200, this would effectively
+reduce the error variance from the previous 6400 to 3200, enhancing the
+precision of our experiment’s results.</p>
+</div>
+<div id="creating-the-design-object" class="section level4">
+<h4>Creating the Design Object</h4>
+<p>The design object for an RCB can be created with the
+<code>designRCB()</code> function, specifying the variance between
+blocks (<code>VarCov</code>), and the reduced error variance
+(<code>sigma2</code>):</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>mydesign <span class="ot">&lt;-</span> <span class="fu">designRCB</span>(</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  <span class="at">treatments =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">2</span>), </span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>  <span class="at">blocks =</span> <span class="dv">10</span>, </span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>  <span class="at">beta =</span> <span class="fu">c</span>(<span class="dv">470</span>, <span class="dv">30</span>, <span class="sc">-</span><span class="dv">55</span>, <span class="dv">5</span>), </span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>  <span class="at">VarCov =</span> <span class="dv">3200</span>, </span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>  <span class="at">sigma2 =</span> <span class="dv">3200</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+<div id="power-calculation-for-main-effects-and-interaction-1" class="section level4">
+<h4>Power Calculation for Main Effects and Interaction</h4>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">pwr.anova</span>(mydesign)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="co">#&gt; Power analysis of Randomized complete block design design</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co">#&gt;           NumDF DenDF non-centrality alpha   power</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co">#&gt; facA          1    27         3.3008  0.05 0.41779</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt; facB          1    27         8.6133  0.05 0.80760</span></span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a><span class="co">#&gt; facA:facB     1    27         0.0195  0.05 0.05209</span></span></code></pre></div>
+<p>The reduction in error variance has led to the following changes in
+our ability to detect significant effects:</p>
+<ul>
+<li><strong>Inhibitor</strong>: The power for detecting the main effect
+of the inhibitor has increased to 0.8, indicating a strong likelihood of
+correctly identifying the true effect of the inhibitor on methane
+emissions.</li>
+<li><strong>Diet</strong>: Despite the improvements, the power for
+detecting the main effect of diet remains below the desired threshold of
+0.8. This suggests that the diet’s impact might be subtler or require a
+larger sample size or different blocking strategy to detect
+effectively.</li>
+</ul>
+</div>
+<div id="determining-the-number-of-blocks-required-for-adequate-power" class="section level4">
+<h4>Determining the Number of Blocks Required for Adequate Power</h4>
+<p>In order to achieve a desired power of 0.8 for testing the effects of
+diet and inhibitor in our RCBD, it is crucial to determine the optimal
+number of blocks required. The <code>find_sample_size</code> function
+can be utilized for this purpose, taking a quoted design object as input
+to estimate the minimum number of blocks needed.</p>
+<p>The function allows setting a range for the number of blocks
+considered, from a minimum (<code>n_min</code>, default 2) to a maximum
+(<code>n_max</code>, default 99). However, for demonstration purposes,
+we will use the maximum 99, acknowledging that such a high number of
+blocks is typically unfeasible in controlled animal experiments:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co"># Quoting the design to be evaluated with varying number of blocks</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>mydesign_quote <span class="ot">&lt;-</span> <span class="fu">quote</span>(<span class="fu">designRCB</span>(<span class="at">treatments =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">2</span>), <span class="at">blocks =</span> n, <span class="at">beta =</span> <span class="fu">c</span>(<span class="dv">470</span>, <span class="dv">30</span>, <span class="sc">-</span><span class="dv">55</span>, <span class="dv">5</span>), <span class="at">VarCov =</span> <span class="dv">3200</span>, <span class="at">sigma2 =</span> <span class="dv">3200</span>))</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co"># Finding the required number of blocks to achieve a power of 0.8</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>required_blocks <span class="ot">&lt;-</span> <span class="fu">find_sample_size</span>(<span class="at">design =</span> mydesign_quote, <span class="at">n_min =</span> <span class="dv">2</span>, <span class="at">n_max =</span> <span class="dv">99</span>, <span class="at">power =</span> <span class="fl">0.8</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="fu">print</span>(required_blocks)</span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co">#&gt;           alpha      power best_n</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt; facA       0.05 0.80898088     25</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt; facB       0.05 0.80760263     10</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt; facA:facB  0.05 0.05023862     NA</span></span></code></pre></div>
+</div>
+</div>
+<div id="latin-square-design-lsd-for-multiple-sources-of-variation" class="section level3">
+<h3>Latin Square Design (LSD) for Multiple Sources of Variation</h3>
+<p>The Latin Square Design (LSD) is particularly advantageous when
+dealing with more than one source of variation. It allows for the
+control of two sources simultaneously by organizing the experimental
+units in a square matrix. Each row and each column in this matrix
+represent a different source of variation, and each treatment is
+represented exactly once in each row and column within each block. This
+arrangement ensures that the treatments are uniformly distributed across
+the sources of variability.</p>
+<div id="extending-the-rcb-example-to-lsd" class="section level4">
+<h4>Extending the RCB Example to LSD</h4>
+<p>Building on the example from the Randomized Complete Block Design
+section, we now consider two blocking factors: cow and period. The
+experimental setup is designed such that it can be conducted over
+several different time periods. All cows receive all treatments but in
+different sequences, making both cows and time periods important
+blocking factors. This specific setup with time periods as one block
+factor is often referred to as a crossover design.</p>
+<p>Assuming that we replicate a single Latin square three times, we
+arrange 12 animals in 4×4 Latin Squares, resulting in a total of 48
+experimental units.</p>
+</div>
+<div id="variance-assumptions-and-design-setup" class="section level4">
+<h4>Variance Assumptions and Design Setup</h4>
+<p>We assume the variance between cows and between periods to be 3200
+and 1600, respectively. This arrangement significantly reduces the error
+variance from the total variance previously assumed to be 6400 down to
+1600.</p>
+</div>
+<div id="creating-the-design-object-1" class="section level4">
+<h4>Creating the Design Object</h4>
+<p>The design object for an LSD is set up using the
+<code>designLSD()</code> function. In this function: - The
+<code>squares</code> argument specifies the number of squares for
+replicating the Latin Squares. - The variances of the random effects of
+cows and periods need to be supplied in a list to the
+<code>VarCov</code> argument, reflecting their respective contributions
+to the total variance.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>mydesign <span class="ot">&lt;-</span> <span class="fu">designLSD</span>(</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>    <span class="at">treatments =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">2</span>),</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>    <span class="at">squares =</span> <span class="dv">3</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>    <span class="at">reuse =</span> <span class="st">&quot;col&quot;</span>,  <span class="co"># Ensuring each treatment appears once per column</span></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a>    <span class="at">formula =</span> y <span class="sc">~</span> facA<span class="sc">*</span>facB <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>col) <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>row),</span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a>    <span class="at">beta =</span> <span class="fu">c</span>(<span class="dv">470</span>, <span class="dv">30</span>, <span class="sc">-</span><span class="dv">55</span>, <span class="dv">5</span>), </span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a>    <span class="at">VarCov =</span> <span class="fu">list</span>(<span class="dv">1600</span>, <span class="dv">3200</span>),</span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a>    <span class="at">sigma2 =</span> <span class="dv">1600</span></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+<div id="power-for-main-effects-and-interaction" class="section level4">
+<h4>Power for Main Effects and Interaction</h4>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="fu">pwr.anova</span>(mydesign)</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="co">#&gt; Power analysis of Latin square design design</span></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="co">#&gt;           NumDF DenDF non-centrality alpha   power</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="co">#&gt; facA          1    30         7.9219  0.05 0.77743</span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="co">#&gt; facB          1    30        20.6719  0.05 0.99259</span></span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="co">#&gt; facA:facB     1    30         0.0469  0.05 0.05505</span></span></code></pre></div>
+</div>
+</div>
+<div id="special-design-combining-split-plot-with-latin-square-design-lsd" class="section level3">
+<h3>Special Design: Combining Split-Plot with Latin Square Design
+(LSD)</h3>
+<p>This subsection demonstrates how to conduct power analysis for a
+specialized experimental design that incorporates elements of both a
+split-plot and a LSD. In this setup, we not only assess the effects of
+diet and additives but also include the breed of cows as a main plot
+factor.</p>
+<div id="experimental-setup" class="section level4">
+<h4>Experimental Setup</h4>
+<p>Continuing with the LSD, we now integrate a split-plot design by
+including two breeds of cows. Specifically, 16 cows (8 from each breed)
+are arranged in a replicated 4x4 LSD. Here, cows serve as the main
+plots, breed is the main plot factor, and the diet and additives are
+managed as subplot factors within each Latin square.</p>
+</div>
+<div id="creating-the-customized-design" class="section level4">
+<h4>Creating the Customized Design</h4>
+<p>To manage this complex design, we utilize the
+<code>designCustom</code> function from the <code>pwr4exp</code>
+package, which allows for the creation of a power analysis model using a
+custom data frame that defines the structure of the design.</p>
+<p>First, we construct a data frame representing the layout of a 4x4 LSD
+with 16 cows, assigning 8 cows to each breed:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>mydf <span class="ot">&lt;-</span> <span class="fu">df.crossover</span>(<span class="at">treatments =</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">2</span>), <span class="at">squares =</span> <span class="dv">4</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>mydf<span class="sc">$</span>breed <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="fu">c</span>(<span class="st">&quot;Hol&quot;</span>, <span class="st">&quot;Jer&quot;</span>), <span class="at">each =</span> <span class="dv">32</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="fu">names</span>(mydf) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;cow&quot;</span>, <span class="st">&quot;period&quot;</span>, <span class="st">&quot;treatment&quot;</span>, <span class="st">&#39;diet&#39;</span>, <span class="st">&#39;additive&#39;</span>, <span class="st">&#39;square&#39;</span>, <span class="st">&#39;breed&#39;</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a>mydf <span class="ot">&lt;-</span> mydf[, <span class="fu">c</span>(<span class="st">&quot;cow&quot;</span>, <span class="st">&quot;breed&quot;</span>, <span class="st">&quot;period&quot;</span>, <span class="st">&#39;diet&#39;</span>, <span class="st">&#39;additive&#39;</span>)]</span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a><span class="fu">head</span>(mydf, <span class="at">n =</span> <span class="dv">4</span>)  <span class="co"># Displays the first four entries</span></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a><span class="co">#&gt;   cow breed period diet additive</span></span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="co">#&gt; 1   1   Hol      1    2        1</span></span>
+<span id="cb10-8"><a href="#cb10-8" tabindex="-1"></a><span class="co">#&gt; 2   2   Hol      1    1        2</span></span>
+<span id="cb10-9"><a href="#cb10-9" tabindex="-1"></a><span class="co">#&gt; 3   3   Hol      1    2        2</span></span>
+<span id="cb10-10"><a href="#cb10-10" tabindex="-1"></a><span class="co">#&gt; 4   4   Hol      1    1        1</span></span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">tail</span>(mydf, <span class="at">n =</span> <span class="dv">4</span>)  <span class="co"># Displays the last four entries</span></span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="co">#&gt;    cow breed period diet additive</span></span>
+<span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a><span class="co">#&gt; 61  13   Jer      4    1        1</span></span>
+<span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="co">#&gt; 62  14   Jer      4    2        1</span></span>
+<span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="co">#&gt; 63  15   Jer      4    1        2</span></span>
+<span id="cb11-6"><a href="#cb11-6" tabindex="-1"></a><span class="co">#&gt; 64  16   Jer      4    2        2</span></span></code></pre></div>
+<p>Next, we create the design object:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>mydesign <span class="ot">&lt;-</span> <span class="fu">designCustom</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a>    <span class="at">design.df =</span> mydf,</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>    <span class="at">formula =</span> y <span class="sc">~</span> breed <span class="sc">+</span> diet<span class="sc">*</span>additive <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>cow) <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>period),</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>    <span class="at">beta =</span> <span class="fu">c</span>(<span class="dv">470</span>, <span class="dv">20</span>, <span class="dv">30</span>, <span class="sc">-</span><span class="dv">55</span>, <span class="dv">5</span>),</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a>    <span class="at">VarCov =</span> <span class="fu">list</span>(<span class="dv">3200</span>, <span class="dv">1600</span>),</span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>    <span class="at">sigma2 =</span> <span class="dv">1600</span>,</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>    <span class="at">design.name =</span> <span class="st">&quot;Customized design&quot;</span></span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>)</span></code></pre></div>
+<p>Power Calculation for Main Effects and Interaction:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="fu">pwr.anova</span>(mydesign)</span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="co">#&gt; Power analysis of Customized design design</span></span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a><span class="co">#&gt;               NumDF DenDF non-centrality alpha   power</span></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a><span class="co">#&gt; breed             1    14         0.4444  0.05 0.09537</span></span>
+<span id="cb13-5"><a href="#cb13-5" tabindex="-1"></a><span class="co">#&gt; diet              1    42        10.5625  0.05 0.88779</span></span>
+<span id="cb13-6"><a href="#cb13-6" tabindex="-1"></a><span class="co">#&gt; additive          1    42        27.5625  0.05 0.99923</span></span>
+<span id="cb13-7"><a href="#cb13-7" tabindex="-1"></a><span class="co">#&gt; diet:additive     1    42         0.0625  0.05 0.05687</span></span></code></pre></div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

@@ -129,14 +129,14 @@ The reduction in error variance has led to the following changes in our ability 
 
 In order to achieve a desired power of 0.8 for testing the effects of diet and inhibitor in our RCBD, it is crucial to determine the optimal number of blocks required. The `find_sample_size` function can be utilized for this purpose, taking a quoted design object as input to estimate the minimum number of blocks needed.
 
-The function allows setting a range for the number of blocks considered, from a minimum (`n_min`, default 2) to a maximum (`n_max`, default 99). However, for demonstration purposes, we will adjust the maximum to 999, acknowledging that such a high number of blocks is typically unfeasible in controlled animal experiments:
+The function allows setting a range for the number of blocks considered, from a minimum (`n_min`, default 2) to a maximum (`n_max`, default 99). However, for demonstration purposes, we will use the maximum 99, acknowledging that such a high number of blocks is typically unfeasible in controlled animal experiments:
 
 ```{r}
 # Quoting the design to be evaluated with varying number of blocks
 mydesign_quote <- quote(designRCB(treatments = c(2, 2), blocks = n, beta = c(470, 30, -55, 5), VarCov = 3200, sigma2 = 3200))
 
 # Finding the required number of blocks to achieve a power of 0.8
-required_blocks <- find_sample_size(design = mydesign_quote, n_min = 2, n_max = 999, power = 0.8)
+required_blocks <- find_sample_size(design = mydesign_quote, n_min = 2, n_max = 99, power = 0.8)
 print(required_blocks)
 ```
 

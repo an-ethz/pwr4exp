@@ -16,12 +16,32 @@ You can install the development version of `pwr4exp` from [GitHub](https://githu
 devtools::install_github("WangKai7kkw/pwr4exp")
 ```
 
-## Example
+## Functions
 
-This is a basic example which shows you how to solve a common problem:
+Performing power analysis in `pwr4exp` involves the following steps:
+- First, create a desired design object (a list) using design generating functions.
+- Once the design object is created, calculating power or determining sample size using `pwr4exp` is straightforward. Simply pass the design object to the power calculator for main effects and interactions, `pwr.anova()`, or for contrasts, `pwr.contrast()`.
+- To determine the minimal sample size to achieve a target power, a quoted design object can be passed to the function `find_sample_size()`.
 
-``` r
+### Example Usage
+
+Here's an example of how you can generate a design and calculate power:
+
+```r
 library(pwr4exp)
-## basic example code
+# Define a design
+my_design <- designCRD(
+  treatments = c(2, 2),
+  replications = 10,
+  beta = c(470, 30, -55, 5),
+  sigma2 = 6400
+)
+
+# Calculate power for main effects and interaction
+pwr.anova(design = my_design)
+
+# Calculate power for contrasts
+pwr.contrast(design = mydesign, specs = ~ facB | facA, contrast = "pairwise")
+pwr.contrast(design = mydesign, specs = ~ facB * facA, contrast = "pairwise")
 ```
 
