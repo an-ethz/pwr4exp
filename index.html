@@ -54,7 +54,7 @@
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header"><h1 id="pwr4exp">pwr4exp<a class="anchor" aria-label="anchor" href="#pwr4exp"></a>
 </h1></div>
-<p><code>pwr4exp</code> is an R package that provides functions for power calculation and sample size determination in animal experiments. The package emphasizes the importance of specifying models for conducting power analyses and supports power analyses for main effects, interactions, and specific contrasts. Additionally, <code>pwr4exp</code> offers a flexible framework to perform power analysis on customized designs which are currently not predefined in the package.</p>
+<p>The <code>pwr4exp</code> package is an R package that provides functions for power calculation and sample size determination in animal experiments. The package emphasizes the importance of specifying models for conducting power analyses and supports power analyses for main effects, interactions, and specific contrasts. Additionally, <code>pwr4exp</code> offers a flexible framework to perform power analysis on customized designs which are currently not predefined in the package.</p>
 <!-- badges: start -->
 <!-- badges: end -->
 <div class="section level2">
@@ -63,14 +63,14 @@
 <p>You can install the development version of <code>pwr4exp</code> from <a href="https://github.com/WangKai7kkw/pwr4exp" class="external-link">GitHub</a> with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"WangKai7kkw/pwr4exp"</span>, dependencies <span class="op">=</span> <span class="cn">TRUE</span>, build_vignettes <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p>Browse the vignette for a detailed introduction to the package:</p>
+<p>Browse the vignette for a detailed tutorial to the package:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/browseVignettes.html" class="external-link">browseVignettes</a></span><span class="op">(</span><span class="st">"pwr4exp"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="functions">Functions<a class="anchor" aria-label="anchor" href="#functions"></a>
 </h2>
-<p>Performing power analysis in <code>pwr4exp</code> involves the following steps: - First, create a desired design object (a list) using design generating functions. - Once the design object is created, calculating power or determining sample size using <code>pwr4exp</code> is straightforward. Simply pass the design object to the power calculator for main effects and interactions, <code><a href="reference/pwr.anova.html">pwr.anova()</a></code>, or for contrasts, <code><a href="reference/pwr.contrast.html">pwr.contrast()</a></code>. - To determine the minimal sample size to achieve a target power, a quoted design object can be passed to the function <code><a href="reference/find_sample_size.html">find_sample_size()</a></code>.</p>
+<p>Performing power analysis in <code>pwr4exp</code> involves the following steps: - First, create a desired design object using design generating functions. - Once the design object is created, calculating power or determining sample size using <code>pwr4exp</code> is straightforward. Simply pass the design object to the power calculator for main effects and interactions, <code><a href="reference/pwr.anova.html">pwr.anova()</a></code>, or for contrasts, <code><a href="reference/pwr.contrast.html">pwr.contrast()</a></code>. - To determine the minimal sample size to achieve a target power, a quoted design object can be passed to the function <code><a href="reference/find_sample_size.html">find_sample_size()</a></code>.</p>
 <div class="section level3">
 <h3 id="example-usage">Example Usage<a class="anchor" aria-label="anchor" href="#example-usage"></a>
 </h3>
@@ -78,19 +78,21 @@
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/WangKai7kkw/pwr4exp" class="external-link">pwr4exp</a></span><span class="op">)</span></span>
 <span><span class="co"># Define a design</span></span>
-<span><span class="va">my_design</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/designCRD.html">designCRD</a></span><span class="op">(</span></span>
+<span><span class="va">crd</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/designRCBD.html">designRCBD</a></span><span class="op">(</span></span>
 <span>  treatments <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>,</span>
-<span>  replications <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>facA <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A1"</span>, <span class="st">"A2"</span><span class="op">)</span>, facB <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"B1"</span>, <span class="st">"B2"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  blocks <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  formula <span class="op">=</span> <span class="va">y</span> <span class="op">~</span> <span class="va">facA</span><span class="op">*</span><span class="va">facB</span> <span class="op">+</span> <span class="op">(</span><span class="fl">1</span><span class="op">|</span><span class="va">block</span><span class="op">)</span>,</span>
 <span>  beta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">470</span>, <span class="fl">30</span>, <span class="op">-</span><span class="fl">55</span>, <span class="fl">5</span><span class="op">)</span>,</span>
-<span>  sigma2 <span class="op">=</span> <span class="fl">6400</span></span>
+<span>  VarCov <span class="op">=</span> <span class="fl">3200</span>,</span>
+<span>  sigma2 <span class="op">=</span> <span class="fl">3200</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Calculate power for main effects and interaction</span></span>
-<span><span class="fu"><a href="reference/pwr.anova.html">pwr.anova</a></span><span class="op">(</span>design <span class="op">=</span> <span class="va">my_design</span><span class="op">)</span></span>
+<span><span class="co"># Calculate power of ominubus test (i.e., F-test)</span></span>
+<span><span class="fu"><a href="reference/pwr.anova.html">pwr.anova</a></span><span class="op">(</span>design <span class="op">=</span> <span class="va">crd</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Calculate power for contrasts</span></span>
-<span><span class="fu"><a href="reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span>design <span class="op">=</span> <span class="va">mydesign</span>, specs <span class="op">=</span> <span class="op">~</span> <span class="va">facB</span> <span class="op">|</span> <span class="va">facA</span>, contrast <span class="op">=</span> <span class="st">"pairwise"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span>design <span class="op">=</span> <span class="va">mydesign</span>, specs <span class="op">=</span> <span class="op">~</span> <span class="va">facB</span> <span class="op">*</span> <span class="va">facA</span>, contrast <span class="op">=</span> <span class="st">"pairwise"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span>design <span class="op">=</span> <span class="va">crd</span>, specs <span class="op">=</span> <span class="op">~</span> <span class="va">facB</span> <span class="op">|</span> <span class="va">facA</span>, contrast <span class="op">=</span> <span class="st">"pairwise"</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -99,8 +101,8 @@
 <p>To learn more about <code>pwr4exp</code>, read through the <a href="https://github.com/WangKai7kkw/pwr4exp/vignettes/Introduction.Rmd" class="external-link">vignette</a> for <code>pwr4exp</code> which contains:</p>
 <ul>
 <li>Details on how to provide required inputs.</li>
-<li>Examples of calculating power and determining sample size for completely randomized design, random complete block design, Latin Square design.</li>
-<li>Examples using <code>pwr4exp</code> to assess the power of a customized design.</li>
+<li>Examples of conducting power analysis on the standard designs available in the package.</li>
+<li>Examples of using <code>pwr4exp</code> to assess the power of a customized design.</li>
 </ul>
 <p>Additionally, more information is available at the <a href="wangkai7kkw.github.io/pwr4exp/">package website</a>.</p>
 <p>The documentation for this package is being updated. If you have any questions or suggestions, please feel free to contact the package maintainer.</p>
