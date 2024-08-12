@@ -11,12 +11,10 @@ The `pwr4exp` package is an R package that provides functions for power calculat
 You can install the development version of `pwr4exp` from [GitHub](https://github.com/WangKai7kkw/pwr4exp) with:
 
 ``` r
-devtools::install_github("WangKai7kkw/pwr4exp", dependencies = TRUE, build_vignettes = TRUE)
+devtools::install_github("WangKai7kkw/pwr4exp")
 ```
-
-Browse the vignette for a detailed tutorial to the package:
-
 ```r
+#Load the package
 browseVignettes("pwr4exp")
 ```
 
@@ -53,7 +51,7 @@ pwr.contrast(design = crd, specs = ~ facB | facA, contrast = "pairwise")
 
 ## Learn More
 
-To learn more about `pwr4exp`, read through the [vignette](https://github.com/WangKai7kkw/pwr4exp/vignettes/Introduction.Rmd) for `pwr4exp` which contains:
+To learn more about `pwr4exp`, read through the [vignette](https://wangkai7kkw.github.io/pwr4exp/articles/pwr4exp.html) for `pwr4exp` which contains:
 
 - Details on how to provide required inputs.
 - Examples of conducting power analysis on the standard designs available in the package.
