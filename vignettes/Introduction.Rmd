@@ -3,8 +3,11 @@ title: "Introduction"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Introduction}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r, include = FALSE}
@@ -18,208 +21,377 @@ knitr::opts_chunk$set(
 library(pwr4exp)
 ```
 
-### Introduction
+# Introduction
 
-Performing power analysis in *pwr4exp* involves following steps: first, create a design object with the desired characteristics; then, pass it to either the power calculation function or the sample size determination function. Currently, power calculation is doable for main effects, interactions, as well as contrasts, whereas sample size determination can only be performed for main effects and interactions.
+The pwr4exp R package offers functionality for power analysis and sample
+size determination for some standard and common designs in animal
+studies, and it can be used for various complex experimental designs.
+This section provides an overview of the functionality within the
+pwr4exp and explains some common arguments used in its functions. To
+perform power analysis in pwr4exp involves two steps:
 
-Design objects in `pwr4exp` can be created using functions that generate several standard designs, as well as a function for creating customized designs. Generally, creating a design object requires specifying all or some of the following arguments:
+## Step1: creating a design object
 
-1. **Treatment Factors and Levels**: Represented in a vector, where each value indicates the number of levels for each treatment factor. For example, setting the argument `treatments = c(2, 3)` specifies two treatment factors with 2 and 3 levels, respectively.
-2. **Number of Units or Replications**: Indicated by an integer, and the specific function arguments for these parameters depend on the design.
-3. **Model Formula (`formula`)**: Needed to capture the fixed effects and variation in the data for the design. Each design generating function sets a default formula internally, which can be changed based on objectives and assumptions.
-4. **Effect Size (`beta`)**: Represented by the expected values of the main effects and interactions in the model. These values can be directly set or transformed from group means. For instance, if the expectation of each combination of treatments `treatments = c(2, 3)` are as follows: A1B1 = 10, A1B2 = 8, A1B3 = 6, A2B1 = 12, A2B2 = 14, A2B3 = 10. The effect sizes are `beta = c(10, 2, -2, -4, 4, 2)`, representing intercept (the mean of the reference group A1B1), main effect of A2 (the difference in mean between A2B1 and A1B1), main effect of B2 (the difference in mean between A1B2 and A1B1), main effect of B3 (the difference in mean between A1B3 and A1B1), interaction effect of A2 and B2 (the additional effect when both factors are at their second levels (A2B2) compared to what would be expected from the individual main effects), and interaction effect of A2 and B3 (the additional effect when of A2B3 compared to what would be expected from the individual main effects).
-5. **Variance-Covariance Components (`VarCov`)**: Required value for designs that use models with random effects. If there are multiple grouping factors, supply a variance-covariance matrix for each grouping factor in a list.
-6. **Error Variance (`sigma2`)**.
+Design objects in pwr4exp can be created using functions that generate
+several standard experimental designs available in the package. These
+functions include **designCRD** for complete randomized design
+(**CRD**), **designRCBD** for randomized complete block design
+(**RCBD**), **designLSD** for Latin Square design (**LSD**),
+**designCOD** for crossover design (**COD**), and **designSPD** for
+split-plot design (**SPD**). The arguments of these functions fall into
+the following main categories:
 
-Once the design object is created, calculating power or determining sample size using `pwr4exp` is straightforward. Simply pass the design object to the power calculator for main effects and interactions, `pwr.anova()`, or for contrasts, `pwr.contrast()`. To determine the minimal sample size to achieve a target power, a quoted design object can be passed to function `find_sample_size()`. Three types of sum of squares and two methods for approximating denominator degrees of freedom can be set; however, these settings do not affect the results in balanced designs. By default, type III sum of squares and Satterthwaite’s approximation of denominator degrees of freedom are applied. The same syntax of the `emmeans` (citation) package is employed to specify types of contrast for power calculation of contrast.
+1.  **Treatment structure:** The arguments `treatments`, `trt.main`, and
+    `trt.sub` are used to specify the treatment structure for designs
+    other than SPD, and in the case of an SPD, they refer to the main
+    plot and subplot levels, respectively. The treatment structure is
+    defined by an integer-valued vector, where the length of the vector
+    indicates the number of treatment factors, and each value represents
+    the number of levels for each factor. A maximum of two factors is
+    allowed, and they are arranged in a factorial design.
 
-The `pwr4exp` package offers functionality for power analysis and sample size determination for some standard and common designs in animal studies, and potentially can be used for various design variants. This section provides a brief demonstration of how to use functions in `pwr4exp` to perform power analysis for these designs.
+    For instance, `treatments = 2` is used to define an experiment
+    involving only two treatments (e.g., control vs. intervention). In
+    the case of two factors, `treatments = c(2, 2)` sets up a "2x2"
+    factorial design where two factors are arranged to study the main
+    effects and their interactions. In the case of SPD, `trt.main` and
+    `trt.sub` allow for hierarchical structuring of treatments. For
+    example, `trt.main = 2` specifies two levels of a main plot
+    treatment factor, and `trt.sub = c(2, 2)` defines a "2 × 2"
+    factorial design at the subplot level.
 
-### Demonstration Scenario: Cattle Experiment
+2.  **Label:** The optional argument `label` accepts a list that
+    specifies the names of treatment factors and their corresponding
+    level labels. Each element of the list represents a factor, with the
+    name of the element being the name of the factor. The value of each
+    element should be a vector containing the labels for that factor's
+    levels. If not provided, the default name "trt" is assigned to a
+    single treatment factor, while "facA" and "facB" are used for two
+    treatment factors. The levels of each factor are sequentially coded
+    as "1", "2", and so on, if not specified by `label`.
 
-Consider a scenario for a cattle experiment, where the cows are fed two types of basal diets differing in NDF content (factorA, A1 vs. A2), each supplemented with feed additives that influence enteric methane emission (factorB, B1 vs. B2). The objective of this experiment is to evaluate the effect of diet fiber content and inhibitor on enteric methane emissions. The expectation of variance of the response variable methane is assumed to be 6400. The expected group means are as follows:
-- **A1_B1**: 470
-- **A1_B2**: 415
-- **A2_B1**: 500
-- **A2_B2**: 450
+    For example, `list(trt = c("ad libitum", "fasting"))` uses the
+    default name for a single treatment factor, but customizes its
+    levels to "ad libitum" and "fasting." For multiple factors, such as
+    ``` list(feed = c("``ad libitum``", "``fasting``"), dosage = c("D0", "D1", "D2")) ```,
+    the first factor is named "feed" with levels "ad libitum" and
+    "fasting" and the second factor is named "dosage" with levels "D0,"
+    "D1," and "D2."
 
-The vector of effect size required by power analysis is then `beta = c(470, 30, -55, 5)`, representing:
-- The mean of the reference group [A1_B1],
-- The main effect of A2 [mean difference: A2_B1 - A1_B1],
-- The main effect of B2 [mean difference: A1_B2 - A1_B1],
-- The interaction effect of A2 and B2 [the additional effect of the combination of A2 and B2 compared to what would be expected from the individual main effects].
+3.  **Replication:** Given distinct replicating mechanisms, three
+    arguments `replicates`, `blocks`, and `squares` are used to
+    represent replication and indicate sample size for different
+    designs. The argument `replicates` specifies the number of
+    experimental units per treatment in a CRD or the number of main
+    plots (i.e., the number of experimental units per treatment at main
+    plot) in a SPD; `blocks` specifies the number of blocks in an RCBD;
+    and `squares` specifies the number of squares in a replicated LSD or
+    crossover design.
 
-Once this treatment design according to our objective is determined, we can explore which experimental design to be used.
+    In CRD, `replicates = 10` along with `treatments = 4` (or
+    `treatments = c(2, 2)`) indicate that each treatment group consists
+    of 10 experimental units, resulting in a total of 40 experimental
+    units. While configuring a SPD, `replicates = 10` combined with
+    `trt.main = 4` (or `trt.main = c(2, 2)`) signifies that each main
+    plot treatment is replicated across 10 experimental units,
+    accumulating to 40 main plots in total. In a RCBD, the argument
+    `blocks = 10` used in conjunction with `treatments = 4` (or
+    `treatments = c(2, 2)`) ensures that all four treatments are
+    replicated across 10 different blocks, leading to a total of 40
+    experimental units. For an LSD, setting `squares = 3` alongside
+    `treatments = 4` (or `treatments = c(2, 2)`) implies the replication
+    of the layout of a single "4×4" square 3 times, resulting a total of
+    48 experimental units.
 
-### Completely Randomized Design (CRD)
+4.  **Model:** The `formula` argument specifies the formula that would
+    be used to test effects in post-experimental data analysis. This
+    formula follows the syntax used in R’s `lm` (procedure for linear
+    models) and `lmer` (procedure for LMM) functions to specify fixed
+    and random effects. Each design-generating function within the
+    package comes with a default model formula. The default model
+    formula incorporates interaction terms when two treatment factors
+    are present and fits blocking factors as random effects.
 
-In a CRD, individual cows are randomly assigned to treatments without considering blocking factors. In this setup, cows serve as the experimental units in a CRD. Assume that 10 animals are randomly assigned to each treatment combination, resulting in 40 units in total. The source of variation in CRD is only random error variance, which is equal to the total variance of the response variable, assumed to be 6400.
+5.  **Effect Size:** The `beta` argument represents model coefficients.
+    It is noteworthy that the coefficients for categorical variables are
+    the coefficients of dummy variables created using `contr.treatment`
+    contrast coding in R. This coding scheme designates the first level
+    of each categorical factor as the reference level and creates
+    indicator variables for the other levels to compare against this
+    reference. The coefficient for the reference level is the mean of
+    that level. The coefficients for the other levels are interpreted as
+    the difference from this reference level.
 
-#### Creating an R Object for CRD
+    For example, considering a factor with 2 levels (`treatments = 2`),
+    control vs. intervention (optional,
+    `label = list(trt = c("control", "intervention"))`), if
+    `beta = c(10, 5)`, this indicates that the mean of the control group
+    is 10, and the effect of an intervention is 5 units higher than the
+    control.
 
-To create an R object of this design using the `designCRD()` function, you must specify arguments including the number of treatment levels (`treatments`), number of replicates (`replications`), model formula (`formula`), effects (`beta`), and error variance (`sigma2`). The default formula in `designCRD()` includes both the main effects and the interaction, which can be adjusted according to the objectives and assumptions. For instance, a formula without an interaction term can be used if it is assumed that the interaction is either absent or minimal.
+    In another example with a "2 × 2" factorial arrangement of
+    treatments, e.g, `treatments = c(2, 2)` &
+    `label= list(A = c("A1", "A2"), B = c("B1", "B2"))`, assume the
+    expected outcomes for each combination of the two factors are as
+    follows:
+
+    $$
+    \begin{array}{c|c|c}
+      & B1 & B2 \\
+    \hline
+    A1 & 10 & 6 \\
+    A2 & 8  & 12 \\
+    \end{array}
+    $$
+
+    The argument for effect size reflects as
+    `beta = c(intercept = 10, A2 = -2, B2 = -4, A2B2 = 8)`, which
+    indicates that the mean of the reference level (`A1B1`), the effect
+    of A2 alone (`A2B1 - A1B1)`, the effect of B2 alone (`A1B2 - A1B1`),
+    and the interaction between A2 and B2 (`A2B2 - A2B1 - A1B2 + A1B1`),
+    i.e., the additional effect of combining A2B2 compared to what would
+    be expected from the sum of individual effects of A2 and B2. It is
+    important to mention that values in `beta` indicate population
+    values (i.e., expectations), which are usually unknown and must be
+    derived through informed assumptions. These values can either be
+    directly or transformed from group means as demonstrated.
+
+6.  **Variance-Covariance:** The `VarCov` specifies variance-covariance
+    components of random effects. If there are multiple random effects
+    of one grouping factor, provide variance-covariance components in a
+    matrix that matches the order of the random effects specified in the
+    model formula.
+
+    For instance, the covariance matrix for random intercepts and random
+    slopes for one grouping factor is structured as:
+
+    $$
+    \begin{pmatrix}
+    \tau_0^2 & \tau_{12} \\
+    \tau_{12} & \tau_1^2
+    \end{pmatrix}
+    $$
+
+    where $\tau_0^2$ is the variance of the random intercept, $\tau_1^2$
+    is the variance of the random slope, and $\tau_{12}$ is the
+    covariance between them. In the standard designs available in
+    pwr4exp, the corresponding LMM are typically the simplest variance
+    component models, i.e., models without random slopes. For example,
+    in an RCBD with block as a random effect, the input required is the
+    variance between blocks $\text{VarCov} = \tau_b^2$. If there are
+    multiple grouping factors, provide the variance-covariance matrix
+    for each grouping factor in a list. For example, in an LSD with both
+    row and column blocks as random effects, the required inputs would
+    be $\text{VarCov} = list(\tau_r^2, \tau_c^2)$, representing the
+    variances of the row and column blocks, respectively.
+
+7.  **Error Variance:** `sigma2` is the variance of random error in the
+    model.
+
+A design which is not available in the package can be potentially
+constructed using the function `designCustom`. The required inputs
+include `design.df`, `design.name`, `formula`, `beta`, `VarCov`, and
+`sigma2`. All arguments have been defined above except for `design.df`,
+which indicates a data frame with columns of independent variables,
+outlining the structure of the data to be collected from the experiment,
+but it does not include the response variable. Optionally, the name of
+the customized design can be specified using `design.name`.
+
+## Step2: power or sample size calculation
+
+Once the design object is created, calculating power or sample size is
+straightforward. Power for omnibus tests, including main effects and
+their interactions (if included in the model specified during the
+creation of the design object), can be calculated using the
+`pwr.anova(design = , alpha = )` function. The required inputs include:
+
+1.  `design`, which refers to the design object,
+
+2.  `alpha`, indicating the Type I error rate, which has a default value
+    of 0.05, if not specified.
+
+On the other hand, power for specific contrasts can be calculated using
+`pwr.contrast(design = , alpha = , spec = , method = )`. The same syntax
+of the emmeans package is inherited to specify contrasts of interest.
+The required inputs are:
+
+1.  `design` and `alpha` as defined in the `pwr.anova` function
+
+2.  `spec`, which is an argument inherited from `emmeans` specifying the
+    names of the factors over which the contrasts are performed, and
+
+3.  `method`, which is another argument inherited from `emmeans`
+    specifying the method of contrasts, e.g., pairwise, linear, and
+    polynomials.
+
+The minimal sample size needed to achieve a target power can be
+determined using
+`find_sample_size(design.quote = , alpha = , target.power = , n_init = , n_max = )`.
+This procedure uses an iterative approach to find the minimum
+replications by traversing through a series of integers. The required
+inputs are:
+
+1.  `design.quote`, which is a quoted design object with unknown and
+    unevaluated replications to be evaluated with varying values,
+
+2.  `alpha` as defined in the `pwr.anova` function,
+
+3.  `target.power`, which can be a single value specifying the target
+    power for all effects or a vector of values for individual target
+    power levels for each effect,
+
+4.  `n_init` is the initial replications for the iterative process, with
+    the default value set to 2,
+
+5.  `n_max` is the maximum number of replications for the iterative
+    process, with the default value of 99.
+
+This function calculates the minimum sample size necessary by
+incrementally checking integers from `n_init` to `n_max`. Currently,
+sample size determination is available only for omnibus tests and not
+for specific contrasts in pwr4exp.
+
+# Completely Randomized Design
+
+## CRD with one treatment factor
+
+The following design profile is used to create an exemplary CRD with one
+treatment factor:
+
+1.  Treatments: 1 treatment factor with 4 levels.
+
+2.  Replicates: 8 experimental units in each of 4 groups.
+
+3.  Mean and effect size: The mean of control group is 35, and the
+    effects of other three treatments are -5, +2, and +3.
+
+4.  Error variance: The variance of response variable is 15.
+
+If not specified, the treatment factor is named "trt" and its levels are
+labeled as "1", "2", "3", and "4" by default. The corresponding design
+is generated using the `designCRD` function:
 
 ```{r}
-mydesign <- designCRD(
+crd1 <- designCRD(
+  treatments = 4,
+  replicates = 8,
+  beta = c(35, -5, 2, 3),
+  sigma2 = 15
+)
+```
+
+Power of omnibus test (i.e., F-test) can be calculated using the
+`pwr.anova` function. Under the type I error rate of 0.05, the power for
+testing an overall difference among treatments is 0.95467.
+
+```{r}
+pwr.anova(design = crd1)
+```
+
+The function `pwr.contrat` can be used to assess the power for specific
+contrasts. To calculate the power for detecting the differences of other
+levels to the control, contrast `method = rt.vs.ctrl` for the treatment
+factor (`specs = ~ trt`) can be defined according to the specification
+of **emmeans** package.
+
+```{r}
+pwr.contrast(design = crd1, specs =  ~ trt, method = "trt.vs.ctrl")
+```
+
+Another example to demonstrate specifying contrast vectors involves the
+contrasts of interest: trt4 vs. trt1 (control) and comparing the
+combined effect of trt1 and trt2 to that of trt3 and trt4.
+
+```{r}
+pwr.contrast(design = crd1, 
+             specs =  ~ trt, 
+             method = list(`trt4-trt2` = c(0, -1, 0, 1),
+                           `trt12-trt34` = c(.5, .5, -.5, -.5)))
+```
+
+## CRD with "2x2" factorial treatments
+
+The following design profile is used to create an exemplary CRD with two
+treatment factors:
+
+1.  Treatments: 2 treatment factors each with 2 levels.
+
+2.  Label: two factors are "facA" with levels "A1" and "A2", "facB" with
+    levels "B1" and "B2".
+
+3.  Replicates: 8 experimental units in each of 4 groups.
+
+4.  Mean and effect size: The mean of the control (A1B1) is 35. The
+    effect of A2 alone is an increase of 5 units, and the effect of B2
+    alone is an increase of 3 units. The interaction between A2 and B2
+    introduces an additional effect of -2 units, resulting the combined
+    effect of A2 and B2 below (-2) the sum of their individual effects.
+    The corresponding cell means are:$$
+    \begin{array}{c|c|c}
+      & B1 & B2 \\
+    \hline
+    A1 & 35 & 38 \\
+    A2 & 40  & 41 \\
+    \end{array}
+    $$
+
+5.  Error variance: The variance of response variable is 15.
+
+This design can be created as follows:
+
+```{r}
+crd2 <- designCRD(
   treatments = c(2, 2),
-  replications = 10,
-  beta = c(470, 30, -55, 5),
-  sigma2 = 6400
+  replicates = 8,
+  label = list(facA = c("A1", "A2"), facB = c("B1", "B2")),
+  beta = c(35, 5, 3, -2),
+  sigma2 = 15
 )
 ```
 
-#### Power Calculation Using the CRD Design
-
-After creating the design object with the `designCRD()` function, it can be passed to the power calculation function to assess the overall test and specific contrasts.
-
-#### Power Calculation for Main Effects and Interaction
-
-The power calculation for the main effects of diet, additive, and their interaction can be performed using `pwr.anova()` function:
+The power of the omnibus test:
 
 ```{r}
-pwr.anova(mydesign)
+pwr.anova(design = crd2)
 ```
 
-#### Power Calculation for Specific Contrasts
-
-Power calculations can also be performed for specific contrasts, such as comparing A2 vs. A1 at each level of factor B. This analysis helps to assess whether the differences between these levels are statistically significant and to what extent.
-
-To perform this power calculation, the `pwr.contrast()` function from the `pwr4exp` package is used. Here’s how to execute it:
+The power for detecting the effect of factor A, both overall and within
+each level of factor B, can be assessed as follows:
 
 ```{r}
-pwr.contrast(design = mydesign, specs = ~ facB | facA, contrast = "pairwise")
+# main effect of facA
+pwr.contrast(design = crd2, specs = ~ "facA", method = "pairwise")
+# effect of facA under B1 and B2, respectively
+pwr.contrast(design = crd2, specs = ~ facA|facB, method = "pairwise")
 ```
 
-### Randomized Complete Block Design (RCBD)
-
-A RCBD is beneficial when there's variability among experimental units that could influence the measurement of the response variable. This design helps reduce error variance by blocking on factors that may contribute to this variability.
-
-#### Setting up the RCB
-
-In the continuation of our previous example using a CRD, assume now we can block the experimental units by one block factor, such as days in milk. By using 10 blocks with cows having close days in milk within each block, the error variance due to uncontrolled factors is expected to reduce. This results in a total of 40 cows distributed evenly across the blocks.
-
-Assuming the variance between blocks is 3200, this would effectively reduce the error variance from the previous 6400 to 3200, enhancing the precision of our experiment's results.
-
-#### Creating the Design Object
-
-The design object for an RCB can be created with the `designRCB()` function, specifying the variance between blocks (`VarCov`), and the reduced error variance (`sigma2`):
+The number of units per treatment required to achieve the target power
+can be determined using `find_sample_size`, which employs an iterative
+approach. A quoted design object, where replicates = n remains
+unevaluated, is created first.
 
 ```{r}
-mydesign <- designRCB(
-  treatments = c(2, 2), 
-  blocks = 10, 
-  beta = c(470, 30, -55, 5), 
-  VarCov = 3200, 
-  sigma2 = 3200
+crd_quote <- quote(
+  designCRD(
+  treatments = c(2, 2),
+  replicates = n,
+  label = list(facA = c("A1", "A2"), facB = c("B1", "B2")),
+  beta = c(35, 5, 3, -2),
+  sigma2 = 15
+  )
 )
 ```
 
-#### Power Calculation for Main Effects and Interaction
+The best sample size for the target power within the range of `n_int` and `n_max` can be determined:
 
 ```{r}
-pwr.anova(mydesign)
+find_sample_size(design.quote = crd_quote, n_init = 2, n_max = 99)
 ```
 
-The reduction in error variance has led to the following changes in our ability to detect significant effects:
+# Randomized Complete Block Design
 
-- **Inhibitor**: The power for detecting the main effect of the inhibitor has increased to 0.8, indicating a strong likelihood of correctly identifying the true effect of the inhibitor on methane emissions.
-- **Diet**: Despite the improvements, the power for detecting the main effect of diet remains below the desired threshold of 0.8. This suggests that the diet's impact might be subtler or require a larger sample size or different blocking strategy to detect effectively.
+# Latin Square Design
 
-#### Determining the Number of Blocks Required for Adequate Power
+# Crossover Design
 
-In order to achieve a desired power of 0.8 for testing the effects of diet and inhibitor in our RCBD, it is crucial to determine the optimal number of blocks required. The `find_sample_size` function can be utilized for this purpose, taking a quoted design object as input to estimate the minimum number of blocks needed.
-
-The function allows setting a range for the number of blocks considered, from a minimum (`n_min`, default 2) to a maximum (`n_max`, default 99). However, for demonstration purposes, we will use the maximum 99, acknowledging that such a high number of blocks is typically unfeasible in controlled animal experiments:
-
-```{r}
-# Quoting the design to be evaluated with varying number of blocks
-mydesign_quote <- quote(designRCB(treatments = c(2, 2), blocks = n, beta = c(470, 30, -55, 5), VarCov = 3200, sigma2 = 3200))
-
-# Finding the required number of blocks to achieve a power of 0.8
-required_blocks <- find_sample_size(design = mydesign_quote, n_min = 2, n_max = 99, power = 0.8)
-print(required_blocks)
-```
-
-### Latin Square Design (LSD) for Multiple Sources of Variation
-
-The Latin Square Design (LSD) is particularly advantageous when dealing with more than one source of variation. It allows for the control of two sources simultaneously by organizing the experimental units in a square matrix. Each row and each column in this matrix represent a different source of variation, and each treatment is represented exactly once in each row and column within each block. This arrangement ensures that the treatments are uniformly distributed across the sources of variability.
-
-#### Extending the RCB Example to LSD
-
-Building on the example from the Randomized Complete Block Design section, we now consider two blocking factors: cow and period. The experimental setup is designed such that it can be conducted over several different time periods. All cows receive all treatments but in different sequences, making both cows and time periods important blocking factors. This specific setup with time periods as one block factor is often referred to as a crossover design.
-
-Assuming that we replicate a single Latin square three times, we arrange 12 animals in 4×4 Latin Squares, resulting in a total of 48 experimental units.
-
-#### Variance Assumptions and Design Setup
-
-We assume the variance between cows and between periods to be 3200 and 1600, respectively. This arrangement significantly reduces the error variance from the total variance previously assumed to be 6400 down to 1600.
-
-#### Creating the Design Object
-
-The design object for an LSD is set up using the `designLSD()` function. In this function:
-- The `squares` argument specifies the number of squares for replicating the Latin Squares.
-- The variances of the random effects of cows and periods need to be supplied in a list to the `VarCov` argument, reflecting their respective contributions to the total variance.
-
-```{r}
-mydesign <- designLSD(
-    treatments = c(2, 2),
-    squares = 3,
-    reuse = "col",  # Ensuring each treatment appears once per column
-    formula = y ~ facA*facB + (1|col) + (1|row),
-    beta = c(470, 30, -55, 5), 
-    VarCov = list(1600, 3200),
-    sigma2 = 1600
-)
-```
-
-#### Power for Main Effects and Interaction
-
-
-```{r}
-pwr.anova(mydesign)
-```
-
-### Special Design: Combining Split-Plot with Latin Square Design (LSD)
-
-This subsection demonstrates how to conduct power analysis for a specialized experimental design that incorporates elements of both a split-plot and a LSD. In this setup, we not only assess the effects of diet and additives but also include the breed of cows as a main plot factor.
-
-#### Experimental Setup
-
-Continuing with the LSD, we now integrate a split-plot design by including two breeds of cows. Specifically, 16 cows (8 from each breed) are arranged in a replicated 4x4 LSD. Here, cows serve as the main plots, breed is the main plot factor, and the diet and additives are managed as subplot factors within each Latin square.
-
-#### Creating the Customized Design
-
-To manage this complex design, we utilize the `designCustom` function from the `pwr4exp` package, which allows for the creation of a power analysis model using a custom data frame that defines the structure of the design.
-
-First, we construct a data frame representing the layout of a 4x4 LSD with 16 cows, assigning 8 cows to each breed:
-
-```{r}
-mydf <- df.crossover(treatments = c(2, 2), squares = 4)
-mydf$breed <- rep(c("Hol", "Jer"), each = 32)
-names(mydf) <- c("cow", "period", "treatment", 'diet', 'additive', 'square', 'breed')
-mydf <- mydf[, c("cow", "breed", "period", 'diet', 'additive')]
-head(mydf, n = 4)  # Displays the first four entries
-tail(mydf, n = 4)  # Displays the last four entries
-```
-
-Next, we create the design object:
-
-```{r}
-mydesign <- designCustom(
-    design.df = mydf,
-    formula = y ~ breed + diet*additive + (1|cow) + (1|period),
-    beta = c(470, 20, 30, -55, 5),
-    VarCov = list(3200, 1600),
-    sigma2 = 1600,
-    design.name = "Customized design"
-)
-```
-
-Power Calculation for Main Effects and Interaction:
-
-```{r}
-pwr.anova(mydesign)
-```
-
-
-
+# Split-plot Design

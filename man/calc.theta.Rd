@@ -7,15 +7,17 @@
 calc.theta(VarCov, sigma)
 }
 \arguments{
-\item{VarCov}{variance-covariance components of random effects. If there are multiple grouping factors, supply variance-covariance matrix for each grouping factor in a list.}
+\item{VarCov}{variance-covariance components of random effects.
+If there are multiple random effects of one grouping factor, provide the variance-covariance matrix.
+If there are multiple grouping factors, supply the variance-covariance matrix of each grouping factor in a list.}
 
-\item{sigma}{error standard deviation}
+\item{sigma}{error standard deviation.}
 }
 \value{
 covariance parameter vector
 }
 \description{
-This function calculates the covariance parameter vector
+This function calculates the covariance parameters
 }
 \details{
 For more details on the structure and estimation of \code{theta}, refer to the documentation

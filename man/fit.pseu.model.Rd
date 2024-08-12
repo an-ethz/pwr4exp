@@ -7,21 +7,31 @@
 fit.pseu.model(formula, data, beta, VarCov, sigma, ...)
 }
 \arguments{
-\item{formula}{an object of class \code{\link{formula}}: a symbolic description of the model used to assess treatment effects, which should contain fixed components and sources of variation according to experimental designs, assumptions, and objectives. The details of model specification for fixed effects see \code{\link{lm}} and random effects see \code{\link{lmer}}.}
+\item{formula}{an object of class \code{\link{formula}}: a symbolic description of the model that would be used to test effects in post-experimental data analysis.
+For details on model specification, see \code{\link{lm}} for fixed effects and \code{\link{lmer}} for random effects.}
 
-\item{data}{a data frame with the independent variables of a design, e.g., treatment factors, block factors.}
+\item{data}{a data frame with the independent variables of a design as columns, e.g., treatment factors and block factors.}
 
-\item{beta}{effect size: a vector including the expectations of intercept, main effects of factors and interactions between factors. Vector values are in the same order as the coefficients of the model that would be fitted using the exact data with \code{\link{contr.treatment}}.}
+\item{beta}{a vector of the expectations of model coefficients.
+The coefficients for categorical variables are the coefficients of dummy variables created using \code{\link{contr.treatment}} contrast coding.}
 
-\item{VarCov}{variance-covariance components of random effects. If there are multiple random effects of one grouping factor, supply variance-covariance components in a matrix with the same order as the random effects specified in model formula. If there are multiple grouping factors, supply variance-covariance matrix for each grouping factor in a list.}
+\item{VarCov}{variance-covariance components of random effects.
+If there are multiple random effects of one grouping factor, provide the variance-covariance matrix.
+If there are multiple grouping factors, supply the variance-covariance matrix of each grouping factor in a list.}
 
 \item{sigma}{standard deviation of error}
 
-\item{...}{other arguments passed to \code{\link{anova}}.}
+\item{...}{other arguments passed to the \code{anova} function in \code{lmerTest}.
+The type of ANOVA table, with Type III as the default, and the method for computing the denominator degrees of freedom, with Satterthwaite's method as the default, can be changed.
+For more details, see \link[lmerTest]{anova.lmerModLmerTest}.}
 }
 \value{
-a pseudo model object \code{lmerMod} or \code{\link{lm}}.
+a pseudo model object.
 }
 \description{
-Create a pseudo model object with the same structure as the model object fitted using the exact data. Model coefficients are replaced by the effect size specified in the argument \code{beta}. The variance-covariance matrix of random effects is replaced by the argument \code{VarCov}. The standard deviation of error is replaced by the argument \code{sigma}.
+Create a pseudo-model object with the response variable being simulated according to the fixed and random effects.
+Model coefficients are replaced by the expectations specified in the argument \code{beta}.
+Variance-covariance components of random effects are replaced by the values specified in argument \code{VarCov}.
+The standard deviation of random error is replaced by the argument \code{sigma}.
+Creating such a pseudo-model facilitates power calculations by leveraging the \code{anova} function in \code{lmerTest} and the \code{Anova} function in \code{car}.
 }
