@@ -1,8 +1,8 @@
 ---
-title: "Introduction"
+title: "pwr4exp: Power Analysis for Experimental Designs"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Introduction}
+  %\VignetteIndexEntry{pwr4exp: Power Analysis for Experimental Designs}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options: 
