@@ -161,7 +161,7 @@ df.lsd <- function(treatments,
 #' @return a data.frame with columns for treatment factors, individuals (row block factor), period (column block factor), and squares
 #' @export
 df.cod <- function(treatments, label, squares){
-  df <- df.lsd(treatments, squares, reuse = "col")
+  df <- df.lsd(treatments = treatments, label = label, squares = squares, reuse = "col")
   names(df)[1:2] <- c("subject", "period")
   df[] <- lapply(df, as.factor)
   if (!missing(label)) {
