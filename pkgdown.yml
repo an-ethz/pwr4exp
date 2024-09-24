@@ -1,9 +1,9 @@
 pandoc: 3.1.11
-pkgdown: 2.1.0
+pkgdown: 2.1.1
 pkgdown_sha: ~
 articles:
   pwr4exp: pwr4exp.html
-last_built: 2024-08-22T08:23Z
+last_built: 2024-09-24T20:40Z
 urls:
   reference: https://wangkai7kkw.github.io/pwr4exp/reference
   article: https://wangkai7kkw.github.io/pwr4exp/articles
