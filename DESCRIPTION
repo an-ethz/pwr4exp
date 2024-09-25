@@ -1,9 +1,11 @@
 Package: pwr4exp
 Title: Power Analysis for Experiment Designs in Animal Studies
 Version: 0.0.0.9000
-Authors@R: 
-    person(given = "Kai", family = "Wang", email = "kai.wang@usys.ethz.ch", role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0002-6672-1121"))
+Authors@R: c(
+    person("Kai", "Wang", email = "kai.wang@usys.ethz.ch", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-6672-1121")),
+           person("Mutian", "Niu", email = "mutian.niu@usys.ethz.ch", role = "aut")
+           )
 Description: The package provides advanced tools to calculate statistical power and 
     determine sample size for a variety of experimental designs commonly used in agricultural 
     and biological research. Supported designs include completely randomized designs, block designs, 
@@ -27,7 +29,7 @@ Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
-URL: https://github.com/WangKai7kkw/pwr4exp, https://wangkai7kkw.github.io/pwr4exp/, https://github.com/an-ethz/pwr4exp
+URL: https://github.com/an-ethz/pwr4exp, https://an-ethz.github.io/pwr4exp/
 BugReports: https://github.com/an-ethz/pwr4exp/issues
 Depends: 
     R (>= 2.10)
