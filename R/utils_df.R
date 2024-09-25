@@ -164,18 +164,6 @@ df.cod <- function(treatments, label, squares){
   df <- df.lsd(treatments = treatments, label = label, squares = squares, reuse = "col")
   names(df)[1:2] <- c("subject", "period")
   df[] <- lapply(df, as.factor)
-  if (!missing(label)) {
-    if (length(treatments) == 1) {
-      df[["trt"]] <- factor(df[["trt"]], labels = label[[1]])
-      names(df) <- sub("trt", names(label), names(df))
-    }
-    if (length(treatments) == 2) {
-      df[["facA"]] <- factor(df[["facA"]], labels = label[[1]])
-      df[["facB"]] <- factor(df[["facB"]], labels = label[[2]])
-      names(df) <- sub("facA", names(label)[1], names(df))
-      names(df) <- sub("facB", names(label)[2], names(df))
-    }
-  }
   return(df)
 }
 
@@ -194,7 +182,7 @@ df.cod <- function(treatments, label, squares){
 #' @return a data.frame with columns for main plots, main treatments, and sub-treatments
 #' @export
 df.spd <- function(trt.main, trt.sub, label, replicates){
-  df.main <- df.crd(treatments = trt.main, replicates)
+  df.main <- df.crd(treatments = trt.main, replicates = replicates)
   df.main$mainplots <- 1:(prod(trt.main)*replicates)
 
   if (length(trt.main) > 1) {
