@@ -2,27 +2,22 @@
 % Please edit documentation in R/utils.R
 \name{calc.theta}
 \alias{calc.theta}
-\title{Calculate covariance parameter vector (theta)}
+\title{Calculate variance covariance parameters}
 \usage{
 calc.theta(VarCov, sigma)
 }
 \arguments{
-\item{VarCov}{variance-covariance components of random effects.
-If there are multiple random effects of one grouping factor, provide the variance-covariance matrix.
-If there are multiple grouping factors, supply the variance-covariance matrix of each grouping factor in a list.}
+\item{VarCov}{variance-covariance matrices. If there are multiple random effect groups,
+supply the variance-covariance matrix of each group as an element in a list.}
 
-\item{sigma}{error standard deviation.}
+\item{sigma}{standard deviation of random errors.}
 }
 \value{
-covariance parameter vector
+theta
 }
 \description{
-This function calculates the covariance parameters
-}
-\details{
-For more details on the structure and estimation of \code{theta}, refer to the documentation
-of the \code{\link[lme4]{getME}} function in the \code{lme4} package.
+Scale variance-covariance matrices as the relative Cholesky factors of each random effect term.
 }
 \seealso{
-\code{\link[lme4]{getME}}, \code{\link[lme4]{lmer}}
+"theta" in \code{\link[lme4]{getME}}, \code{\link[lme4]{lmer}}
 }

@@ -7,31 +7,33 @@
 fit.pseu.model(formula, data, beta, VarCov, sigma, ...)
 }
 \arguments{
-\item{formula}{an object of class \code{\link{formula}}: a symbolic description of the model that would be used to test effects in post-experimental data analysis.
-For details on model specification, see \code{\link{lm}} for fixed effects and \code{\link{lmer}} for random effects.}
+\item{formula}{an object of class \code{\link{formula}}}
 
-\item{data}{a data frame with the independent variables of a design as columns, e.g., treatment factors and block factors.}
+\item{data}{a data frame with the independent variables of the design as
+columns, e.g., treatment factors and block factors.}
 
-\item{beta}{a vector of the expectations of model coefficients.
-The coefficients for categorical variables are the coefficients of dummy variables created using \code{\link{contr.treatment}} contrast coding.}
+\item{beta}{a vector of the expectations of model coefficients.}
 
-\item{VarCov}{variance-covariance components of random effects.
-If there are multiple random effects of one grouping factor, provide the variance-covariance matrix.
-If there are multiple grouping factors, supply the variance-covariance matrix of each grouping factor in a list.}
+\item{VarCov}{variance-covariance matrices. If there are multiple random effect groups,
+supply the variance-covariance matrix of each group as an element in a list.}
 
 \item{sigma}{standard deviation of error}
 
 \item{...}{other arguments passed to the \code{anova} function in \code{lmerTest}.
-The type of ANOVA table, with Type III as the default, and the method for computing the denominator degrees of freedom, with Satterthwaite's method as the default, can be changed.
+The type of sum of squares, with Type III as the default, and the method for
+computing the denominator degrees of freedom, with Satterthwaite's method as the default, can be changed.
 For more details, see \link[lmerTest]{anova.lmerModLmerTest}.}
 }
 \value{
 a pseudo model object.
 }
 \description{
-Create a pseudo-model object with the response variable being simulated according to the fixed and random effects.
-Model coefficients are replaced by the expectations specified in the argument \code{beta}.
-Variance-covariance components of random effects are replaced by the values specified in argument \code{VarCov}.
-The standard deviation of random error is replaced by the argument \code{sigma}.
-Creating such a pseudo-model facilitates power calculations by leveraging the \code{anova} function in \code{lmerTest} and the \code{Anova} function in \code{car}.
+Create a pseudo-model object with the response variable being simulated
+according to the fixed and random effects. Model coefficients are replaced
+by the expectations specified in the argument \code{beta}. Variance-covariance
+components of random effects are replaced by the values specified in argument
+\code{VarCov}. The standard deviation of random error is replaced by the
+argument \code{sigma}. Creating such a pseudo-model facilitates power
+calculations by leveraging the \code{anova} function in \code{lmerTest} and
+the \code{Anova} function in \code{car}.
 }

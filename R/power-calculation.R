@@ -1,39 +1,38 @@
-#' Power calculation for omnibus test
+#' Power of omnibus test
 #'
-#' Calculate power for testing overall effects of treatment factors and their interactions, i.e., ANOVA test.
+#' Calculate power for testing overall effects of treatment factors and their
+#' interactions, i.e., statistical power of ANOVA.
 #'
-#' @param design a design object created using design generating functions, \code{\link{designCRD}}, \code{\link{designRCBD}},
-#' \code{\link{designLSD}},  \code{\link{designCOD}}, \code{\link{designSPD}}, and \code{\link{designCustom}}
+#' @param design a design object created using design generating functions.
 #' @param alpha significance level (type I error rate), default 0.05
-#' @param ... #' Other arguments are passed to the \code{anova} function in \code{lmerTest} for linear mixed models
-#' and to the \code{Anova} function in \code{car} for linear models.
-#' The type of ANOVA table, with Type III as the default, and the method for computing the denominator degrees
-#' of freedom, with Satterthwaite's method as the default, can be changed.
-#' For more details, see \link[lmerTest]{anova.lmerModLmerTest} and \link[car]{Anova}.
-#' For linear mixed models, these arguments should also be defined in the design-generating functions
-#' before passing the design object to the \code{pwr.anova} function.
-#' @return a data frame
+#' @param ... Additional arguments passed to \link[lmerTest]{anova.lmerModLmerTest}
+#' for linear mixed models and to \link[car]{Anova} for linear models. The type
+#' of sum of squares (SS, default is Type III) and the method for computing denominator
+#' degrees of freedom (DDF, default is Satterthwaite's method) can be modified.
+#' For balanced designs, types of SS and DDF do not affect results. Note that
+#' these additional arguments should be consistent in the design-generating
+#' function and \code{pwr.anova} for linear mixed models.
+#'
+#' @seealso [designCRD()], [designRCBD()], [designLSD()], [designCOD()], [designSPD()], [designCustom()], and [pwr.contrast()]
 #' @export
 #' @examples
 #' # generate an RCBD
 #' rcbd = designRCBD(treatments = c(2, 2), blocks = 10, beta = c(10, 9, 8, 7), VarCov = 10, sigma2 = 9)
-#' pwr.anova(rcbd)
-pwr.anova <- function(design, alpha, ...) {
+#' # power of omnibus test
+#' pwr.anova(rcbd, alpha  = 0.05)
+pwr.anova <- function(design, alpha = 0.05, ...) {
   UseMethod("pwr.anova", design)
 }
 
 #' @exportS3Method pwr.anova lmmDesign
 pwr.anova.lmmDesign <- function(design, alpha = 0.05, ...){
-
   args <- list(...)
   if (!("type" %in% names(args))) {
     args$type <- "3"
   }
-
   if (!("ddf" %in% names(args))) {
     args$ddf <- "Satterthwaite"
   }
-
   res <- as.data.frame(do.call(stats::anova, c(list(design$pseu_model), args)))
   res$DenDF <- design$pseu_model@DenDF
   res$`non-centrality` <- res$`F value` * res$NumDF
@@ -42,7 +41,7 @@ pwr.anova.lmmDesign <- function(design, alpha = 0.05, ...){
   res <- res[, c("NumDF", "DenDF", "non-centrality", "power")]
   res$alpha <- alpha
   res <- res[, c("NumDF", "DenDF", "non-centrality", "alpha", "power")]
-  attr(res, "heading") <- paste("Power analysis of", design$design)
+  attr(res, "heading") <- paste("Power Analysis of", design$design)
   class(res) <- c("anova", "data.frame")
   return(res)
 }
@@ -76,18 +75,18 @@ pwr.anova.lmDesign <- function(design, alpha = 0.05, ...){
   return(res)
 }
 
-#' Power calculation for contrasts
+#' Power of contrasts
 #'
-#' Calculate power for testing various contrasts between levels of treatment factors.
-#' The same syntax of \code{\link{emmeans}} package is employed to specify contrast types.
+#' Calculate power for testing various contrasts. The same syntax of
+#' \code{\link{emmeans}} package is employed to specify contrast types.
 #'
-#' @param design a design object created using design generating functions, \code{\link{designCRD}}, \code{\link{designRCBD}},
-#' \code{\link{designLSD}},  \code{\link{designCOD}}, \code{\link{designSPD}}, and \code{\link{designCustom}}
-#' @param specs an argument inherited from \link[emmeans]{emmeans} specifying the names of the factors over which the contrasts are performed
-#' @param method an argument inherited from \link[emmeans]{contrast} specifying the method of contrasts, e.g., pairwise, linear, and polynomials.
+#' @param design a design object created using design generating functions.
+#' @param specs an argument inherited from \link[emmeans]{emmeans} specifying
+#' the names of the factors over which the contrasts are performed.
+#' @param method an argument inherited from \link[emmeans]{contrast} specifying
+#' the method of contrasts, e.g., pairwise, linear, and polynomials.
 #' @param alpha significance level (type I error rate), default 0.05
-#' @param ... other arguments passed to \link[emmeans]{contrast}. By default, kenward-roger approximation for degrees of freedom is applied.
-#' @return a data frame
+#' @param ... other arguments passed to \link[emmeans]{contrast}.
 #' @export
 #' @examples
 #' rcbd = designRCBD(treatments = c(2, 2), blocks = 10, beta = c(10, 9, 8, 7), VarCov = 10, sigma2 = 9)

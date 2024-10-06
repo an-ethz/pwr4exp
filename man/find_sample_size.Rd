@@ -2,7 +2,7 @@
 % Please edit documentation in R/sample-size.R
 \name{find_sample_size}
 \alias{find_sample_size}
-\title{Determine the sample size required to achieve target power}
+\title{Determine the sample size required to achieve the target power}
 \usage{
 find_sample_size(
   design.quote,
@@ -14,22 +14,43 @@ find_sample_size(
 )
 }
 \arguments{
-\item{design.quote}{a quoted design object with replications that are unknown and evaluated,
-denoted as "n"}
+\item{design.quote}{a quoted design object with unknown and unevaluated
+replications to be evaluated with varying values}
 
-\item{alpha}{significance level, default 0.05}
+\item{alpha}{type I error rate, default is 0.05}
 
-\item{target.power}{The target power to achieve, default 0.8}
+\item{target.power}{the target power can be a single value for all factors or
+a vector of containing individual values for different factors, default is 0.8}
 
-\item{n_init}{The initial sample size to start with, default 2}
+\item{n_init}{the initial replications for the iterative process, default is 2}
 
-\item{n_max}{The maximum sample size to try, default 99}
+\item{n_max}{the maximum number of replications for the iterative process, default is 99}
 
-\item{...}{Additional arguments to pass to pwr.anova}
+\item{...}{additional arguments passed to \code{\link{pwr.anova}}}
 }
 \value{
-A data frame with the alpha, power, and best sample size for each sample size tried
+A data frame with type I error rate (alpha), realized power (power),
+and minimum sample size (best_n).
 }
 \description{
-This function finds the sample size required to achieve a target power for a given.
+This function finds the minimum sample size needed to achieve the target power
+for a given design. It uses an iterative approach to determine the minimum
+number of replications by traversing through a series of integers.
+}
+\examples{
+# create a LSD object with unknown replications (\code{squares = n})
+# simply \code{\link{quote}} the design generating function with
+lsd_quote <- quote(
+  designLSD(
+    treatments = 4,
+    squares = n,
+    reuse = "row",
+    beta = c(10, 2, 3, 4),
+    VarCov = list(5, 2),
+    sigma2 = 10
+  )
+)
+
+# find the minimum number of squares required to achieve the target power of 0.8
+find_sample_size(lsd_quote)
 }

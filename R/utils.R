@@ -10,25 +10,21 @@ methods::setClass(
   slots = c(DenDF = "numeric")
 )
 
-#' Calculate covariance parameter vector (theta)
+#' Calculate variance covariance parameters
 #'
-#' This function calculates the covariance parameters
+#' Scale variance-covariance matrices as the relative Cholesky factors of each random effect term.
 #'
-#' @param VarCov variance-covariance components of random effects.
-#' If there are multiple random effects of one grouping factor, provide the variance-covariance matrix.
-#' If there are multiple grouping factors, supply the variance-covariance matrix of each grouping factor in a list.
-#' @param sigma error standard deviation.
-#' @return covariance parameter vector
-#' @details
-#' For more details on the structure and estimation of `theta`, refer to the documentation
-#' of the \code{\link[lme4]{getME}} function in the \code{lme4} package.
-#' @seealso \code{\link[lme4]{getME}}, \code{\link[lme4]{lmer}}
-#' @export
+#' @param VarCov variance-covariance matrices. If there are multiple random effect groups,
+#' supply the variance-covariance matrix of each group as an element in a list.
+#' @param sigma standard deviation of random errors.
+#' @return theta
+#' @seealso "theta" in \code{\link[lme4]{getME}}, \code{\link[lme4]{lmer}}
 calc.theta <- function(VarCov, sigma) {
   UseMethod('calc.theta', VarCov)
 }
 
 #' @exportS3Method calc.theta default
+#' @noRd
 calc.theta.default <- function(VarCov, sigma) {
   L <- chol(VarCov)
   theta <- L[upper.tri(L, diag = TRUE)] / sigma
@@ -36,6 +32,7 @@ calc.theta.default <- function(VarCov, sigma) {
 }
 
 #' @exportS3Method calc.theta list
+#' @noRd
 calc.theta.list <- function(VarCov, sigma) {
   unname(unlist(
     lapply(
@@ -47,32 +44,74 @@ calc.theta.list <- function(VarCov, sigma) {
   ))
 }
 
+#' Naming theta
+#' Naming the vector in the order of model specification and in the actual order used in the model
+#' @param data data frame
+#' @param formula model formula
+theta.names <- function(data, formula) {
+  # random effect terms in the order of fitting process
+  lmod <- lme4::lFormula(formula, data)
+  reTrms <- lmod$reTrms$cnms
+  # random effect terms in the order of model formula
+  grp <- as.character(sapply(lme4::findbars(formula), '[[', 3))
+  reTrms0 <- reTrms[grp]
+  # generate theta terms from random effects terms
+  get_thetaTrms <- function(reTrms){
+    thetaTrms <- c()
+    for (group in names(reTrms)) {
+      terms <- reTrms[[group]]
+      n_terms <- length(terms)
+      # 1. Add the variance term for intercept first
+      if ("(Intercept)" %in% terms) {
+        thetaTrms <- c(thetaTrms, paste0(group, ".(Intercept)"))
+      }
+      # 2. Add covariance terms if there is more than one random effect term (random slope + intercept)
+      if (n_terms > 1) {
+        for (term in terms) {
+          if (term != "(Intercept)") {
+            # Covariance between slope and intercept
+            thetaTrms <- c(thetaTrms, paste0(group, ".", term, ".(Intercept)"))
+          }
+        }
+      }
+      # 3. Add the variance terms for slopes after the covariances
+      for (term in terms) {
+        if (term != "(Intercept)") {
+          thetaTrms <- c(thetaTrms, paste0(group, ".", term))
+        }
+      }
+    }
+    return(thetaTrms)
+  }
+  thetaNames <- list(input = get_thetaTrms(reTrms0), output = get_thetaTrms(reTrms))
+  return(thetaNames)
+}
+
 #' Create an artificial model object
 #'
-#' Create a pseudo-model object with the response variable being simulated according to the fixed and random effects.
-#' Model coefficients are replaced by the expectations specified in the argument \code{beta}.
-#' Variance-covariance components of random effects are replaced by the values specified in argument \code{VarCov}.
-#' The standard deviation of random error is replaced by the argument \code{sigma}.
-#' Creating such a pseudo-model facilitates power calculations by leveraging the \code{anova} function in \code{lmerTest} and the \code{Anova} function in \code{car}.
+#' Create a pseudo-model object with the response variable being simulated
+#' according to the fixed and random effects. Model coefficients are replaced
+#' by the expectations specified in the argument \code{beta}. Variance-covariance
+#' components of random effects are replaced by the values specified in argument
+#' \code{VarCov}. The standard deviation of random error is replaced by the
+#' argument \code{sigma}. Creating such a pseudo-model facilitates power
+#' calculations by leveraging the \code{anova} function in \code{lmerTest} and
+#' the \code{Anova} function in \code{car}.
 #'
-#' @param formula an object of class \code{\link{formula}}: a symbolic description of the model that would be used to test effects in post-experimental data analysis.
-#' For details on model specification, see \code{\link{lm}} for fixed effects and \code{\link{lmer}} for random effects.
-#' @param data a data frame with the independent variables of a design as columns, e.g., treatment factors and block factors.
+#' @param formula an object of class \code{\link{formula}}
+#' @param data a data frame with the independent variables of the design as
+#' columns, e.g., treatment factors and block factors.
 #' @param beta a vector of the expectations of model coefficients.
-#' The coefficients for categorical variables are the coefficients of dummy variables created using \code{\link{contr.treatment}} contrast coding.
-#' @param VarCov variance-covariance components of random effects.
-#' If there are multiple random effects of one grouping factor, provide the variance-covariance matrix.
-#' If there are multiple grouping factors, supply the variance-covariance matrix of each grouping factor in a list.
+#' @param VarCov variance-covariance matrices. If there are multiple random effect groups,
+#' supply the variance-covariance matrix of each group as an element in a list.
 #' @param sigma standard deviation of error
 #' @param ... other arguments passed to the \code{anova} function in \code{lmerTest}.
-#' The type of ANOVA table, with Type III as the default, and the method for computing the denominator degrees of freedom, with Satterthwaite's method as the default, can be changed.
+#' The type of sum of squares, with Type III as the default, and the method for
+#' computing the denominator degrees of freedom, with Satterthwaite's method as the default, can be changed.
 #' For more details, see \link[lmerTest]{anova.lmerModLmerTest}.
 #' @return a pseudo model object.
-#' @export
 fit.pseu.model <- function(formula, data, beta, VarCov, sigma, ...) {
-  # Check if the formula contains random effects terms
   has_random_effects <- any(grepl("\\(|\\)", as.character(formula)))
-
   if (has_random_effects) {
     return(fit.pseu.model.lmer(formula, data, beta, VarCov, sigma, ...))
   } else {
@@ -82,20 +121,13 @@ fit.pseu.model <- function(formula, data, beta, VarCov, sigma, ...) {
 
 #' @noRd
 fit.pseu.model.lmer <- function(formula, data, beta, VarCov, sigma, ...) {
-  # Fill up missing beta values with zeros
-  fixed_formula <- stats::reformulate(
-    attr(stats::terms(formula), "term.labels")[!grepl("\\|", attr(stats::terms(formula), "term.labels"))],
-    response = "y"
-  )
-  model_matrix <- stats::model.matrix(fixed_formula[-2], data)
-  fixed_terms <- dimnames(model_matrix)[[2]]
-  if (length(beta) != length(fixed_terms)) {
-    beta <- c(beta, rep(0, length(fixed_terms) - length(beta)))
-  }
-
+  # pseudo variable for construct model structure
+  data$y <- 0
   # Calculate covariance parameters
   theta <- calc.theta(VarCov = VarCov, sigma = sigma)
-
+  thetaNames <- theta.names(data = data, formula = formula)
+  names(theta) <- thetaNames[["input"]]
+  theta <- theta[thetaNames[["output"]]]
   # Internal function to fit a pseudo-model
   pseu.model <- function() {
     suppressMessages(
@@ -113,13 +145,11 @@ fit.pseu.model.lmer <- function(formula, data, beta, VarCov, sigma, ...) {
       return(pseu_model)
     }
   }
-
   # Repeat fitting until a non-singular model is obtained
   repeat {
     suppressMessages(model <- pseu.model())
     if (!is.null(model)) break
   }
-
   # Modify model parameters
   DenDF <- round(stats::anova(model, ...)$DenDF, 0)
   model@beta <- beta
@@ -135,43 +165,29 @@ fit.pseu.model.lmer <- function(formula, data, beta, VarCov, sigma, ...) {
     n = nrow(model@pp$X)
   )
   model@vcov_beta <- as.matrix(lme4::vcov.merMod(model))
-
   model <- methods::new("customLmerMod", model, DenDF = DenDF)
-
   return(model)
 }
 
 #' @noRd
 fit.pseu.model.lm <- function(formula, data, beta, sigma) {
   model_matrix <- stats::model.matrix(formula[-2], data)
-  terms <- dimnames(model_matrix)[[2]]
-
-  if (length(beta) < length(terms)) {
-    beta <- c(beta, rep(0, length(terms) - length(beta)))
-  }
-
   data$y <- model_matrix %*% beta + stats::rnorm(nrow(data), 0, sigma)
   pseu_model <- stats::lm(formula, data)
-
-  # Modify the pseu_model coefficients
+  # modify model parameters
   pseu_model$coefficients[] <- beta
-
-  # Calculate the desired RSS based on the desired sigma
+  # expected RSS
   desired_rss <- (sigma^2) * pseu_model$df.residual
-
-  # Adjust the residuals to achieve the desired RSS
+  # Adjust the residuals to achieve the expected RSS
   original_residuals <- stats::residuals(pseu_model)
   current_rss <- sum(original_residuals^2)
   adjustment_factor <- sqrt(desired_rss / current_rss)
   adjusted_residuals <- original_residuals * adjustment_factor
-
   # Create new fitted values using the new coefficients
   new_fitted_values <- as.vector(model_matrix %*% beta)
-
   # Update the pseu_model components manually
   pseu_model$fitted.values[] <- new_fitted_values
   pseu_model$residuals <- adjusted_residuals
   pseu_model$model$y[, 1] <- new_fitted_values + adjusted_residuals
-
   return(pseu_model)
 }

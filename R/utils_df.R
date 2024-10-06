@@ -1,15 +1,21 @@
 #' Create a data frame of completely randomized design
 #'
-#' @param treatments a vector specifying the treatment structure, in which the
-#' length of the vector indicates the number of treatment factors, and each value
-#' represents the number of levels for each factor. For example, \code{treatments=c(2,3)}
-#' specifies two treatment factors with 2 and 3 levels, respectively.
-#' @param label optional, names of treatments factors and their levels can be specified in a list.
-#' @param replicates The number of experimental units per group.
-#' In a one-factor design, 'group' refers to the levels of that factor.
-#' In a two-factor design, 'group' refers to each combination of levels between the two factors.
+#' @param treatments An integer-valued vector specifying the treatment structure,
+#' in which the length of the vector indicates the number of treatment factors,
+#' and each value represents the number of levels for each factor. A maximum of
+#' two factors is allowed, and they are arranged in a factorial design.
+#' For instance, \code{treatments = n} specifies one treatment factor with n
+#' levels, and \code{treatments=c(2,3)} creates a "2x3" factorial design of
+#' two treatment factors with 2 and 3 levels, respectively.
+#' @param label Optional. A list of character vectors specifying the names of
+#' treatment factors and factor levels. Each vector in the list represents a
+#' treatment factor, where the name of the vector specifies the name of the
+#' factor, and the values in the vector are the labels for that factor's levels.
+#' If not provided, factors and levels for one and two treatment factors are
+#' labeled as \code{list(trt = c("1", "2", ...))} and
+#' \code{list(facA = c("1", "2", ...), facB = c("1", "2", ...))}, respectively.
+#' @param replicates The number of experimental units per treatment.
 #' @return a data.frame with columns for treatment factors and replicates
-#' @export
 df.crd <- function(treatments, label, replicates){
   if(length(treatments) == 1){
     df = expand.grid(
@@ -38,14 +44,9 @@ df.crd <- function(treatments, label, replicates){
 
 #' Create a data frame of randomized complete block design
 #'
-#' @param treatments a vector specifying the treatment structure, in which the
-#' length of the vector indicates the number of treatment factors, and each value
-#' represents the number of levels for each factor. For example, \code{treatments=c(2,3)}
-#' specifies two treatment factors with 2 and 3 levels, respectively.
-#' @param label optional, names of treatments factors and their levels can be specified in a list.
+#' @inheritParams designCRD
 #' @param blocks the number of blocks
 #' @return a data.frame with columns for blocks and treatment factors
-#' @export
 df.rcbd <- function(treatments, label, blocks){
   if(length(treatments) == 1){
     df = expand.grid(
@@ -74,16 +75,13 @@ df.rcbd <- function(treatments, label, blocks){
 
 #' Create a data frame for Latin square design
 #'
-#' @param treatments a vector specifying the treatment structure, in which the
-#' length of the vector indicates the number of treatment factors, and each value
-#' represents the number of levels for each factor. For example, \code{treatments=c(2,3)}
-#' specifies two treatment factors with 2 and 3 levels, respectively.
-#' @param label optional, names of treatments factors and their levels can be specified in a list.
+#' @inheritParams designCRD
 #' @param squares the number of replicated squares
-#' @param reuse a character string: "row", "col", or "both", indicating reuse of
-#' rows or columns or both when replicate a Latin square
+#' @param reuse A character string specifying how to replicate squares when
+#' there are multiple squares. Options are: "row" for reusing row blocks, "col"
+#' for reusing column blocks, or "both" for reusing both row and column blocks
+#' to replicate a single square.
 #' @return a data.frame with columns for treatment factors, row and column block factors, and squares
-#' @export
 df.lsd <- function(treatments,
                    label,
                    squares = 1,
@@ -152,14 +150,8 @@ df.lsd <- function(treatments,
 
 #' Create a data frame for Crossover design
 #'
-#' @param treatments a vector specifying the treatment structure, in which the
-#' length of the vector indicates the number of treatment factors, and each value
-#' represents the number of levels for each factor. For example, \code{treatments=c(2,3)}
-#' specifies two treatment factors with 2 and 3 levels, respectively.
-#' @param label optional, names of treatments factors and their levels can be specified in a list.
-#' @param squares the number of replicated squares
+#' @inheritParams designCOD
 #' @return a data.frame with columns for treatment factors, individuals (row block factor), period (column block factor), and squares
-#' @export
 df.cod <- function(treatments, label, squares){
   df <- df.lsd(treatments = treatments, label = label, squares = squares, reuse = "col")
   names(df)[1:2] <- c("subject", "period")
@@ -167,38 +159,30 @@ df.cod <- function(treatments, label, squares){
   return(df)
 }
 
-
 #' Create data frame for split-plot design
 #'
-#' @param trt.main a vector specifying the treatment structure at main plot level, in which the
-#' length of the vector indicates the number of main plot factors, and each value
-#' represents the number of levels for each factor.
-#' @param trt.sub a vector specifying the treatment structure at main plot level, in which the
-#' length of the vector indicates the number of main plot factors, and each value
-#' represents the number of levels for each factor.
-#' @param label optional, names of treatments factors and their levels can be specified in a list.
-#' @param replicates the number of main plots per treatment group of main plot factors
+#' @inheritParams designCRD
+#' @param trt.main an integer-valued vector specifying the treatment structure at
+#' main plot level, similar to \code{\link{df.crd}}.
+#' @param trt.sub an integer-valued vector specifying the treatment structure at
+#' sub plot level, similar to `trt.main`.
+#' @param replicates the number of experimental units (main plots) per treatment
+#' of main plot factors.
 #'
 #' @return a data.frame with columns for main plots, main treatments, and sub-treatments
-#' @export
 df.spd <- function(trt.main, trt.sub, label, replicates){
   df.main <- df.crd(treatments = trt.main, replicates = replicates)
-  df.main$mainplots <- 1:(prod(trt.main)*replicates)
+  df.main$mainplot <- 1:(prod(trt.main)*replicates)
 
   if (length(trt.main) > 1) {
     names(df.main)[1:2] <- c("facA.main", "facB.main")
   } else {names(df.main)[1] <- "trt.main"}
-
-
   df.sub <- df.rcbd(treatments = trt.sub, blocks = prod(trt.main)*replicates)
-
   if (length(trt.sub) > 1) {
-    names(df.sub) <- c("facA.sub", "facB.sub", "mainplots")
-  } else {names(df.sub) <- c("trt.sub", "mainplots")}
-
+    names(df.sub) <- c("facA.sub", "facB.sub", "mainplot")
+  } else {names(df.sub) <- c("trt.sub", "mainplot")}
   df <- merge(df.main, df.sub)
   df <- df[, colnames(df) != "replication"]
-
   if (!missing(label)) {
     if (length(trt.main) == 1) {
       df[["trt.main"]] <- factor(df[["trt.main"]], labels = label[[1]])

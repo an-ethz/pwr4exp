@@ -7,17 +7,22 @@
 df.spd(trt.main, trt.sub, label, replicates)
 }
 \arguments{
-\item{trt.main}{a vector specifying the treatment structure at main plot level, in which the
-length of the vector indicates the number of main plot factors, and each value
-represents the number of levels for each factor.}
+\item{trt.main}{an integer-valued vector specifying the treatment structure at
+main plot level, similar to \code{\link{df.crd}}.}
 
-\item{trt.sub}{a vector specifying the treatment structure at main plot level, in which the
-length of the vector indicates the number of main plot factors, and each value
-represents the number of levels for each factor.}
+\item{trt.sub}{an integer-valued vector specifying the treatment structure at
+sub plot level, similar to \code{trt.main}.}
 
-\item{label}{optional, names of treatments factors and their levels can be specified in a list.}
+\item{label}{Optional. A list of character vectors specifying the names of
+treatment factors and factor levels. Each vector in the list represents a
+treatment factor, where the name of the vector specifies the name of the
+factor, and the values in the vector are the labels for that factor's levels.
+If not provided, factors and levels for one and two treatment factors are
+labeled as \code{list(trt = c("1", "2", ...))} and
+\code{list(facA = c("1", "2", ...), facB = c("1", "2", ...))}, respectively.}
 
-\item{replicates}{the number of main plots per treatment group of main plot factors}
+\item{replicates}{the number of experimental units (main plots) per treatment
+of main plot factors.}
 }
 \value{
 a data.frame with columns for main plots, main treatments, and sub-treatments

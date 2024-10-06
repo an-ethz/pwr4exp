@@ -4,7 +4,8 @@ Version: 0.0.0.9000
 Authors@R: c(
     person("Kai", "Wang", email = "kai.wang@usys.ethz.ch", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-6672-1121")),
-           person("Mutian", "Niu", email = "mutian.niu@usys.ethz.ch", role = "aut")
+           person("Mutian", "Niu", email = "mutian.niu@usys.ethz.ch", role = "aut", 
+           comment = c(ORCID = "0000-0003-4484-4611"))
            )
 Description: The package provides advanced tools to calculate statistical power and 
     determine sample size for a variety of experimental designs commonly used in agricultural 

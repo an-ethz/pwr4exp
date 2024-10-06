@@ -2,32 +2,33 @@
 % Please edit documentation in R/power-calculation.R
 \name{pwr.anova}
 \alias{pwr.anova}
-\title{Power calculation for omnibus test}
+\title{Power of omnibus test}
 \usage{
-pwr.anova(design, alpha, ...)
+pwr.anova(design, alpha = 0.05, ...)
 }
 \arguments{
-\item{design}{a design object created using design generating functions, \code{\link{designCRD}}, \code{\link{designRCBD}},
-\code{\link{designLSD}},  \code{\link{designCOD}}, \code{\link{designSPD}}, and \code{\link{designCustom}}}
+\item{design}{a design object created using design generating functions.}
 
 \item{alpha}{significance level (type I error rate), default 0.05}
 
-\item{...}{#' Other arguments are passed to the \code{anova} function in \code{lmerTest} for linear mixed models
-and to the \code{Anova} function in \code{car} for linear models.
-The type of ANOVA table, with Type III as the default, and the method for computing the denominator degrees
-of freedom, with Satterthwaite's method as the default, can be changed.
-For more details, see \link[lmerTest]{anova.lmerModLmerTest} and \link[car]{Anova}.
-For linear mixed models, these arguments should also be defined in the design-generating functions
-before passing the design object to the \code{pwr.anova} function.}
-}
-\value{
-a data frame
+\item{...}{Additional arguments passed to \link[lmerTest]{anova.lmerModLmerTest}
+for linear mixed models and to \link[car]{Anova} for linear models. The type
+of sum of squares (SS, default is Type III) and the method for computing denominator
+degrees of freedom (DDF, default is Satterthwaite's method) can be modified.
+For balanced designs, types of SS and DDF do not affect results. Note that
+these additional arguments should be consistent in the design-generating
+function and \code{pwr.anova} for linear mixed models.}
 }
 \description{
-Calculate power for testing overall effects of treatment factors and their interactions, i.e., ANOVA test.
+Calculate power for testing overall effects of treatment factors and their
+interactions, i.e., statistical power of ANOVA.
 }
 \examples{
 # generate an RCBD
 rcbd = designRCBD(treatments = c(2, 2), blocks = 10, beta = c(10, 9, 8, 7), VarCov = 10, sigma2 = 9)
-pwr.anova(rcbd)
+# power of omnibus test
+pwr.anova(rcbd, alpha  = 0.05)
+}
+\seealso{
+\code{\link[=designCRD]{designCRD()}}, \code{\link[=designRCBD]{designRCBD()}}, \code{\link[=designLSD]{designLSD()}}, \code{\link[=designCOD]{designCOD()}}, \code{\link[=designSPD]{designSPD()}}, \code{\link[=designCustom]{designCustom()}}, and \code{\link[=pwr.contrast]{pwr.contrast()}}
 }
