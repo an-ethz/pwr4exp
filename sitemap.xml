@@ -7,13 +7,8 @@
 <url><loc>https://an-ethz.github.io/pwr4exp/authors.html</loc></url>
 <url><loc>https://an-ethz.github.io/pwr4exp/index.html</loc></url>
 <url><loc>https://an-ethz.github.io/pwr4exp/reference/calc.theta.html</loc></url>
+<url><loc>https://an-ethz.github.io/pwr4exp/reference/create_designs.html</loc></url>
 <url><loc>https://an-ethz.github.io/pwr4exp/reference/customLmerMod-class.html</loc></url>
-<url><loc>https://an-ethz.github.io/pwr4exp/reference/designCOD.html</loc></url>
-<url><loc>https://an-ethz.github.io/pwr4exp/reference/designCRD.html</loc></url>
-<url><loc>https://an-ethz.github.io/pwr4exp/reference/designCustom.html</loc></url>
-<url><loc>https://an-ethz.github.io/pwr4exp/reference/designLSD.html</loc></url>
-<url><loc>https://an-ethz.github.io/pwr4exp/reference/designRCBD.html</loc></url>
-<url><loc>https://an-ethz.github.io/pwr4exp/reference/designSPD.html</loc></url>
 <url><loc>https://an-ethz.github.io/pwr4exp/reference/df.cod.html</loc></url>
 <url><loc>https://an-ethz.github.io/pwr4exp/reference/df.crd.html</loc></url>
 <url><loc>https://an-ethz.github.io/pwr4exp/reference/df.lsd.html</loc></url>
@@ -24,5 +19,6 @@
 <url><loc>https://an-ethz.github.io/pwr4exp/reference/index.html</loc></url>
 <url><loc>https://an-ethz.github.io/pwr4exp/reference/pwr.anova.html</loc></url>
 <url><loc>https://an-ethz.github.io/pwr4exp/reference/pwr.contrast.html</loc></url>
+<url><loc>https://an-ethz.github.io/pwr4exp/reference/theta.names.html</loc></url>
 </urlset>
 

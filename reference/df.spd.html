@@ -47,23 +47,28 @@
 
 
 <dl><dt id="arg-trt-main">trt.main<a class="anchor" aria-label="anchor" href="#arg-trt-main"></a></dt>
-<dd><p>a vector specifying the treatment structure at main plot level, in which the
-length of the vector indicates the number of main plot factors, and each value
-represents the number of levels for each factor.</p></dd>
+<dd><p>an integer-valued vector specifying the treatment structure at
+main plot level, similar to <code><a href="df.crd.html">df.crd</a></code>.</p></dd>
 
 
 <dt id="arg-trt-sub">trt.sub<a class="anchor" aria-label="anchor" href="#arg-trt-sub"></a></dt>
-<dd><p>a vector specifying the treatment structure at main plot level, in which the
-length of the vector indicates the number of main plot factors, and each value
-represents the number of levels for each factor.</p></dd>
+<dd><p>an integer-valued vector specifying the treatment structure at
+sub plot level, similar to <code>trt.main</code>.</p></dd>
 
 
 <dt id="arg-label">label<a class="anchor" aria-label="anchor" href="#arg-label"></a></dt>
-<dd><p>optional, names of treatments factors and their levels can be specified in a list.</p></dd>
+<dd><p>Optional. A list of character vectors specifying the names of
+treatment factors and factor levels. Each vector in the list represents a
+treatment factor, where the name of the vector specifies the name of the
+factor, and the values in the vector are the labels for that factor's levels.
+If not provided, factors and levels for one and two treatment factors are
+labeled as <code>list(trt = c("1", "2", ...))</code> and
+<code>list(facA = c("1", "2", ...), facB = c("1", "2", ...))</code>, respectively.</p></dd>
 
 
 <dt id="arg-replicates">replicates<a class="anchor" aria-label="anchor" href="#arg-replicates"></a></dt>
-<dd><p>the number of main plots per treatment group of main plot factors</p></dd>
+<dd><p>the number of experimental units (main plots) per treatment
+of main plot factors.</p></dd>
 
 </dl></div>
     <div class="section level2">

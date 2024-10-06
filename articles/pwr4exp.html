@@ -62,125 +62,429 @@
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/an-ethz/pwr4exp" class="external-link">pwr4exp</a></span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
-<h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
+<h2 id="foundational-concepts">Foundational Concepts<a class="anchor" aria-label="anchor" href="#foundational-concepts"></a>
 </h2>
-<p>The pwr4exp R package offers functionality for power analysis and
-sample size determination for some standard and common designs in animal
-studies, and it can be used for various complex experimental designs.
-This section provides an overview of the functionality within the
-pwr4exp and explains some common arguments used in its functions. To
-perform power analysis in pwr4exp involves two steps:</p>
+<p>The <strong>pwr4exp</strong> R package offers functionality for power
+analysis. The package is developed based on linear mixed model (LMM)
+theory, offering tailored functions for standard experimental designs in
+animal science and beyond. The current version does not yet support
+non-normal response variables, such as those encountered in generalized
+LMM.</p>
+<p>Linear mixed model is a powerful tool for analyzing data from various
+experimental designs, especially when accounting for both fixed and
+random effects. The general form of an LMM can be expressed as:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mi>X</mi><mi>β</mi><mo>+</mo><mi>Z</mi><mi>u</mi><mo>+</mo><mi>ε</mi></mrow><annotation encoding="application/x-tex">
+y = X\beta + Zu + \varepsilon
+</annotation></semantics></math></p>
+<p>where:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>
+represents the observations of the response variable,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+represents the fixed effect coefficients,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>u</mi><annotation encoding="application/x-tex">u</annotation></semantics></math>
+denotes the random effects, where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>u</mi><mo>∼</mo><msub><mi>N</mi><mi>q</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mi>G</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">u \sim N_q(0, G)</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ε</mi><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math>
+represents the random errors, where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ε</mi><mo>∼</mo><msub><mi>N</mi><mi>n</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mi>R</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\varepsilon \sim N_n(0, R)</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>n</mi><mo>×</mo><mi>p</mi><mo stretchy="true" form="postfix">)</mo></mrow></msub><annotation encoding="application/x-tex">X_{(n \times p)}</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>Z</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>n</mi><mo>×</mo><mi>q</mi><mo stretchy="true" form="postfix">)</mo></mrow></msub><annotation encoding="application/x-tex">Z_{(n \times q)}</annotation></semantics></math>
+are the design matrices for the fixed and random effects,
+respectively.</p>
+<p>It is assumed that
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>u</mi><annotation encoding="application/x-tex">u</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ε</mi><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math>
+are independent, and the marginal distribution of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>
+follows a normal distribution
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>∼</mo><msub><mi>N</mi><mi>n</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>X</mi><mi>β</mi><mo>,</mo><mi>V</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">y \sim N_n(X\beta, V)</annotation></semantics></math>,
+where:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mo>=</mo><mi>Z</mi><mi>G</mi><msup><mi>Z</mi><mi>T</mi></msup><mo>+</mo><mi>R</mi></mrow><annotation encoding="application/x-tex">
+V = ZGZ^T + R
+</annotation></semantics></math></p>
 <div class="section level3">
-<h3 id="step1-creating-a-design-object">Step1: creating a design object<a class="anchor" aria-label="anchor" href="#step1-creating-a-design-object"></a>
+<h3 id="inference-on-treatment-effects">Inference on Treatment Effects<a class="anchor" aria-label="anchor" href="#inference-on-treatment-effects"></a>
 </h3>
-<p>Design objects in pwr4exp can be created using functions that
-generate several standard experimental designs available in the package.
-These functions include <strong>designCRD</strong> for complete
-randomized design (<strong>CRD</strong>), <strong>designRCBD</strong>
-for randomized complete block design (<strong>RCBD</strong>),
-<strong>designLSD</strong> for Latin Square design
-(<strong>LSD</strong>), <strong>designCOD</strong> for crossover design
-(<strong>COD</strong>), and <strong>designSPD</strong> for split-plot
-design (<strong>SPD</strong>). The arguments of these functions fall
-into the following main categories:</p>
-<ol style="list-style-type: decimal">
+<p>Inference on treatment effects often involves testing omnibus
+hypotheses and contrasts. These can be formulated using the general
+linear hypothesis:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mn>0</mn></msub><mo>:</mo><mi>K</mi><mi>′</mi><mi>β</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">
+H_0: K'\beta = 0
+</annotation></semantics></math></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mi>′</mi></mrow><annotation encoding="application/x-tex">K'</annotation></semantics></math>
+is a contrast matrix. When the variance-covariance parameters in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>R</mi><annotation encoding="application/x-tex">R</annotation></semantics></math>
+are known, the estimate of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+is:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>β</mi><mo accent="true">̂</mo></mover><mo>=</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>X</mi><mi>T</mi></msup><msup><mi>V</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mi>X</mi><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mo>−</mo><mn>1</mn></mrow></msup><msup><mi>X</mi><mi>T</mi></msup><msup><mi>V</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mi>y</mi></mrow><annotation encoding="application/x-tex">
+\hat{\beta} = (X^TV^{-1}X)^{-1}X^TV^{-1}y
+</annotation></semantics></math></p>
+<p>And its variance is:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo>=</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>X</mi><mi>T</mi></msup><msup><mi>V</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mi>X</mi><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mo>−</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">
+C = (X^TV^{-1}X)^{-1}
+</annotation></semantics></math></p>
+<p>The sampling distribution of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mi>′</mi><mover><mi>β</mi><mo accent="true">̂</mo></mover></mrow><annotation encoding="application/x-tex">K'\hat{\beta}</annotation></semantics></math>
+is:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mi>′</mi><mover><mi>β</mi><mo accent="true">̂</mo></mover><mo>∼</mo><mi>N</mi><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo>,</mo><mi>K</mi><mi>′</mi><mi>C</mi><mi>K</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+K'\hat{\beta} \sim N(0, K'CK)
+</annotation></semantics></math></p>
+<p>However, in practical situations, the matrices
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>R</mi><annotation encoding="application/x-tex">R</annotation></semantics></math>
+are unknown and must be estimated using methods like Maximum Likelihood
+(ML) or Restricted ML (REML). The estimate of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+is obtained by plugging in the estimated covariance matrices
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>V</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\hat{V}</annotation></semantics></math>,
+where:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>V</mi><mo accent="true">̂</mo></mover><mo>=</mo><mi>Z</mi><mover><mi>G</mi><mo accent="true">̂</mo></mover><msup><mi>Z</mi><mi>T</mi></msup><mo>+</mo><mover><mi>R</mi><mo accent="true">̂</mo></mover></mrow><annotation encoding="application/x-tex">
+\hat{V} = Z\hat{G}Z^T + \hat{R}
+</annotation></semantics></math></p>
+<p>The resulting estimate of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+is:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>β</mi><mo accent="true">̂</mo></mover><mo>=</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>X</mi><mi>T</mi></msup><msup><mover><mi>V</mi><mo accent="true">̂</mo></mover><mrow><mo>−</mo><mn>1</mn></mrow></msup><mi>X</mi><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mo>−</mo><mn>1</mn></mrow></msup><msup><mi>X</mi><mi>T</mi></msup><msup><mover><mi>V</mi><mo accent="true">̂</mo></mover><mrow><mo>−</mo><mn>1</mn></mrow></msup><mi>y</mi></mrow><annotation encoding="application/x-tex">
+\hat{\beta} = (X^T\hat{V}^{-1}X)^{-1}X^T\hat{V}^{-1}y
+</annotation></semantics></math></p>
+<p>And its estimated variance is:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>C</mi><mo accent="true">̂</mo></mover><mo>=</mo><msup><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>X</mi><mi>T</mi></msup><msup><mover><mi>V</mi><mo accent="true">̂</mo></mover><mrow><mo>−</mo><mn>1</mn></mrow></msup><mi>X</mi><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mo>−</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">
+\hat{C} = (X^T\hat{V}^{-1}X)^{-1}
+</annotation></semantics></math></p>
+<p>When testing the null hypothesis
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mn>0</mn></msub><mo>:</mo><mi>K</mi><mi>′</mi><mi>β</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">H_0: K'\beta = 0</annotation></semantics></math>,
+an approximate F-statistic is used. The F-statistic is given by:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>F</mi><mo>=</mo><mfrac><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>K</mi><mi>′</mi><mover><mi>β</mi><mo accent="true">̂</mo></mover><mo stretchy="true" form="postfix">)</mo></mrow><mi>′</mi><msup><mrow><mo stretchy="true" form="prefix">[</mo><mi>K</mi><mi>′</mi><mover><mi>C</mi><mo accent="true">̂</mo></mover><mi>K</mi><mi>′</mi><mo stretchy="true" form="postfix">]</mo></mrow><mrow><mo>−</mo><mn>1</mn></mrow></msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>K</mi><mi>′</mi><mover><mi>β</mi><mo accent="true">̂</mo></mover><mo stretchy="true" form="postfix">)</mo></mrow></mrow><mrow><mtext mathvariant="normal">rank</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mi>K</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></mfrac></mrow><annotation encoding="application/x-tex">
+F = \frac{(K'\hat{\beta})' [K'\hat{C}K']^{-1} (K'\hat{\beta})}{\text{rank}(K)}
+</annotation></semantics></math></p>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>F</mi><annotation encoding="application/x-tex">F</annotation></semantics></math>
+follows an approximate F-distribution
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>F</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>v</mi><mn>1</mn></msub><mo>,</mo><msub><mi>v</mi><mn>2</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">F(v_1, v_2)</annotation></semantics></math>
+under
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>H</mi><mn>0</mn></msub><annotation encoding="application/x-tex">H_0</annotation></semantics></math>,
+where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>v</mi><mn>1</mn></msub><mo>=</mo><mtext mathvariant="normal">rank</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mi>K</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>≥</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">v_1 = \text{rank}(K) \geq 1</annotation></semantics></math>
+represents the numerator degrees of freedom (df),
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mn>2</mn></msub><annotation encoding="application/x-tex">v_2</annotation></semantics></math>
+is the denominator df.</p>
+<p>When
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">rank</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mi>K</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\text{rank}(K) = 1</annotation></semantics></math>,
+the F-statistic simplifies to the square of the t-statistic:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>F</mi><mo>=</mo><msup><mi>t</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">
+F = t^2
+</annotation></semantics></math>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><mfrac><mrow><mi>K</mi><mi>′</mi><mover><mi>β</mi><mo accent="true">̂</mo></mover></mrow><msqrt><mrow><mi>K</mi><mi>′</mi><mover><mi>C</mi><mo accent="true">̂</mo></mover><mi>K</mi></mrow></msqrt></mfrac></mrow><annotation encoding="application/x-tex">t = \frac{K'\hat{\beta}}{\sqrt{K'\hat{C}K}}</annotation></semantics></math>
+with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mn>2</mn></msub><annotation encoding="application/x-tex">v_2</annotation></semantics></math>
+df.</p>
+<p>In balanced designs, where data is analyzed using a variance
+components model—commonly applied in experimental animal
+research—<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mn>2</mn></msub><annotation encoding="application/x-tex">v_2</annotation></semantics></math>​
+can be precisely determined through degrees of freedom decomposition, as
+applied in analysis of variance (ANOVA):</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>v</mi><mn>2</mn></msub><mo>=</mo><mi>n</mi><mo>−</mo><mn>1</mn><mo>−</mo><mrow><mo stretchy="true" form="prefix">[</mo><mtext mathvariant="normal">rank</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mi>X</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><mn>1</mn><mo stretchy="true" form="postfix">]</mo></mrow><mo>−</mo><mrow><mo stretchy="true" form="prefix">[</mo><mtext mathvariant="normal">rank</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mi>Z</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><mn>1</mn><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">
+v_2 = n - 1 - [\text{rank}(X) - 1] - [\text{rank}(Z) - 1]
+</annotation></semantics></math></p>
+<p>However, for general cases, such as unbalanced designs or models with
+correlated random intercept and slope effects,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mn>2</mn></msub><annotation encoding="application/x-tex">v_2</annotation></semantics></math>
+must be approximated using methods like Satterthwaite’s approximation
+(Fai and Cornelius, 1996) or Kenward-Roger’s method (Kenward and Roger,
+1997), as implemented in the <strong>lmerTest</strong> package.</p>
+</div>
+<div class="section level3">
+<h3 id="power-calculation-under-the-alternative-hypothesis">Power Calculation Under the Alternative Hypothesis<a class="anchor" aria-label="anchor" href="#power-calculation-under-the-alternative-hypothesis"></a>
+</h3>
+<p>Under the alternative hypothesis
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mi>A</mi></msub><mo>:</mo><mi>K</mi><mi>′</mi><mi>β</mi><mo>≠</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">H_A: K'\beta \neq 0</annotation></semantics></math>,
+the F-statistic follows a non-central distribution
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>F</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>v</mi><mn>1</mn></msub><mo>,</mo><msub><mi>v</mi><mn>2</mn></msub><mo>,</mo><mi>ϕ</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">F(v_1, v_2, \phi)</annotation></semantics></math>,
+where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>
+is the non-centrality parameter that measures the departure from the
+null hypothesis
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>H</mi><mn>0</mn></msub><annotation encoding="application/x-tex">H_0</annotation></semantics></math>.
+The non-centrality parameter
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>
+is given by:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ϕ</mi><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mi>K</mi><mi>′</mi><mover><mi>β</mi><mo accent="true">̂</mo></mover><mo stretchy="true" form="postfix">)</mo></mrow><mi>′</mi><msup><mrow><mo stretchy="true" form="prefix">[</mo><mi>K</mi><mi>′</mi><mover><mi>C</mi><mo accent="true">̂</mo></mover><mi>K</mi><mi>′</mi><mo stretchy="true" form="postfix">]</mo></mrow><mrow><mo>−</mo><mn>1</mn></mrow></msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>K</mi><mi>′</mi><mover><mi>β</mi><mo accent="true">̂</mo></mover><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+\phi = (K'\hat{\beta})' [K'\hat{C}K']^{-1} (K'\hat{\beta})
+</annotation></semantics></math></p>
+<p>Once the distribution of the F-statistic under
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>H</mi><mi>A</mi></msub><annotation encoding="application/x-tex">H_A</annotation></semantics></math>
+is known, the power of the test can be calculated as the conditional
+probability of rejecting
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>H</mi><mn>0</mn></msub><annotation encoding="application/x-tex">H_0</annotation></semantics></math>
+when
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>H</mi><mi>A</mi></msub><annotation encoding="application/x-tex">H_A</annotation></semantics></math>
+is true:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Power</mtext><mo>=</mo><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mrow><mtext mathvariant="normal">reject </mtext><mspace width="0.333em"></mspace></mrow><msub><mi>H</mi><mn>0</mn></msub><mo>:</mo><mi>F</mi><mo>&gt;</mo><msub><mi>F</mi><mtext mathvariant="normal">crit</mtext></msub><mo>∣</mo><msub><mi>H</mi><mi>A</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
+\text{Power} = P(\text{reject } H_0: F &gt; F_{\text{crit}} \mid H_A)
+</annotation></semantics></math></p>
+<p>Where:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>F</mi><mtext mathvariant="normal">crit</mtext></msub><annotation encoding="application/x-tex">F_{\text{crit}}</annotation></semantics></math>
+is the critical value of the F-statistic used to reject
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>H</mi><mn>0</mn></msub><annotation encoding="application/x-tex">H_0</annotation></semantics></math>,
+determined such that
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>F</mi><mo>&gt;</mo><msub><mi>F</mi><mtext mathvariant="normal">crit</mtext></msub><mo>∣</mo><msub><mi>H</mi><mn>0</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>α</mi></mrow><annotation encoding="application/x-tex">P(F &gt; F_{\text{crit}} \mid H_0) = \alpha</annotation></semantics></math>,
+where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math>
+is the type I error rate.</p>
+<p>The determination of the degrees of freedom
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mn>1</mn></msub><annotation encoding="application/x-tex">v_1</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mn>2</mn></msub><annotation encoding="application/x-tex">v_2</annotation></semantics></math>,
+as well as the non-centrality parameter
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>,
+are critical steps for power calculation. Notably,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>
+resembles the numerator of the F-statistic but with population
+parameters for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>,
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>R</mi><annotation encoding="application/x-tex">R</annotation></semantics></math>
+replacing their sample estimates
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>β</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\hat{\beta}</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>G</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\hat{G}</annotation></semantics></math>,
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>R</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\hat{R}</annotation></semantics></math>.</p>
+<p>Generally, power analysis requires specifying the following
+components:</p>
+<ul>
+<li>The <strong>Design</strong> to be evaluated, which determines the
+matrices
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>
+(fixed effects) and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Z</mi><annotation encoding="application/x-tex">Z</annotation></semantics></math>
+(random effects).</li>
+<li>The <strong>Treatment Effects</strong>, which determine
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+(the fixed effect coefficients).</li>
+<li>The <strong>Variance Components</strong>, which determine
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+(the covariance matrix of the random effects) and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>R</mi><annotation encoding="application/x-tex">R</annotation></semantics></math>
+(the covariance matrix of the residuals).</li>
+</ul>
+<p>A key aspect of conducting a valid power analysis is obtaining
+<strong>reasonable estimates for the magnitude of the
+parameters</strong> that will be used in the model. This includes:</p>
+<ul>
 <li>
-<p><strong>Treatment structure:</strong> The arguments
-<code>treatments</code>, <code>trt.main</code>, and <code>trt.sub</code>
-are used to specify the treatment structure for designs other than SPD,
-and in the case of an SPD, they refer to the main plot and subplot
-levels, respectively. The treatment structure is defined by an
-integer-valued vector, where the length of the vector indicates the
-number of treatment factors, and each value represents the number of
-levels for each factor. A maximum of two factors is allowed, and they
-are arranged in a factorial design.</p>
-<p>For instance, <code>treatments = 2</code> is used to define an
-experiment involving only two treatments (e.g., control
-vs. intervention). In the case of two factors,
-<code>treatments = c(2, 2)</code> sets up a “2x2” factorial design where
-two factors are arranged to study the main effects and their
-interactions. In the case of SPD, <code>trt.main</code> and
-<code>trt.sub</code> allow for hierarchical structuring of treatments.
-For example, <code>trt.main = 2</code> specifies two levels of a main
-plot treatment factor, and <code>trt.sub = c(2, 2)</code> defines a “2 ×
-2” factorial design at the subplot level.</p>
+<strong>Treatment Effects</strong>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>):
+The size of the treatment effect(s) you expect to detect. This can be
+obtained from previous studies, pilot experiments, or subject-matter
+expertise.</li>
+<li>
+<strong>Variance Components</strong>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>R</mi><annotation encoding="application/x-tex">R</annotation></semantics></math>):
+These represent the variability in the random effects and residual
+errors. Variance estimates are often obtained from:
+<ul>
+<li>
+<strong>Pilot studies</strong> or preliminary data, which can
+provide initial estimates of variability in random effects (e.g.,
+subject-to-subject variability or group-level variability).</li>
+<li>
+<strong>Literature</strong> on similar experiments, where variance
+components have been reported.</li>
+<li>
+<strong>Subject-matter expertise</strong>, where researchers provide
+estimates based on their knowledge of the system being studied.</li>
+</ul>
 </li>
+</ul>
+<p>Performing a power analysis with unrealistic parameter magnitudes can
+lead to incorrect conclusions, either overestimating the likelihood of
+detecting a treatment effect or requiring an unnecessarily large sample
+size.</p>
+</div>
+</div>
+<div class="section level2">
+<h2 id="getting-started">Getting Started<a class="anchor" aria-label="anchor" href="#getting-started"></a>
+</h2>
+<p>This section provides an overview of the package’s functionality. The
+<strong>pwr4exp</strong> package is designed to streamline statistical
+power calculations into a simple, user-friendly pipeline. Performing a
+power analysis in <strong>pwr4exp</strong> involves two steps: creating
+a design object and then calculating power or determining sample
+size.</p>
+<div class="section level3">
+<h3 id="step1-creating-a-design-object">Step1: Creating a Design Object<a class="anchor" aria-label="anchor" href="#step1-creating-a-design-object"></a>
+</h3>
+<p>Design objects in <strong>pwr4exp</strong> can be created using
+functions that generate several standard experimental designs available
+in the package. These functions include:</p>
+<ul>
 <li>
-<p><strong>Label:</strong> The optional argument <code>label</code>
-accepts a list that specifies the names of treatment factors and their
-corresponding level labels. Each element of the list represents a
-factor, with the name of the element being the name of the factor. The
-value of each element should be a vector containing the labels for that
-factor’s levels. If not provided, the default name “trt” is assigned to
-a single treatment factor, while “facA” and “facB” are used for two
-treatment factors. The levels of each factor are sequentially coded as
-“1”, “2”, and so on, if not specified by <code>label</code>.</p>
-<p>For example, <code>list(trt = c("ad libitum", "fasting"))</code> uses
-the default name for a single treatment factor, but customizes its
-levels to “ad libitum” and “fasting.” For multiple factors, such as
-<code>list(feed = c("``ad libitum``", "``fasting``"), dosage = c("D0", "D1", "D2"))</code>,
-the first factor is named “feed” with levels “ad libitum” and “fasting”
-and the second factor is named “dosage” with levels “D0,” “D1,” and
-“D2.”</p>
-</li>
+<code>designCRD(treatments, label, replicates, formula, beta, sigma2)</code>:
+For completely randomized design (CRD).</li>
 <li>
-<p><strong>Replication:</strong> Given distinct replicating
-mechanisms, three arguments <code>replicates</code>,
-<code>blocks</code>, and <code>squares</code> are used to represent
-replication and indicate sample size for different designs. The argument
-<code>replicates</code> specifies the number of experimental units per
-treatment in a CRD or the number of main plots (i.e., the number of
-experimental units per treatment at main plot) in a SPD;
-<code>blocks</code> specifies the number of blocks in an RCBD; and
-<code>squares</code> specifies the number of squares in a replicated LSD
-or crossover design.</p>
-<p>In CRD, <code>replicates = 10</code> along with
-<code>treatments = 4</code> (or <code>treatments = c(2, 2)</code>)
-indicate that each treatment group consists of 10 experimental units,
-resulting in a total of 40 experimental units. While configuring a SPD,
-<code>replicates = 10</code> combined with <code>trt.main = 4</code> (or
+<code>designRCBD(treatments, label, blocks, formula, beta, VarCov, sigma2, ...)</code>:
+For randomized complete block design (RCBD).</li>
+<li>
+<code>designLSD(treatments, label, squares, reuse, formula, beta, VarCov, sigma2, ...)</code>:
+For Latin square design (LSD).</li>
+<li>
+<code>designCOD(treatments, label, squares, formula, beta, VarCov, sigma2, ...)</code>:
+For crossover design (COD), which is a special case of LSD with time
+periods and individuals as blocks. Period blocks are reused when
+replicating squares.</li>
+<li>
+<code>designSPD(trt.main, trt.sub, label, replicates, formula, beta, VarCov, sigma2, ...)</code>:
+For split-plot design (SPD).</li>
+</ul>
+<div class="section level4">
+<h4 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a>
+</h4>
+<p>The arguments of these functions fall into the following main
+categories:</p>
+<div class="section level5">
+<h5 id="treatment-structure">
+<strong>Treatment structure</strong><a class="anchor" aria-label="anchor" href="#treatment-structure"></a>
+</h5>
+<p>The arguments <code>treatments</code>, <code>trt.main</code>, and
+<code>trt.sub</code> are used to specify the treatment structure. For
+designs other than SPD, <code>treatments</code> defines the structure,
+whereas in SPD, <code>trt.main</code> and <code>trt.sub</code> refer to
+the main plot and subplot levels, respectively. The treatment structure
+is specified by an integer-valued vector, where the length of the vector
+represents the number of treatment factors, and each value indicates the
+number of levels for each factor. A maximum of two factors is allowed
+(for SPD, this applies to both the main plot and subplot levels),
+arranged in a factorial design.</p>
+<p>For instance, <code>treatments = 2</code> defines an experiment
+involving two treatments (e.g., control vs. intervention). For two
+factors, <code>treatments = c(2, 2)</code> sets up a “2x2” factorial
+design to study main effects and interactions. In the case of SPD,
+<code>trt.main = 2</code> specifies two levels of the main plot factor,
+while <code>trt.sub = c(2, 2)</code> defines a “2x2” factorial design at
+the subplot level.</p>
+</div>
+<div class="section level5">
+<h5 id="label">
+<strong>Label</strong><a class="anchor" aria-label="anchor" href="#label"></a>
+</h5>
+<p>The optional <code>label</code> argument is a list of character
+vectors that specifies the names of treatment factors and their
+corresponding levels. Each vector in the list represents a treatment
+factor, where the name of the vector defines the name of the factor, and
+the values in the vector are the labels for the levels of that
+factor.</p>
+<p>If the <code>label</code> argument is not provided, default names are
+assigned to the factors and levels. For one treatment factor, the
+default is <code>list(trt = c("1", "2", ...))</code>. For two factors,
+the default is
+<code>list(facA = c("1", "2", ...), facB = c("1", "2", ...))</code>,
+where “facA” and “facB” represent the two factors, and “1”, “2”, etc.,
+represent the levels of each factor.</p>
+<p>For example, <code>list(trt = c("ad libitum", "fasting"))</code>
+customizes the levels of a single treatment factor to “ad libitum” and
+“fasting.” For multiple factors,
+<code>list(feed = c("ad libitum", "fasting"), dosage = c("D0", "D1", "D2"))</code>
+names the first factor “feed” with levels “ad libitum” and “fasting,”
+and the second factor “dosage” with levels “D0,” “D1,” and “D2.”</p>
+</div>
+<div class="section level5">
+<h5 id="replication">
+<strong>Replication</strong><a class="anchor" aria-label="anchor" href="#replication"></a>
+</h5>
+<p>Given the distinct randomization and replication mechanisms across
+designs, the arguments <code>replicates</code>, <code>blocks</code>, and
+<code>squares</code> are used to represent replication and to indicate
+the sample size for different designs:</p>
+<ul>
+<li>The argument <code>replicates</code> specifies the number of
+experimental units per treatment in a CRD or the number of main plots
+(i.e., the number of experimental units per treatment at the main plot
+level) in a SPD.</li>
+<li>
+<code>blocks</code> specifies the number of blocks in a RCBD.</li>
+<li>
+<code>squares</code> specifies the number of squares in a replicated
+LSD or COD.</li>
+</ul>
+<p>In a CRD, setting <code>replicates = 10</code> and
+<code>treatments = 4</code> (or <code>treatments = c(2, 2)</code>) means
+that each treatment group consists of 10 experimental units, resulting
+in a total of 40 experimental units. When configuring an SPD,
+<code>replicates = 10</code> with <code>trt.main = 4</code> (or
 <code>trt.main = c(2, 2)</code>) signifies that each main plot treatment
-is replicated across 10 experimental units, accumulating to 40 main
-plots in total. In a RCBD, the argument <code>blocks = 10</code> used in
-conjunction with <code>treatments = 4</code> (or
-<code>treatments = c(2, 2)</code>) ensures that all four treatments are
-replicated across 10 different blocks, leading to a total of 40
-experimental units. For an LSD, setting <code>squares = 3</code>
-alongside <code>treatments = 4</code> (or
-<code>treatments = c(2, 2)</code>) implies the replication of the layout
-of a single “4×4” square 3 times, resulting a total of 48 experimental
+is replicated across 10 experimental units, totaling 40 main plots. For
+an RCBD, using <code>blocks = 10</code> along with
+<code>treatments = 4</code> (or <code>treatments = c(2, 2)</code>)
+ensures that all four treatments are replicated across 10 different
+blocks, leading to a total of 40 experimental units. In an LSD, setting
+<code>squares = 3</code> with <code>treatments = 4</code> (or
+<code>treatments = c(2, 2)</code>) implies the replication of a single
+“4×4” square layout 3 times, resulting in a total of 48 experimental
 units.</p>
-</li>
-<li><p><strong>Model:</strong> The <code>formula</code> argument
-specifies the formula that would be used to test effects in
-post-experimental data analysis. This formula follows the syntax used in
-R’s <code>lm</code> (procedure for linear models) and <code>lmer</code>
-(procedure for LMM) functions to specify fixed and random effects. Each
+</div>
+<div class="section level5">
+<h5 id="model">
+<strong>Model</strong><a class="anchor" aria-label="anchor" href="#model"></a>
+</h5>
+<p>The <code>formula</code> argument specifies the model formula that
+will be used to test effects during post-experimental data analysis.
+This formula follows the same syntax used in R’s <code>lm</code>
+function (for linear models) and <code>lmer</code> function (for linear
+mixed models) to specify fixed and random effects. Each
 design-generating function within the package comes with a default model
-formula. The default model formula incorporates interaction terms when
-two treatment factors are present and fits blocking factors as random
-effects.</p></li>
-<li>
-<p><strong>Effect Size:</strong> The <code>beta</code> argument
-represents model coefficients. It is noteworthy that the coefficients
-for categorical variables are the coefficients of dummy variables
-created using <code>contr.treatment</code> contrast coding in R. This
-coding scheme designates the first level of each categorical factor as
-the reference level and creates indicator variables for the other levels
-to compare against this reference. The coefficient for the reference
-level is the mean of that level. The coefficients for the other levels
-are interpreted as the difference from this reference level.</p>
-<p>For example, considering a factor with 2 levels
-(<code>treatments = 2</code>), control vs. intervention (optional,
-<code>label = list(trt = c("control", "intervention"))</code>), if
+formula. The default formula incorporates interaction terms when two
+treatment factors are present and fits blocking factors as random
+effects where applicable. You can inspect the default formula from the
+generated design object using <code>design$formula</code>, or by
+checking the function’s documentation (<code>?function</code>).</p>
+<p>For example, in a SPD with one treatment factor at the main plot
+level and two factors at the subplot level, the default model formula
+would be:
+<code>y ~ trt.main * facA.sub * facB.sub + (1 | mainplot)</code>. This
+formula tests all interactions, including three-way interactions. If no
+interaction between the main plot and subplot factors is assumed, the
+model formula can specify the model as :
+<code>y ~ trt.main + facA.sub * facB.sub + (1 | mainplot)</code> by the
+user.</p>
+<p>Notably, when specifying the model formula manually, the names of the
+treatment factors must be consistent with those provided in the
+<code>label</code> argument.</p>
+</div>
+<div class="section level5">
+<h5 id="effect-size">
+<strong>Effect Size</strong><a class="anchor" aria-label="anchor" href="#effect-size"></a>
+</h5>
+<p>The <code>beta</code> argument is a numeric vector of expected model
+coefficients, representing the effect sizes. The first element
+corresponds to the intercept term, which represents the mean of the
+reference level for categorical variables. Subsequent elements
+correspond to the effect sizes of the independent variables in the order
+they appear in the model matrix. For categorical variables, each
+coefficient represents the difference between a non-reference level and
+the reference level (intercept), as the <code>contr.treatment</code>
+contrast coding is used to construct the model matrix. It is important
+to ensure that the <code>beta</code> vector aligns with the columns of
+the model matrix, including any dummy variables created for categorical
+predictors.</p>
+<p>These values can either be specified directly or transformed from
+group means. For example, consider a factor with 2 levels
+(<code>treatments = 2</code>), representing control vs. intervention
+(<code>label = list(trt = c("control", "intervention"))</code>). If
 <code>beta = c(10, 5)</code>, this indicates that the mean of the
-control group is 10, and the effect of an intervention is 5 units higher
-than the control.</p>
-<p>In another example with a “2 × 2” factorial arrangement of
-treatments, e.g, <code>treatments = c(2, 2)</code> &amp;
-<code>label= list(A = c("A1", "A2"), B = c("B1", "B2"))</code>, assume
-the expected outcomes for each combination of the two factors are as
-follows:</p>
+control group is 10, and the effect of the intervention is 5 units
+higher than the control.</p>
+<p>In another example, consider a “2 × 2” factorial arrangement
+(<code>treatments = c(2, 2)</code> &amp;
+<code>label= list(A = c("A1", "A2"), B = c("B1", "B2"))</code>):</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="center" style="text-align: center"></mtd><mtd columnalign="center" style="text-align: center"><mi>B</mi><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mi>B</mi><mn>2</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>A</mi><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>10</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>6</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>A</mi><mn>2</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>8</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>12</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"></mtd></mtr></mtable><annotation encoding="application/x-tex">
 \begin{array}{c|c|c}
   &amp; B1 &amp; B2 \\
@@ -189,27 +493,31 @@ A1 &amp; 10 &amp; 6 \\
 A2 &amp; 8  &amp; 12 \\
 \end{array}
 </annotation></semantics></math></p>
-<p>The argument for effect size reflects as
-<code>beta = c(intercept = 10, A2 = -2, B2 = -4, A2B2 = 8)</code>, which
-indicates that the mean of the reference level (<code>A1B1</code>), the
-effect of A2 alone (<code>A2B1 - A1B1)</code>, the effect of B2 alone
-(<code>A1B2 - A1B1</code>), and the interaction between A2 and B2
-(<code>A2B2 - A2B1 - A1B2 + A1B1</code>), i.e., the additional effect of
-combining A2B2 compared to what would be expected from the sum of
-individual effects of A2 and B2. It is important to mention that values
-in <code>beta</code> indicate population values (i.e., expectations),
-which are usually unknown and must be derived through informed
-assumptions. These values can either be directly or transformed from
-group means as demonstrated.</p>
-</li>
-<li>
-<p><strong>Variance-Covariance:</strong> The <code>VarCov</code>
-specifies variance-covariance components of random effects. If there are
-multiple random effects of one grouping factor, provide
-variance-covariance components in a matrix that matches the order of the
-random effects specified in the model formula.</p>
-<p>For instance, the covariance matrix for random intercepts and random
-slopes for one grouping factor is structured as:</p>
+<p>The <code>beta</code> argument is specified as
+<code>beta = c(10, -2, -4, 8)</code>, which represents the following
+effects:</p>
+<ul>
+<li><p>The mean of the reference level (<code>A1B1</code>) is
+10.</p></li>
+<li><p>The effect of <code>A2</code> alone is -2 (i.e.,
+<code>A2B1 - A1B1</code>).</p></li>
+<li><p>The effect of <code>B2</code> alone is -4 (i.e.,
+<code>A1B2 - A1B1</code>).</p></li>
+<li><p>The interaction between <code>A2</code> and <code>B2</code> is 8,
+representing the additional effect of combining <code>A2</code> and
+<code>B2</code> compared to what would be expected from the sum of their
+individual effects (<code>A2B2 - A2B1 - A1B2 + A1B1</code>).</p></li>
+</ul>
+</div>
+<div class="section level5">
+<h5 id="variance-covariance">
+<strong>Variance-Covariance</strong><a class="anchor" aria-label="anchor" href="#variance-covariance"></a>
+</h5>
+<p>The <code>VarCov</code> argument specifies the variance-covariance
+components of random effects. If multiple terms exist for a single
+random effect group, the variance-covariance matrix should be provided.
+For example, the covariance matrix for random intercepts and random
+slopes for a single grouping factor is structured as:</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><msubsup><mi>τ</mi><mn>0</mn><mn>2</mn></msubsup></mtd><mtd columnalign="center" style="text-align: center"><msub><mi>τ</mi><mn>12</mn></msub></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><msub><mi>τ</mi><mn>12</mn></msub></mtd><mtd columnalign="center" style="text-align: center"><msubsup><mi>τ</mi><mn>1</mn><mn>2</mn></msubsup></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">
 \begin{pmatrix}
 \tau_0^2 &amp; \tau_{12} \\
@@ -218,167 +526,188 @@ slopes for one grouping factor is structured as:</p>
 </annotation></semantics></math></p>
 <p>where
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>τ</mi><mn>0</mn><mn>2</mn></msubsup><annotation encoding="application/x-tex">\tau_0^2</annotation></semantics></math>
-is the variance of the random intercept,
+represents the variance of the random intercept,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>τ</mi><mn>1</mn><mn>2</mn></msubsup><annotation encoding="application/x-tex">\tau_1^2</annotation></semantics></math>
-is the variance of the random slope, and
+represents the variance of the random slope, and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>τ</mi><mn>12</mn></msub><annotation encoding="application/x-tex">\tau_{12}</annotation></semantics></math>
-is the covariance between them. In the standard designs available in
-pwr4exp, the corresponding LMM are typically the simplest variance
-component models, i.e., models without random slopes. For example, in an
-RCBD with block as a random effect, the input required is the variance
-between blocks
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">VarCov</mtext><mo>=</mo><msubsup><mi>τ</mi><mi>b</mi><mn>2</mn></msubsup></mrow><annotation encoding="application/x-tex">\text{VarCov} = \tau_b^2</annotation></semantics></math>.
-If there are multiple grouping factors, provide the variance-covariance
-matrix for each grouping factor in a list. For example, in an LSD with
-both row and column blocks as random effects, the required inputs would
-be
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">VarCov</mtext><mo>=</mo><mi>l</mi><mi>i</mi><mi>s</mi><mi>t</mi><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>τ</mi><mi>r</mi><mn>2</mn></msubsup><mo>,</mo><msubsup><mi>τ</mi><mi>c</mi><mn>2</mn></msubsup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{VarCov} = list(\tau_r^2, \tau_c^2)</annotation></semantics></math>,
-representing the variances of the row and column blocks,
-respectively.</p>
-</li>
-<li><p><strong>Error Variance:</strong> <code>sigma2</code> is the
-variance of random error in the model.</p></li>
-</ol>
-<p>A design which is not available in the package can be potentially
-constructed using the function <code>designCustom</code>. The required
-inputs include <code>design.df</code>, <code>design.name</code>,
-<code>formula</code>, <code>beta</code>, <code>VarCov</code>, and
-<code>sigma2</code>. All arguments have been defined above except for
-<code>design.df</code>, which indicates a data frame with columns of
-independent variables, outlining the structure of the data to be
-collected from the experiment, but it does not include the response
-variable. Optionally, the name of the customized design can be specified
-using <code>design.name</code>.</p>
+is the covariance between them.</p>
+<p>For multiple random effect groups, supply the variance (for a single
+random effect term) or the variance-covariance matrix (for two or more
+random effect terms) of each group in a list, following the order
+specified in the model formula.</p>
+<p>In the standard designs available in <strong>pwr4exp</strong>, the
+corresponding LMMs are typically variance component models, i.e., models
+without random slopes. For example, in an RCBD with block as a random
+effect, the required input is the variance between blocks:
+<code>VarCov = \tau_b^2</code>. If there are multiple random effects,
+for example, in an LSD with both row and column blocks as random
+effects, the required input would be
+<code>VarCov = list(\tau_r^2, \tau_c^2)</code>, representing the
+variances of the row and column blocks, respectively.</p>
+</div>
+<div class="section level5">
+<h5 id="error-variance">
+<strong>Error Variance</strong><a class="anchor" aria-label="anchor" href="#error-variance"></a>
+</h5>
+<p>The <code>sigma2</code> argument represents the variance of the
+random error in the model. This value specifies the error variance,
+which captures the unexplained variability within the model that is not
+accounted for by the fixed or random effects. It is an important
+parameter for determining the power.</p>
+</div>
+</div>
+<div class="section level4">
+<h4 id="customized-design">Customized design<a class="anchor" aria-label="anchor" href="#customized-design"></a>
+</h4>
+<ul>
+<li><code>designCustom(design.df, formula, beta, VarCov, sigma2, design.name, ...)</code></li>
+</ul>
+<p>If a design is not predefined in the package, it can be constructed
+using the <code>designCustom</code> function. The required inputs are
+<code>design.df</code>, <code>formula</code>, <code>beta</code>,
+<code>VarCov</code>, <code>sigma2</code>, and optionally,
+<code>design.name</code>. All arguments have been defined above, except
+for <code>design.df</code>, which refers to a data frame containing the
+columns of independent variables, outlining the structure of the data to
+be collected in the experiment. Note that this data frame does not
+include a response variable. The <code>design.name</code> argument
+allows for specifying a custom name for the design, if desired.</p>
+</div>
 </div>
 <div class="section level3">
-<h3 id="step2-power-or-sample-size-calculation">Step2: power or sample size calculation<a class="anchor" aria-label="anchor" href="#step2-power-or-sample-size-calculation"></a>
+<h3 id="step2-calculating-power-or-sample-size">Step2: Calculating Power or Sample Size<a class="anchor" aria-label="anchor" href="#step2-calculating-power-or-sample-size"></a>
 </h3>
 <p>Once the design object is created, calculating power or sample size
 is straightforward. Power for omnibus tests, including main effects and
-their interactions (if included in the model specified during the
-creation of the design object), can be calculated using the
-<code>pwr.anova(design = , alpha = )</code> function. The required
-inputs include:</p>
+their interactions (if specified in the model during the creation of the
+design object), can be calculated using:</p>
+<ul>
+<li><code>pwr.anova(design, alpha = 0.05, ...)</code></li>
+</ul>
+<p>The required inputs include:</p>
 <ol style="list-style-type: decimal">
-<li><p><code>design</code>, which refers to the design object,</p></li>
-<li><p><code>alpha</code>, indicating the Type I error rate, which has a
-default value of 0.05, if not specified.</p></li>
+<li>
+<code>design</code>, the object created in <a href="#id_#%20Step1:%20Creating%20a%20Design%20Object">Step 1</a>;</li>
+<li>
+<code>alpha</code>, indicating the Type I error rate, with a default
+value of 0.05.</li>
 </ol>
-<p>On the other hand, power for specific contrasts can be calculated
-using
-<code>pwr.contrast(design = , alpha = , spec = , method = )</code>. The
-same syntax of the emmeans package is inherited to specify contrasts of
-interest. The required inputs are:</p>
+<p>For specific contrasts, power can be calculated using:</p>
+<ul>
+<li><code>pwr.contrast(design, alpha = 0.05, spec, method, ...)</code></li>
+</ul>
+<p>The syntax of the <strong>emmeans</strong> package is inherited to
+specify contrasts of interest. The required inputs are:</p>
 <ol style="list-style-type: decimal">
-<li><p><code>design</code> and <code>alpha</code> as defined in the
-<code>pwr.anova</code> function</p></li>
-<li><p><code>spec</code>, which is an argument inherited from
-<code>emmeans</code> specifying the names of the factors over which the
-contrasts are performed, and</p></li>
-<li><p><code>method</code>, which is another argument inherited from
-<code>emmeans</code> specifying the method of contrasts, e.g., pairwise,
-linear, and polynomials.</p></li>
+<li>
+<code>design</code>;</li>
+<li>
+<code>alpha</code>;</li>
+<li>
+<code>spec</code>, an argument inherited from
+<strong>emmeans</strong>, which specifies the names of the factors over
+which the contrasts are performed.</li>
+<li>
+<code>method</code>, another argument inherited from
+<strong>emmeans</strong>, which specifies the method of contrasts (e.g.,
+“pairwise”, “trt.vs.ctrl”, “poly”).</li>
 </ol>
 <p>The minimal sample size needed to achieve a target power can be
-determined using
-<code>find_sample_size(design.quote = , alpha = , target.power = , n_init = , n_max = )</code>.
-This procedure uses an iterative approach to find the minimum
-replications by traversing through a series of integers. The required
-inputs are:</p>
-<ol style="list-style-type: decimal">
-<li><p><code>design.quote</code>, which is a quoted design object with
-unknown and unevaluated replications to be evaluated with varying
-values,</p></li>
-<li><p><code>alpha</code> as defined in the <code>pwr.anova</code>
-function,</p></li>
-<li><p><code>target.power</code>, which can be a single value specifying
-the target power for all effects or a vector of values for individual
-target power levels for each effect,</p></li>
-<li><p><code>n_init</code> is the initial replications for the iterative
-process, with the default value set to 2,</p></li>
-<li><p><code>n_max</code> is the maximum number of replications for the
-iterative process, with the default value of 99.</p></li>
-</ol>
+determined using:</p>
+<ul>
+<li><code>find_sample_size(design.quote, alpha = 0.05, target.power = 0.8, n_init = 2, n_max = 99)</code></li>
+</ul>
 <p>This function calculates the minimum sample size necessary by
 incrementally checking integers from <code>n_init</code> to
-<code>n_max</code>. Currently, sample size determination is available
-only for omnibus tests and not for specific contrasts in pwr4exp.</p>
+<code>n_max</code>. The required inputs are:</p>
+<ol style="list-style-type: decimal">
+<li>
+<code>design.quote</code>: A quoted design object with an unknown
+and unevaluated replication argument, to be evaluated with varying
+values;</li>
+<li>
+<code>alpha</code>;</li>
+<li>
+<code>target.power</code>: A single value specifying the target
+power for all effects, or a vector specifying individual target power
+levels for each effect, with a default value of 0.05;</li>
+<li>
+<code>n_init</code>: The initial number of replications for the
+iterative process, with a default value of 2;</li>
+<li>
+<code>n_max</code>: The maximum number of replications for the
+iterative process, with a default value of 99.</li>
+</ol>
+<p>Currently, sample size determination is available only for omnibus
+tests and not for specific contrasts in <strong>pwr4exp</strong>.</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="completely-randomized-design">Completely Randomized Design<a class="anchor" aria-label="anchor" href="#completely-randomized-design"></a>
+<h2 id="practical-examples">Practical Examples<a class="anchor" aria-label="anchor" href="#practical-examples"></a>
 </h2>
 <div class="section level3">
-<h3 id="crd-with-one-treatment-factor">CRD with one treatment factor<a class="anchor" aria-label="anchor" href="#crd-with-one-treatment-factor"></a>
+<h3 id="example-1--completely-randomized-design">Example 1. Completely Randomized Design<a class="anchor" aria-label="anchor" href="#example-1--completely-randomized-design"></a>
 </h3>
-<p>The following design profile is used to create an exemplary CRD with
-one treatment factor:</p>
+<p>In this example, we will create a CRD with one treatment factor. The
+design parameters are as follows:</p>
 <ol style="list-style-type: decimal">
-<li><p>Treatments: 1 treatment factor with 4 levels.</p></li>
-<li><p>Replicates: 8 experimental units in each of 4 groups.</p></li>
-<li><p>Mean and effect size: The mean of control group is 35, and the
-effects of other three treatments are -5, +2, and +3.</p></li>
-<li><p>Error variance: The variance of response variable is 15.</p></li>
+<li>Treatments: 1 treatment factor with 4 levels;</li>
+<li>Replicates: 8 experimental units per treatment.</li>
+<li>Mean and effect size: The mean of control is 35, and the effects of
+other three treatments are -5, +2, and +3.</li>
+<li>Error variance: The variance of response variable is 15.</li>
 </ol>
-<p>If not specified, the treatment factor is named “trt” and its levels
-are labeled as “1”, “2”, “3”, and “4” by default. The corresponding
-design is generated using the <code>designCRD</code> function:</p>
+<p><strong>Create the CRD</strong></p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">crd1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/designCRD.html">designCRD</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">crd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_designs.html">designCRD</a></span><span class="op">(</span></span>
 <span>  treatments <span class="op">=</span> <span class="fl">4</span>,</span>
 <span>  replicates <span class="op">=</span> <span class="fl">8</span>,</span>
 <span>  beta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">35</span>, <span class="op">-</span><span class="fl">5</span>, <span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span>,</span>
 <span>  sigma2 <span class="op">=</span> <span class="fl">15</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>Power of omnibus test (i.e., F-test) can be calculated using the
-<code>pwr.anova</code> function. Under the type I error rate of 0.05,
-the power for testing an overall difference among treatments is
+<p><strong>Power for the omnibus test</strong></p>
+<p>The power of the omnibus test (i.e., F-test) can be calculated using
+the <code>pwr.anova</code> function. Under the type I error rate of
+0.05, the power for testing an overall difference among treatments is
 0.95467.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.anova.html">pwr.anova</a></span><span class="op">(</span>design <span class="op">=</span> <span class="va">crd1</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Power analysis of Completely randomized design</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.anova.html">pwr.anova</a></span><span class="op">(</span>design <span class="op">=</span> <span class="va">crd</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Power analysis of Completely Randomized Design</span></span>
 <span><span class="co">#&gt;     NumDF DenDF non-centrality alpha   power</span></span>
 <span><span class="co">#&gt; trt     3    28         20.267  0.05 0.95467</span></span></code></pre></div>
-<p>The function <code>pwr.contrat</code> can be used to assess the power
-for specific contrasts. To calculate the power for detecting the
-differences of other levels to the control, contrast
-<code>method = rt.vs.ctrl</code> for the treatment factor
-(<code>specs = ~ trt</code>) can be defined according to the
-specification of <strong>emmeans</strong> package.</p>
+<p><strong>Power for specific contrasts</strong></p>
+<p>To assess the power for specific contrasts, use the
+<code>pwr.contrast</code> function. For example, to calculate the power
+for detecting differences between treatments and the control:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span>design <span class="op">=</span> <span class="va">crd1</span>, specs <span class="op">=</span>  <span class="op">~</span> <span class="va">trt</span>, method <span class="op">=</span> <span class="st">"trt.vs.ctrl"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span>design <span class="op">=</span> <span class="va">crd</span>, specs <span class="op">=</span>  <span class="op">~</span> <span class="va">trt</span>, method <span class="op">=</span> <span class="st">"trt.vs.ctrl"</span><span class="op">)</span></span>
 <span><span class="co">#&gt;      contrast estimate df non-centrality alpha     power</span></span>
 <span><span class="co">#&gt; 1 trt2 - trt1       -5 28       6.666667  0.05 0.7028739</span></span>
 <span><span class="co">#&gt; 2 trt3 - trt1        2 28       1.066667  0.05 0.1694975</span></span>
 <span><span class="co">#&gt; 3 trt4 - trt1        3 28       2.400000  0.05 0.3216803</span></span></code></pre></div>
-<p>Another example to demonstrate specifying contrast vectors involves
-the contrasts of interest: trt4 vs. trt1 (control) and comparing the
-combined effect of trt1 and trt2 to that of trt3 and trt4.</p>
+<p>To calculate the power for detecting linear or polynomial trends
+across the treatment levels:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span>design <span class="op">=</span> <span class="va">crd1</span>, </span>
-<span>             specs <span class="op">=</span>  <span class="op">~</span> <span class="va">trt</span>, </span>
-<span>             method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>`trt4-trt2` <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">0</span>, <span class="fl">1</span><span class="op">)</span>,</span>
-<span>                           `trt12-trt34` <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.5</span>, <span class="fl">.5</span>, <span class="op">-</span><span class="fl">.5</span>, <span class="op">-</span><span class="fl">.5</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;      contrast estimate df non-centrality alpha     power</span></span>
-<span><span class="co">#&gt; 1   trt4-trt2        8 28       17.06667  0.05 0.9786069</span></span>
-<span><span class="co">#&gt; 2 trt12-trt34       -5 28       13.33333  0.05 0.9410503</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span>design <span class="op">=</span> <span class="va">crd</span>, specs <span class="op">=</span>  <span class="op">~</span> <span class="va">trt</span>, method <span class="op">=</span> <span class="st">"poly"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;    contrast estimate df non-centrality alpha     power</span></span>
+<span><span class="co">#&gt; 1    linear       16 28       6.826667  0.05 0.7130735</span></span>
+<span><span class="co">#&gt; 2 quadratic        6 28       4.800000  0.05 0.5617849</span></span>
+<span><span class="co">#&gt; 3     cubic      -18 28       8.640000  0.05 0.8098383</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="crd-with-2x2-factorial-treatments">CRD with “2x2” factorial treatments<a class="anchor" aria-label="anchor" href="#crd-with-2x2-factorial-treatments"></a>
+<h3 id="example-2--randomized-complete-block-design">Example 2. Randomized Complete Block Design<a class="anchor" aria-label="anchor" href="#example-2--randomized-complete-block-design"></a>
 </h3>
-<p>The following design profile is used to create an exemplary CRD with
-two treatment factors:</p>
+<p>In this example, we will create an RCBD with two treatment factors.
+The design parameters are as follows:</p>
 <ol style="list-style-type: decimal">
-<li><p>Treatments: 2 treatment factors each with 2 levels.</p></li>
-<li><p>Label: two factors are “facA” with levels “A1” and “A2”, “facB”
-with levels “B1” and “B2”.</p></li>
-<li><p>Replicates: 8 experimental units in each of 4 groups.</p></li>
-<li><p>Mean and effect size: The mean of the control (A1B1) is 35. The
+<li>Treatments: A 2x2 factorial design.</li>
+<li>Replicates: 8 blocks.</li>
+<li>Mean and effect size: The mean of the control (A1B1) is 35. The
 effect of A2 alone is an increase of 5 units, and the effect of B2 alone
 is an increase of 3 units. The interaction between A2 and B2 introduces
-an additional effect of -2 units, resulting the combined effect of A2
-and B2 below (-2) the sum of their individual effects. The corresponding
-cell means
+an additional effect of -2 units, meaning the combined effect of A2 and
+B2 is 2 units below the sum of their individual effects. The
+corresponding cell means
 are:<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="center" style="text-align: center"></mtd><mtd columnalign="center" style="text-align: center"><mi>B</mi><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mi>B</mi><mn>2</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>A</mi><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>35</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>38</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>A</mi><mn>2</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>40</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>41</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"></mtd></mtr></mtable><annotation encoding="application/x-tex">
 \begin{array}{c|c|c}
   &amp; B1 &amp; B2 \\
@@ -386,78 +715,363 @@ are:<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics>
 A1 &amp; 35 &amp; 38 \\
 A2 &amp; 40  &amp; 41 \\
 \end{array}
-</annotation></semantics></math></p></li>
-<li><p>Error variance: The variance of response variable is 15.</p></li>
+</annotation></semantics></math>
+</li>
+<li>Variance among blocks: 11.</li>
+<li>Error variance: 4. The total variance of the response variable (15)
+is decomposed into variance between blocks (11) and variance within
+blocks (4).</li>
 </ol>
-<p>This design can be created as follows:</p>
+<p><strong>Create the RCBD</strong></p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">crd2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/designCRD.html">designCRD</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">rcbd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_designs.html">designRCBD</a></span><span class="op">(</span></span>
 <span>  treatments <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>,</span>
-<span>  replicates <span class="op">=</span> <span class="fl">8</span>,</span>
-<span>  label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>facA <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A1"</span>, <span class="st">"A2"</span><span class="op">)</span>, facB <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"B1"</span>, <span class="st">"B2"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  blocks <span class="op">=</span> <span class="fl">8</span>,</span>
 <span>  beta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">35</span>, <span class="fl">5</span>, <span class="fl">3</span>, <span class="op">-</span><span class="fl">2</span><span class="op">)</span>,</span>
-<span>  sigma2 <span class="op">=</span> <span class="fl">15</span></span>
+<span>  VarCov <span class="op">=</span> <span class="fl">11</span>,</span>
+<span>  sigma2 <span class="op">=</span> <span class="fl">4</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>The power of the omnibus test:</p>
+<p><strong>Power for the omnibus test</strong></p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.anova.html">pwr.anova</a></span><span class="op">(</span>design <span class="op">=</span> <span class="va">crd2</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Power analysis of Completely randomized design</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.anova.html">pwr.anova</a></span><span class="op">(</span>design <span class="op">=</span> <span class="va">rcbd</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Power Analysis of Randomized Complete Block Design</span></span>
 <span><span class="co">#&gt;           NumDF DenDF non-centrality alpha   power</span></span>
-<span><span class="co">#&gt; facA          1    28         8.5333  0.05 0.80504</span></span>
-<span><span class="co">#&gt; facB          1    28         2.1333  0.05 0.29178</span></span>
-<span><span class="co">#&gt; facA:facB     1    28         0.5333  0.05 0.10868</span></span></code></pre></div>
-<p>The power for detecting the effect of factor A, both overall and
-within each level of factor B, can be assessed as follows:</p>
+<span><span class="co">#&gt; facA          1    21             32  0.05 0.99969</span></span>
+<span><span class="co">#&gt; facB          1    21              8  0.05 0.76950</span></span>
+<span><span class="co">#&gt; facA:facB     1    21              2  0.05 0.27138</span></span></code></pre></div>
+<p><strong>Power for specific contrasts</strong></p>
+<p>The power for detecting the effect of facA, both overall and within
+each level of facB, can be assessed as follows:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># main effect of facA</span></span>
-<span><span class="fu"><a href="../reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span>design <span class="op">=</span> <span class="va">crd2</span>, specs <span class="op">=</span> <span class="op">~</span> <span class="st">"facA"</span>, method <span class="op">=</span> <span class="st">"pairwise"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># across all levels of facB</span></span>
+<span><span class="fu"><a href="../reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span>design <span class="op">=</span> <span class="va">rcbd</span>, specs <span class="op">=</span> <span class="op">~</span> <span class="st">"facA"</span>, method <span class="op">=</span> <span class="st">"pairwise"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; NOTE: Results may be misleading due to involvement in interactions</span></span>
-<span><span class="co">#&gt;   contrast estimate df non-centrality alpha     power</span></span>
-<span><span class="co">#&gt; 1  A1 - A2       -4 28       8.533333  0.05 0.8050374</span></span>
-<span><span class="co"># effect of facA under B1 and B2, respectively</span></span>
-<span><span class="fu"><a href="../reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span>design <span class="op">=</span> <span class="va">crd2</span>, specs <span class="op">=</span> <span class="op">~</span> <span class="va">facA</span><span class="op">|</span><span class="va">facB</span>, method <span class="op">=</span> <span class="st">"pairwise"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   contrast facB estimate df non-centrality alpha     power</span></span>
-<span><span class="co">#&gt; 1  A1 - A2   B1       -5 28       6.666667  0.05 0.7028739</span></span>
-<span><span class="co">#&gt; 2  A1 - A2   B2       -3 28       2.400000  0.05 0.3216803</span></span></code></pre></div>
-<p>The number of units per treatment required to achieve the target
-power can be determined using <code>find_sample_size</code>, which
-employs an iterative approach. A quoted design object, where replicates
-= n remains unevaluated, is created first.</p>
+<span><span class="co">#&gt;        contrast estimate df non-centrality alpha    power</span></span>
+<span><span class="co">#&gt; 1 facA1 - facA2       -4 21             32  0.05 0.999691</span></span>
+<span><span class="co"># at each level of facB</span></span>
+<span><span class="fu"><a href="../reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span>design <span class="op">=</span> <span class="va">rcbd</span>, specs <span class="op">=</span> <span class="op">~</span> <span class="va">facA</span><span class="op">|</span><span class="va">facB</span>, method <span class="op">=</span> <span class="st">"pairwise"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;        contrast facB estimate df non-centrality alpha     power</span></span>
+<span><span class="co">#&gt; 1 facA1 - facA2    1       -5 21             25  0.05 0.9974502</span></span>
+<span><span class="co">#&gt; 2 facA1 - facA2    2       -3 21              9  0.05 0.8160596</span></span></code></pre></div>
+<p><strong>Sample Size Determination</strong></p>
+<p>To determine the number of blocks required to achieve the target
+power, the <code>find_sample_size</code> function can be used. First, we
+create a quoted design object where <code>blocks = n</code> remains
+unevaluated:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">crd_quote</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/substitute.html" class="external-link">quote</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="../reference/designCRD.html">designCRD</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">rcbd_quote</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/substitute.html" class="external-link">quote</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="../reference/create_designs.html">designRCBD</a></span><span class="op">(</span></span>
 <span>  treatments <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>,</span>
-<span>  replicates <span class="op">=</span> <span class="va">n</span>,</span>
-<span>  label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>facA <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A1"</span>, <span class="st">"A2"</span><span class="op">)</span>, facB <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"B1"</span>, <span class="st">"B2"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  blocks <span class="op">=</span> <span class="va">n</span>,</span>
 <span>  beta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">35</span>, <span class="fl">5</span>, <span class="fl">3</span>, <span class="op">-</span><span class="fl">2</span><span class="op">)</span>,</span>
-<span>  sigma2 <span class="op">=</span> <span class="fl">15</span></span>
+<span>  VarCov <span class="op">=</span> <span class="fl">11</span>,</span>
+<span>  sigma2 <span class="op">=</span> <span class="fl">4</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>The best sample size for the target power within the range of
-<code>n_int</code> and <code>n_max</code> can be determined:</p>
+<p>The optimal sample size for the target power within the range of
+n_init and n_max can be determined as follows:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/find_sample_size.html">find_sample_size</a></span><span class="op">(</span>design.quote <span class="op">=</span> <span class="va">crd_quote</span>, n_init <span class="op">=</span> <span class="fl">2</span>, n_max <span class="op">=</span> <span class="fl">99</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/find_sample_size.html">find_sample_size</a></span><span class="op">(</span>design.quote <span class="op">=</span> <span class="va">rcbd_quote</span>, n_init <span class="op">=</span> <span class="fl">2</span>, n_max <span class="op">=</span> <span class="fl">99</span><span class="op">)</span></span>
 <span><span class="co">#&gt;           alpha     power best_n</span></span>
-<span><span class="co">#&gt; facA       0.05 0.8050374      8</span></span>
-<span><span class="co">#&gt; facB       0.05 0.8009381     30</span></span>
-<span><span class="co">#&gt; facA:facB  0.05 0.7266769     99</span></span></code></pre></div>
+<span><span class="co">#&gt; facA       0.05 0.8212779      3</span></span>
+<span><span class="co">#&gt; facB       0.05 0.8207219      9</span></span>
+<span><span class="co">#&gt; facA:facB  0.05 0.8115100     33</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="example-3--latin-square-design">Example 3. Latin Square Design<a class="anchor" aria-label="anchor" href="#example-3--latin-square-design"></a>
+</h3>
+<p>In this example, we extend the design from Example 2 by introducing
+another blocking factor, thus creating an LSD. The treatment structure
+and effect sizes remain the same as in Example 2. The design controls
+for two sources of variability (row and column blocks) while evaluating
+the treatment effects. In the LSD, the total variance (15) is further
+decomposed into three components:</p>
+<ul>
+<li>Variance between row blocks (11),</li>
+<li>Variance between column blocks (2), and</li>
+<li>Residual error variance (2).</li>
+</ul>
+<p>In this example, we will customize the labels for the two factors as
+follows: “temp” with levels “T1” and “T2”, and “dosage” with levels “D1”
+and “D2”.</p>
+<p><strong>Create the LSD</strong></p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">lsd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_designs.html">designLSD</a></span><span class="op">(</span></span>
+<span>  treatments <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>,</span>
+<span>  label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>temp <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"T1"</span>, <span class="st">"T2"</span><span class="op">)</span>, dosage <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"D1"</span>, <span class="st">"D2"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  squares <span class="op">=</span> <span class="fl">4</span>,</span>
+<span>  reuse <span class="op">=</span> <span class="st">"both"</span>,</span>
+<span>  beta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">35</span>, <span class="fl">5</span>, <span class="fl">3</span>, <span class="op">-</span><span class="fl">2</span><span class="op">)</span>,</span>
+<span>  VarCov <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">11</span>, <span class="fl">2</span><span class="op">)</span>,</span>
+<span>  sigma2 <span class="op">=</span> <span class="fl">2</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><strong>Power for the omnibus test</strong></p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.anova.html">pwr.anova</a></span><span class="op">(</span>design <span class="op">=</span> <span class="va">lsd</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Power Analysis of Latin Square Design</span></span>
+<span><span class="co">#&gt;             NumDF DenDF non-centrality alpha   power</span></span>
+<span><span class="co">#&gt; temp            1    33            128  0.05 1.00000</span></span>
+<span><span class="co">#&gt; dosage          1    33             32  0.05 0.99979</span></span>
+<span><span class="co">#&gt; temp:dosage     1    33              8  0.05 0.78387</span></span></code></pre></div>
+<p><strong>Power for specific contrasts</strong></p>
+<p>The power for detecting the effect of <em>dosage</em>, both overall
+and within each level of <em>temp</em>, can be assessed as follows:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># the effect of dosage across all levels of temp</span></span>
+<span><span class="fu"><a href="../reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span>design <span class="op">=</span> <span class="va">lsd</span>, specs <span class="op">=</span> <span class="op">~</span> <span class="st">"dosage"</span>, method <span class="op">=</span> <span class="st">"pairwise"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; NOTE: Results may be misleading due to involvement in interactions</span></span>
+<span><span class="co">#&gt;   contrast estimate df non-centrality alpha     power</span></span>
+<span><span class="co">#&gt; 1  D1 - D2       -2 33             32  0.05 0.9997892</span></span>
+<span><span class="co"># the effect of dosage at each level of temp</span></span>
+<span><span class="fu"><a href="../reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span>design <span class="op">=</span> <span class="va">lsd</span>, specs <span class="op">=</span> <span class="op">~</span> <span class="va">dosage</span><span class="op">|</span><span class="va">temp</span>, method <span class="op">=</span> <span class="st">"pairwise"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   contrast temp estimate df non-centrality alpha     power</span></span>
+<span><span class="co">#&gt; 1  D1 - D2   T1       -3 33             36  0.05 0.9999429</span></span>
+<span><span class="co">#&gt; 2  D1 - D2   T2       -1 33              4  0.05 0.4927485</span></span></code></pre></div>
+<p><strong>Sample Size Determination</strong></p>
+<p>To determine the number of squares required to achieve the target
+power, the <code>find_sample_size</code> function can be used. First, we
+create a quoted design object where <code>squares = n</code> remains
+unevaluated:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">lsd_quote</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/substitute.html" class="external-link">quote</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="../reference/create_designs.html">designLSD</a></span><span class="op">(</span></span>
+<span>  treatments <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>,</span>
+<span>  squares <span class="op">=</span> <span class="va">n</span>,</span>
+<span>  reuse <span class="op">=</span> <span class="st">"both"</span>,</span>
+<span>  beta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">35</span>, <span class="fl">5</span>, <span class="fl">3</span>, <span class="op">-</span><span class="fl">2</span><span class="op">)</span>,</span>
+<span>  VarCov <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">11</span>, <span class="fl">2</span><span class="op">)</span>,</span>
+<span>  sigma2 <span class="op">=</span> <span class="fl">2</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>The optimal sample size for the target power within the range of
+n_init and n_max can be determined as follows:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/find_sample_size.html">find_sample_size</a></span><span class="op">(</span>design.quote <span class="op">=</span> <span class="va">lsd_quote</span>, n_init <span class="op">=</span> <span class="fl">2</span>, n_max <span class="op">=</span> <span class="fl">99</span><span class="op">)</span></span>
+<span><span class="co">#&gt;           alpha     power best_n</span></span>
+<span><span class="co">#&gt; facA       0.05 1.0000000      2</span></span>
+<span><span class="co">#&gt; facB       0.05 0.9618851      2</span></span>
+<span><span class="co">#&gt; facA:facB  0.05 0.8705999      5</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="example-4-split-plot-design">Example 4: Split-plot Design<a class="anchor" aria-label="anchor" href="#example-4-split-plot-design"></a>
+</h3>
+<p>In this example, we will create a SPD with two treatment factors, one
+at each level. The design parameters are as follows:</p>
+<ol style="list-style-type: decimal">
+<li><p>Treatments: One main plot factor having 2 levels, and another
+factor with 3 levels at the sub-plot level.</p></li>
+<li><p>Label: The two treatment factors are labeled as “Main” with
+levels “Main1” and “Main2,” and “Sub” with levels “Sub1” and “Sub2,”
+corresponding to the main plot and subplot, respectively.</p></li>
+<li><p><strong>Replicates</strong>: There are 10 main plots, with 5 main
+plots per “Main” treatment level, resulting in 10 experimental units
+(blocks) for each “Sub” treatment level.</p></li>
+<li><p>The mean of the control (Main1 with Sub1) is 20. The effect of
+Main2 alone is an increase of 2 units. The effects of Sub2 and Sub3
+alone are increases of 2 and 4 units, respectively. The interaction
+between Main2 and Sub2 is zero. The interaction between Main2 and Sub3
+introduces an additional effect of 2 units, meaning the combined effect
+of Main2 and Sub3 is 2 units above the sum of their individual effects.
+The corresponding cell means
+are:<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="center" style="text-align: center"></mtd><mtd columnalign="center" style="text-align: center"><mi>S</mi><mi>u</mi><mi>b</mi><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mi>S</mi><mi>u</mi><mi>b</mi><mn>2</mn></mtd><mtd columnalign="center" style="text-align: center"><mi>S</mi><mi>u</mi><mi>b</mi><mn>3</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>M</mi><mi>a</mi><mi>i</mi><mi>n</mi><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>20</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>22</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>24</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>M</mi><mi>a</mi><mi>i</mi><mi>n</mi><mn>2</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>22</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>24</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>28</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"></mtd></mtr></mtable><annotation encoding="application/x-tex">
+\begin{array}{c|c|c}
+  &amp; Sub1 &amp; Sub2 &amp; Sub3 \\
+\hline
+Main1 &amp; 20 &amp; 22 &amp; 24\\
+Main2 &amp; 22 &amp; 24 &amp; 28 \\
+\end{array}
+</annotation></semantics></math></p></li>
+<li><p>The total variance (15) is assumed to decompose into 4 for
+whole-plot error and 11 for subplot error.</p></li>
+</ol>
+<p><strong>Create the SPD</strong></p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">spd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_designs.html">designSPD</a></span><span class="op">(</span></span>
+<span>  trt.main <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  trt.sub <span class="op">=</span> <span class="fl">3</span>, </span>
+<span>  replicates <span class="op">=</span> <span class="fl">10</span>, </span>
+<span>  label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Main <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Main1"</span>, <span class="st">"Main2"</span><span class="op">)</span>, Sub <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Sub1"</span>, <span class="st">"Sub2"</span>, <span class="st">"Sub3"</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  beta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">4</span>, <span class="fl">0</span>, <span class="fl">2</span><span class="op">)</span>,</span>
+<span>  VarCov <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">4</span><span class="op">)</span>,</span>
+<span>  sigma2 <span class="op">=</span> <span class="fl">11</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><strong>Power for the omnibus test</strong></p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.anova.html">pwr.anova</a></span><span class="op">(</span><span class="va">spd</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Power Analysis of Split Plot Design</span></span>
+<span><span class="co">#&gt;          NumDF DenDF non-centrality alpha   power</span></span>
+<span><span class="co">#&gt; Main         1    18         4.6377  0.05 0.53114</span></span>
+<span><span class="co">#&gt; Sub          2    36        23.0303  0.05 0.98924</span></span>
+<span><span class="co">#&gt; Main:Sub     2    36         1.2121  0.05 0.14311</span></span></code></pre></div>
+<p><strong>Power for specific contrasts</strong></p>
+<p>The power for detecting the effect of subplot treatment under each
+level of main plot treatment, can be assessed as follows:</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span>design <span class="op">=</span> <span class="va">spd</span>, specs <span class="op">=</span> <span class="op">~</span> <span class="va">Sub</span><span class="op">|</span><span class="va">Main</span>, method <span class="op">=</span> <span class="st">"trt.vs.ctrl"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;      contrast  Main estimate df non-centrality alpha     power</span></span>
+<span><span class="co">#&gt; 1 Sub2 - Sub1 Main1        2 36       1.818182  0.05 0.2592167</span></span>
+<span><span class="co">#&gt; 2 Sub3 - Sub1 Main1        4 36       7.272727  0.05 0.7467531</span></span>
+<span><span class="co">#&gt; 3 Sub2 - Sub1 Main2        2 36       1.818182  0.05 0.2592167</span></span>
+<span><span class="co">#&gt; 4 Sub3 - Sub1 Main2        6 36      16.363636  0.05 0.9758744</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="example-5-a-customized-design">Example 5: A customized design<a class="anchor" aria-label="anchor" href="#example-5-a-customized-design"></a>
+</h3>
+<p>In this example, we will create a COD arranged at the “subplot” level
+of a split-plot layout.</p>
+<p>Sixteen subjects, split evenly between two breeds (8 subjects per
+breed), are enrolled in a 4x4 crossover design. Within each breed, the
+subjects are further divided into two squares (for a total of four
+squares), with each square consisting of four subjects. Each subject
+follows one of four treatment sequences and receives treatments across
+four periods. This hybrid SPD-COD combines elements of a SPD and a COD
+to evaluate treatment effects across different breeds. The Latin Square
+structure ensures that within each square, treatments are balanced
+across periods, while the split-plot element accounts for breed as a
+whole-plot factor. The overall structure is as follows:</p>
+<ul>
+<li>
+<p><strong>Treatment structure</strong></p>
+<ul>
+<li>
+<strong>Whole-plot level</strong>: Breed (2 breeds, with 8 subjects
+in each breed)</li>
+<li>
+<strong>Sub-plot level</strong>: A 2x2 factorial design with two
+treatment factors, facA and facB.</li>
+</ul>
+</li>
+<li>
+<p><strong>Experimental units</strong></p>
+<ul>
+<li>Whole-plot factor: Subjects (randomly selected from two breeds)</li>
+<li>Sub-plot factor: Measurements taken from subjects at each
+period.</li>
+</ul>
+</li>
+<li><p><strong>Variance decomposition</strong> The overall variance (15)
+is decomposed into three main components: subject variance (7), period
+variance (4), and random error (4).</p></li>
+</ul>
+<p><strong>Construct the design data frame</strong></p>
+<p>To create the design object for this hybrid SPD-COD, we first need to
+construct a data frame containing all the independent variables,
+structured to resemble the actual experimental data. This data frame can
+be generated using the internal function <code>df.cod</code>, which
+builds a data frame for a COD with the specified treatment structure and
+number of replications. Once the base data frame is generated, a column
+for the “Breed” variable is manually added. It is important to note that
+no randomization occurs at this stage—the data frame simply represents
+the data structure and is not the actual randomized experimental data.
+Its purpose is to create the design layout.</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">df_spd_cod</span> <span class="op">&lt;-</span> <span class="fu">pwr4exp</span><span class="fu">:::</span><span class="fu"><a href="../reference/df.cod.html">df.cod</a></span><span class="op">(</span></span>
+<span>  treatments <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>,</span>
+<span>  squares <span class="op">=</span> <span class="fl">4</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co">## Create main plot factor, i.e., breed</span></span>
+<span><span class="va">df_spd_cod</span><span class="op">$</span><span class="va">Breed</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"1"</span>, <span class="st">"2"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">32</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Check data structure</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">df_spd_cod</span>, n <span class="op">=</span> <span class="fl">4</span><span class="op">)</span>; <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">tail</a></span><span class="op">(</span><span class="va">df_spd_cod</span>, n <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   subject period trt facA facB square Breed</span></span>
+<span><span class="co">#&gt; 1       1      1   2    2    1      1     1</span></span>
+<span><span class="co">#&gt; 2       2      1   3    1    2      1     1</span></span>
+<span><span class="co">#&gt; 3       3      1   4    2    2      1     1</span></span>
+<span><span class="co">#&gt; 4       4      1   1    1    1      1     1</span></span>
+<span><span class="co">#&gt;    subject period trt facA facB square Breed</span></span>
+<span><span class="co">#&gt; 61      13      4   1    1    1      4     2</span></span>
+<span><span class="co">#&gt; 62      14      4   2    2    1      4     2</span></span>
+<span><span class="co">#&gt; 63      15      4   3    1    2      4     2</span></span>
+<span><span class="co">#&gt; 64      16      4   4    2    2      4     2</span></span></code></pre></div>
+<p><strong>Specify the model formula</strong></p>
+<p>Next, an appropriate model formula must be specified to fit the
+experimental design. The formula captures the interactions between
+breed, the two treatment factors (facA and facB), and the random effects
+for subjects and periods.</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">formula</span> <span class="op">&lt;-</span> <span class="va">y</span> <span class="op">~</span> <span class="va">Breed</span><span class="op">*</span><span class="va">facA</span><span class="op">*</span><span class="va">facB</span> <span class="op">+</span> <span class="op">(</span><span class="fl">1</span><span class="op">|</span><span class="va">subject</span><span class="op">)</span> <span class="op">+</span> <span class="op">(</span><span class="fl">1</span><span class="op">|</span><span class="va">period</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Fixed effects</strong></p>
+<p>We then specify the fixed effects for the model, where beta contains
+the baseline intercept and the effects of each factor and their
+interactions.</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">beta</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  `(Intercept)` <span class="op">=</span> <span class="fl">35</span>,        <span class="co"># Baseline (mean of Breed1_A1_B1)</span></span>
+<span>  Breed2 <span class="op">=</span> <span class="op">-</span><span class="fl">5</span>,           <span class="co"># Effect of the second breed alone</span></span>
+<span>  facA2 <span class="op">=</span> <span class="op">-</span><span class="fl">5</span>,               <span class="co"># Effect of A2 alone</span></span>
+<span>  facB2 <span class="op">=</span> <span class="fl">1</span>,                <span class="co"># Effect of B2 alone</span></span>
+<span>  `Breed2:facA2` <span class="op">=</span> <span class="fl">1</span>,         <span class="co"># Interaction between Breed2 and A2</span></span>
+<span>  `Breed2:facB2` <span class="op">=</span> <span class="fl">0</span>,         <span class="co"># Interaction between Breed2 and B2</span></span>
+<span>  `facA2:facB2` <span class="op">=</span> <span class="fl">2</span>,             <span class="co"># Interaction between A2 and B2</span></span>
+<span>  `Breed2:facA2:facB2` <span class="op">=</span> <span class="fl">1</span>       <span class="co"># Three-way interaction between Breed2, A2, and B2</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><strong>Create the design object</strong></p>
+<p>After constructing the data frame, model formula, and fixed effects,
+the design object can be created using the <code>designCustom</code>
+function. The variance-covariance structure and error variance are also
+provided to complete the design.</p>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">SPD_COD</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_designs.html">designCustom</a></span><span class="op">(</span></span>
+<span>  design.df <span class="op">=</span> <span class="va">df_spd_cod</span>,</span>
+<span>  formula <span class="op">=</span> <span class="va">formula</span>,</span>
+<span>  beta <span class="op">=</span> <span class="va">beta</span>,</span>
+<span>  VarCov <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fl">7</span>, <span class="fl">4</span><span class="op">)</span>,</span>
+<span>  sigma2 <span class="op">=</span> <span class="fl">4</span>,</span>
+<span>  design.name <span class="op">=</span> <span class="st">"hybrid SPD COD"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><strong>Power for the omnibus test</strong></p>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.anova.html">pwr.anova</a></span><span class="op">(</span><span class="va">SPD_COD</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Power Analysis of hybrid SPD COD</span></span>
+<span><span class="co">#&gt;                 NumDF DenDF non-centrality alpha   power</span></span>
+<span><span class="co">#&gt; Breed               1    14          9.031  0.05 0.79790</span></span>
+<span><span class="co">#&gt; facA                1    39         42.250  0.05 0.99999</span></span>
+<span><span class="co">#&gt; facB                1    39         20.250  0.05 0.99238</span></span>
+<span><span class="co">#&gt; Breed:facA          1    39          2.250  0.05 0.30997</span></span>
+<span><span class="co">#&gt; Breed:facB          1    39          0.250  0.05 0.07768</span></span>
+<span><span class="co">#&gt; facA:facB           1    39          6.250  0.05 0.68372</span></span>
+<span><span class="co">#&gt; Breed:facA:facB     1    39          0.250  0.05 0.07768</span></span></code></pre></div>
+<p><strong>Power for specific contrasts</strong></p>
+<p>We can also calculate the power for specific contrasts. For example,
+to assess the power for detecting differences between facA1 and facA2 at
+each level of facB within each breed:</p>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span><span class="va">SPD_COD</span>, <span class="op">~</span><span class="va">facA</span><span class="op">|</span><span class="va">facB</span><span class="op">|</span><span class="va">Breed</span>, <span class="st">"pairwise"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;        contrast facB Breed estimate df non-centrality alpha     power</span></span>
+<span><span class="co">#&gt; 1 facA1 - facA2    1     1        5 39             25  0.05 0.9982139</span></span>
+<span><span class="co">#&gt; 2 facA1 - facA2    2     1        3 39              9  0.05 0.8328312</span></span>
+<span><span class="co">#&gt; 3 facA1 - facA2    1     2        4 39             16  0.05 0.9737940</span></span>
+<span><span class="co">#&gt; 4 facA1 - facA2    2     2        1 39              1  0.05 0.1641134</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
-<h2 id="randomized-complete-block-design">Randomized Complete Block Design<a class="anchor" aria-label="anchor" href="#randomized-complete-block-design"></a>
+<h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
+<p>Hrong-Tai Fai, A., &amp; Cornelius, P. L. (1996). Approximate F-tests
+of multiple degree of freedom hypotheses in generalized least squares
+analyses of unbalanced split-plot experiments. Journal of statistical
+computation and simulation, 54(4), 363-378.</p>
+<p>Kenward, M. G., &amp; Roger, J. H. (1997). Small sample inference for
+fixed effects from restricted maximum likelihood. Biometrics,
+983-997.</p>
 </div>
 <div class="section level2">
-<h2 id="latin-square-design">Latin Square Design<a class="anchor" aria-label="anchor" href="#latin-square-design"></a>
+<h2 id="acknowledgments">Acknowledgments<a class="anchor" aria-label="anchor" href="#acknowledgments"></a>
 </h2>
-</div>
-<div class="section level2">
-<h2 id="crossover-design">Crossover Design<a class="anchor" aria-label="anchor" href="#crossover-design"></a>
-</h2>
-</div>
-<div class="section level2">
-<h2 id="split-plot-design">Split-plot Design<a class="anchor" aria-label="anchor" href="#split-plot-design"></a>
-</h2>
+<p>The development of <strong>pwr4exp</strong> has benefited greatly
+from several R packages. Specifically, it leverages and modifies
+critical functionality from <strong>lmerTest</strong>,
+<strong>car</strong>, and <strong>emmeans</strong> to determine degrees
+of freedom
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mn>1</mn></msub><annotation encoding="application/x-tex">v_1</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mn>2</mn></msub><annotation encoding="application/x-tex">v_2</annotation></semantics></math>)
+and the non-centrality parameter
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>),
+making power analysis more accessible and efficient. We are particularly
+grateful to the authors and contributors of these packages, as well as
+the broader R community for their valuable tools and resources.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
