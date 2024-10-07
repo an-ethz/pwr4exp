@@ -1,5 +1,5 @@
 Package: pwr4exp
-Title: Power Analysis for Experiment Designs in Animal Studies
+Title: Power Analysis for Research Experiments
 Version: 0.0.0.9000
 Authors@R: c(
     person("Kai", "Wang", email = "kai.wang@usys.ethz.ch", role = c("aut", "cre"),
