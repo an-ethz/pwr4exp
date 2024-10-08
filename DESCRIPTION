@@ -7,11 +7,13 @@ Authors@R: c(
            person("Mutian", "Niu", email = "mutian.niu@usys.ethz.ch", role = c("aut", "cph"), 
            comment = c(ORCID = "0000-0003-4484-4611"))
            )
-Description: The package provides advanced tools to calculate statistical power and 
+Description: The pwr4exp package provides advanced tools to calculate statistical power and 
     determine sample size for a variety of experimental designs commonly used in agricultural 
     and biological research. Supported designs include completely randomized designs, block designs, 
-    and split-plot designs. Emphasizing model specification during power analysis, the package allows
-    users to specify main effects, interactions, and contrasts within the models to accurately calculate power.
+    and split-plot designs. Additionally, pwr4exp offers a flexible framework for performing power analysis 
+    on customized designs not predefined in the package. By emphasizing model specification during power analysis, 
+    the package allows users to define main effects, interactions, and contrasts within models, enabling more accurate 
+    power calculations.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
