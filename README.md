@@ -8,14 +8,13 @@ The `pwr4exp` R package provides functions for power calculation and sample size
 
 ## Installation
 
-You can install the development version of `pwr4exp` from [GitHub](https://github.com/an-ethz/pwr4exp) with:
-
-``` r
-devtools::install_github("an-ethz/pwr4exp")
-```
 ```r
-#Load the package
-library("pwr4exp")
+# You can install pwr4exp from CRAN
+install.packages("pwr4exp")
+
+# Or the the development version from GitHub:
+# install.packages("devtools")
+devtools::install_github("an-ethz/pwr4exp")
 ```
 
 ## Functions

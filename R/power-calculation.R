@@ -13,6 +13,10 @@
 #' these additional arguments should be consistent in the design-generating
 #' function and \code{pwr.anova} for linear mixed models.
 #'
+#' @return a data frame with numerator degrees of freedom (NumDF), denominator
+#' degrees of freedom (DenDF), non-centrality parameter, type I error rate (alpha),
+#' and power.
+#'
 #' @seealso [designCRD()], [designRCBD()], [designLSD()], [designCOD()], [designSPD()], [designCustom()], and [pwr.contrast()]
 #' @export
 #' @examples
@@ -78,7 +82,7 @@ pwr.anova.lmDesign <- function(design, alpha = 0.05, ...){
 #' Power of contrasts
 #'
 #' Calculate power for testing various contrasts. The same syntax of
-#' \code{\link{emmeans}} package is employed to specify contrast types.
+#' \link[=emmeans-package]{emmeans} package is employed to specify contrast types.
 #'
 #' @param design a design object created using design generating functions.
 #' @param specs an argument inherited from \link[emmeans]{emmeans} specifying
@@ -88,6 +92,7 @@ pwr.anova.lmDesign <- function(design, alpha = 0.05, ...){
 #' @param alpha significance level (type I error rate), default 0.05
 #' @param ... other arguments passed to \link[emmeans]{contrast}.
 #' @export
+#' @return a data frame showing the power of the specific contrast
 #' @examples
 #' rcbd = designRCBD(treatments = c(2, 2), blocks = 10, beta = c(10, 9, 8, 7), VarCov = 10, sigma2 = 9)
 #' pwr.contrast(rcbd, specs = ~ facA|facB, method = "pairwise")

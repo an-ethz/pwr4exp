@@ -19,6 +19,11 @@ For balanced designs, types of SS and DDF do not affect results. Note that
 these additional arguments should be consistent in the design-generating
 function and \code{pwr.anova} for linear mixed models.}
 }
+\value{
+a data frame with numerator degrees of freedom (NumDF), denominator
+degrees of freedom (DenDF), non-centrality parameter, type I error rate (alpha),
+and power.
+}
 \description{
 Calculate power for testing overall effects of treatment factors and their
 interactions, i.e., statistical power of ANOVA.

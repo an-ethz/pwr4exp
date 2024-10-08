@@ -70,7 +70,7 @@ of main plot factors.}
 
 \item{formula}{A model formula for testing treatment effects in
 post-experimental data analysis. Use the syntax of \code{\link{lm}} for fixed
-effects and \code{\link{lmer}} for random effects. The response variable is
+effects and \link[lme4]{lmer} for random effects. The response variable is
 always denoted as \code{y}. By default, all interaction terms between treatment
 factors are included in the formula.}
 

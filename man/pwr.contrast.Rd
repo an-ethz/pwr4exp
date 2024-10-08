@@ -19,9 +19,12 @@ the method of contrasts, e.g., pairwise, linear, and polynomials.}
 
 \item{...}{other arguments passed to \link[emmeans]{contrast}.}
 }
+\value{
+a data frame showing the power of the specific contrast
+}
 \description{
 Calculate power for testing various contrasts. The same syntax of
-\code{\link{emmeans}} package is employed to specify contrast types.
+\link[=emmeans-package]{emmeans} package is employed to specify contrast types.
 }
 \examples{
 rcbd = designRCBD(treatments = c(2, 2), blocks = 10, beta = c(10, 9, 8, 7), VarCov = 10, sigma2 = 9)
