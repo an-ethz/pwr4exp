@@ -3,7 +3,7 @@ pkgdown: 2.1.1
 pkgdown_sha: ~
 articles:
   pwr4exp: pwr4exp.html
-last_built: 2024-10-08T20:31Z
+last_built: 2024-10-08T21:12Z
 urls:
   reference: https://an-ethz.github.io/pwr4exp/reference
   article: https://an-ethz.github.io/pwr4exp/articles
