@@ -82,7 +82,7 @@ pwr.anova.lmDesign <- function(design, alpha = 0.05, ...){
 #' Power of contrasts
 #'
 #' Calculate power for testing various contrasts. The same syntax of
-#' \link[=emmeans-package]{emmeans} package is employed to specify contrast types.
+#' \link[emmeans:emmeans-package]{emmeans} package is employed to specify contrast types.
 #'
 #' @param design a design object created using design generating functions.
 #' @param specs an argument inherited from \link[emmeans]{emmeans} specifying
