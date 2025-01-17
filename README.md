@@ -1,3 +1,18 @@
+## Development Version
+
+A development version of this package is available on the `dev` branch. This version enables applying various correlation structures (corClasses from nlme package) for repeated measures and some new improvements are still being tested.
+
+For more details on the development version, visit the [dev branch README](https://github.com/an-ethz/pwr4exp/tree/dev).
+
+To install the development version, use the following command in R:
+
+```r
+# Install the 'devtools' package if not already installed
+install.packages("devtools")
+
+# Install the development version from the dev branch
+devtools::install_github("an-ethz/pwr4exp", ref = "dev")
+```
 
 # pwr4exp
 
@@ -14,7 +29,7 @@ install.packages("pwr4exp")
 
 # Or the the development version from GitHub:
 # install.packages("devtools")
-devtools::install_github("an-ethz/pwr4exp")
+devtools::install_github("an-ethz/pwr4exp", ref = "dev")
 ```
 
 ## Functions
