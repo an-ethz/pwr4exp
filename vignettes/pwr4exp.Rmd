@@ -21,6 +21,8 @@ knitr::opts_chunk$set(
 library(pwr4exp)
 ```
 
+# This page will be updated recently for the new version
+
 # Foundational Concepts
 
 The **pwr4exp** R package offers functionality for power analysis. The
@@ -499,12 +501,12 @@ design parameters are as follows:
 **Create the CRD**
 
 ```{r}
-crd <- designCRD(
-  treatments = 4,
-  replicates = 8,
-  beta = c(35, -5, 2, 3),
-  sigma2 = 15
-)
+# crd <- designCRD(
+#   treatments = 4,
+#   replicates = 8,
+#   beta = c(35, -5, 2, 3),
+#   sigma2 = 15
+# )
 ```
 
 **Power for the omnibus test**
@@ -514,7 +516,7 @@ The power of the omnibus test (i.e., F-test) can be calculated using the
 testing an overall difference among treatments is 0.95467.
 
 ```{r}
-pwr.anova(design = crd)
+# pwr.anova(design = crd)
 ```
 
 **Power for specific contrasts**
@@ -524,14 +526,14 @@ function. For example, to calculate the power for detecting differences
 between treatments and the control:
 
 ```{r}
-pwr.contrast(design = crd, specs =  ~ trt, method = "trt.vs.ctrl")
+# pwr.contrast(design = crd, specs =  ~ trt, method = "trt.vs.ctrl")
 ```
 
 To calculate the power for detecting linear or polynomial trends across
 the treatment levels:
 
 ```{r}
-pwr.contrast(design = crd, specs =  ~ trt, method = "poly")
+# pwr.contrast(design = crd, specs =  ~ trt, method = "poly")
 ```
 
 ## Example 2. Randomized Complete Block Design
@@ -562,19 +564,19 @@ design parameters are as follows:
 **Create the RCBD**
 
 ```{r}
-rcbd <- designRCBD(
-  treatments = c(2, 2),
-  blocks = 8,
-  beta = c(35, 5, 3, -2),
-  VarCov = 11,
-  sigma2 = 4
-)
+# rcbd <- designRCBD(
+#   treatments = c(2, 2),
+#   blocks = 8,
+#   beta = c(35, 5, 3, -2),
+#   VarCov = 11,
+#   sigma2 = 4
+# )
 ```
 
 **Power for the omnibus test**
 
 ```{r}
-pwr.anova(design = rcbd)
+#pwr.anova(design = rcbd)
 ```
 
 **Power for specific contrasts**
@@ -584,9 +586,9 @@ level of facB, can be assessed as follows:
 
 ```{r}
 # across all levels of facB
-pwr.contrast(design = rcbd, specs = ~ "facA", method = "pairwise")
+# pwr.contrast(design = rcbd, specs = ~ "facA", method = "pairwise")
 # at each level of facB
-pwr.contrast(design = rcbd, specs = ~ facA|facB, method = "pairwise")
+# pwr.contrast(design = rcbd, specs = ~ facA|facB, method = "pairwise")
 ```
 
 **Sample Size Determination**
@@ -596,22 +598,22 @@ the `find_sample_size` function can be used. First, we create a quoted
 design object where `blocks = n` remains unevaluated:
 
 ```{r}
-rcbd_quote <- quote(
-  designRCBD(
-  treatments = c(2, 2),
-  blocks = n,
-  beta = c(35, 5, 3, -2),
-  VarCov = 11,
-  sigma2 = 4
-  )
-)
+# rcbd_quote <- quote(
+#   designRCBD(
+#   treatments = c(2, 2),
+#   blocks = n,
+#   beta = c(35, 5, 3, -2),
+#   VarCov = 11,
+#   sigma2 = 4
+#   )
+# )
 ```
 
 The optimal sample size for the target power within the range of n_init
 and n_max can be determined as follows:
 
 ```{r}
-find_sample_size(design.quote = rcbd_quote, n_init = 2, n_max = 99)
+#find_sample_size(design.quote = rcbd_quote, n_init = 2, n_max = 99)
 ```
 
 ## Example 3. Latin Square Design
@@ -634,21 +636,21 @@ and "D2".
 **Create the LSD**
 
 ```{r}
-lsd <- designLSD(
-  treatments = c(2, 2),
-  label = list(temp = c("T1", "T2"), dosage = c("D1", "D2")),
-  squares = 4,
-  reuse = "both",
-  beta = c(35, 5, 3, -2),
-  VarCov = list(11, 2),
-  sigma2 = 2
-)
+# lsd <- designLSD(
+#   treatments = c(2, 2),
+#   label = list(temp = c("T1", "T2"), dosage = c("D1", "D2")),
+#   squares = 4,
+#   reuse = "both",
+#   beta = c(35, 5, 3, -2),
+#   VarCov = list(11, 2),
+#   sigma2 = 2
+# )
 ```
 
 **Power for the omnibus test**
 
 ```{r}
-pwr.anova(design = lsd)
+# pwr.anova(design = lsd)
 ```
 
 **Power for specific contrasts**
@@ -657,10 +659,10 @@ The power for detecting the effect of *dosage*, both overall and within
 each level of *temp*, can be assessed as follows:
 
 ```{r}
-# the effect of dosage across all levels of temp
-pwr.contrast(design = lsd, specs = ~ "dosage", method = "pairwise")
-# the effect of dosage at each level of temp
-pwr.contrast(design = lsd, specs = ~ dosage|temp, method = "pairwise")
+# # the effect of dosage across all levels of temp
+# pwr.contrast(design = lsd, specs = ~ "dosage", method = "pairwise")
+# # the effect of dosage at each level of temp
+# pwr.contrast(design = lsd, specs = ~ dosage|temp, method = "pairwise")
 ```
 
 **Sample Size Determination**
@@ -670,23 +672,23 @@ the `find_sample_size` function can be used. First, we create a quoted
 design object where `squares = n` remains unevaluated:
 
 ```{r}
-lsd_quote <- quote(
-  designLSD(
-  treatments = c(2, 2),
-  squares = n,
-  reuse = "both",
-  beta = c(35, 5, 3, -2),
-  VarCov = list(11, 2),
-  sigma2 = 2
-  )
-)
+# lsd_quote <- quote(
+#   designLSD(
+#   treatments = c(2, 2),
+#   squares = n,
+#   reuse = "both",
+#   beta = c(35, 5, 3, -2),
+#   VarCov = list(11, 2),
+#   sigma2 = 2
+#   )
+# )
 ```
 
 The optimal sample size for the target power within the range of n_init
 and n_max can be determined as follows:
 
 ```{r}
-find_sample_size(design.quote = lsd_quote, n_init = 2, n_max = 99)
+# find_sample_size(design.quote = lsd_quote, n_init = 2, n_max = 99)
 ```
 
 ## Example 4: Split-plot Design
@@ -726,21 +728,21 @@ each level. The design parameters are as follows:
 **Create the SPD**
 
 ```{r}
-spd <- designSPD(
-  trt.main = 2,
-  trt.sub = 3, 
-  replicates = 10, 
-  label = list(Main = c("Main1", "Main2"), Sub = c("Sub1", "Sub2", "Sub3")),
-  beta = c(20, 2, 2, 4, 0, 2),
-  VarCov = list(4),
-  sigma2 = 11
-)
+# spd <- designSPD(
+#   trt.main = 2,
+#   trt.sub = 3, 
+#   replicates = 10, 
+#   label = list(Main = c("Main1", "Main2"), Sub = c("Sub1", "Sub2", "Sub3")),
+#   beta = c(20, 2, 2, 4, 0, 2),
+#   VarCov = list(4),
+#   sigma2 = 11
+# )
 ```
 
 **Power for the omnibus test**
 
 ```{r}
-pwr.anova(spd)
+# pwr.anova(spd)
 ```
 
 **Power for specific contrasts**
@@ -749,7 +751,7 @@ The power for detecting the effect of subplot treatment under each level
 of main plot treatment, can be assessed as follows:
 
 ```{r}
-pwr.contrast(design = spd, specs = ~ Sub|Main, method = "trt.vs.ctrl")
+# pwr.contrast(design = spd, specs = ~ Sub|Main, method = "trt.vs.ctrl")
 ```
 
 ## Example 5: A customized design
@@ -790,22 +792,22 @@ whole-plot factor. The overall structure is as follows:
 To create the design object for this hybrid SPD-COD, we first need to construct a data frame containing all the independent variables, structured to resemble the actual experimental data. This data frame can be generated using the internal function `df.cod`, which builds a data frame for a COD with the specified treatment structure and number of replications. Once the base data frame is generated, a column for the "Breed" variable is manually added. It is important to note that no randomization occurs at this stage—the data frame simply represents the data structure and is not the actual randomized experimental data. Its purpose is to create the design layout.
 
 ```{r}
-df_spd_cod <- pwr4exp:::df.cod(
-  treatments = c(2, 2),
-  squares = 4
-)
-## Create main plot factor, i.e., breed
-df_spd_cod$Breed <- rep(c("1", "2"), each = 32)
-
-## Check data structure
-head(df_spd_cod, n = 4); tail(df_spd_cod, n = 4)
+# df_spd_cod <- pwr4exp:::df.cod(
+#   treatments = c(2, 2),
+#   squares = 4
+# )
+# ## Create main plot factor, i.e., breed
+# df_spd_cod$Breed <- rep(c("1", "2"), each = 32)
+# 
+# ## Check data structure
+# head(df_spd_cod, n = 4); tail(df_spd_cod, n = 4)
 ```
 **Specify the model formula**
 
 Next, an appropriate model formula must be specified to fit the experimental design. The formula captures the interactions between breed, the two treatment factors (facA and facB), and the random effects for subjects and periods.
 
 ```{r}
-formula <- y ~ Breed*facA*facB + (1|subject) + (1|period)
+# formula <- y ~ Breed*facA*facB + (1|subject) + (1|period)
 ```
 
 **Fixed effects**
@@ -813,16 +815,16 @@ formula <- y ~ Breed*facA*facB + (1|subject) + (1|period)
 We then specify the fixed effects for the model, where beta contains the baseline intercept and the effects of each factor and their interactions.
 
 ```{r}
-beta = c(
-  `(Intercept)` = 35,        # Baseline (mean of Breed1_A1_B1)
-  Breed2 = -5,           # Effect of the second breed alone
-  facA2 = -5,               # Effect of A2 alone
-  facB2 = 1,                # Effect of B2 alone
-  `Breed2:facA2` = 1,         # Interaction between Breed2 and A2
-  `Breed2:facB2` = 0,         # Interaction between Breed2 and B2
-  `facA2:facB2` = 2,             # Interaction between A2 and B2
-  `Breed2:facA2:facB2` = 1       # Three-way interaction between Breed2, A2, and B2
-)
+# beta = c(
+#   `(Intercept)` = 35,        # Baseline (mean of Breed1_A1_B1)
+#   Breed2 = -5,           # Effect of the second breed alone
+#   facA2 = -5,               # Effect of A2 alone
+#   facB2 = 1,                # Effect of B2 alone
+#   `Breed2:facA2` = 1,         # Interaction between Breed2 and A2
+#   `Breed2:facB2` = 0,         # Interaction between Breed2 and B2
+#   `facA2:facB2` = 2,             # Interaction between A2 and B2
+#   `Breed2:facA2:facB2` = 1       # Three-way interaction between Breed2, A2, and B2
+# )
 
 ```
 
@@ -831,20 +833,20 @@ beta = c(
 After constructing the data frame, model formula, and fixed effects, the design object can be created using the `designCustom` function. The variance-covariance structure and error variance are also provided to complete the design.
 
 ```{r}
-SPD_COD <- designCustom(
-  design.df = df_spd_cod,
-  formula = formula,
-  beta = beta,
-  VarCov = list(7, 4),
-  sigma2 = 4,
-  design.name = "hybrid SPD COD"
-)
+# SPD_COD <- designCustom(
+#   design.df = df_spd_cod,
+#   formula = formula,
+#   beta = beta,
+#   VarCov = list(7, 4),
+#   sigma2 = 4,
+#   design.name = "hybrid SPD COD"
+# )
 ```
 
 **Power for the omnibus test**
 
 ```{r}
-pwr.anova(SPD_COD)
+# pwr.anova(SPD_COD)
 ```
 
 **Power for specific contrasts**
@@ -852,7 +854,7 @@ pwr.anova(SPD_COD)
 We can also calculate the power for specific contrasts. For example, to assess the power for detecting differences between facA1 and facA2 at each level of facB within each breed:
 
 ```{r}
-pwr.contrast(SPD_COD, ~facA|facB|Breed, "pairwise")
+# pwr.contrast(SPD_COD, ~facA|facB|Breed, "pairwise")
 ```
 
 # References

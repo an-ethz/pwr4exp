@@ -15,7 +15,7 @@ For instance, \code{treatments = n} specifies one treatment factor with n
 levels, and \code{treatments=c(2,3)} creates a "2x3" factorial design of
 two treatment factors with 2 and 3 levels, respectively.}
 
-\item{label}{Optional. A list of character vectors specifying the names of
+\item{label}{A optional list of strings specifying the names of
 treatment factors and factor levels. Each vector in the list represents a
 treatment factor, where the name of the vector specifies the name of the
 factor, and the values in the vector are the labels for that factor's levels.

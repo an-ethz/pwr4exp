@@ -2,38 +2,40 @@
 % Please edit documentation in R/power-calculation.R
 \name{pwr.anova}
 \alias{pwr.anova}
-\title{Power of omnibus test}
+\title{Power of omnibus tests}
 \usage{
-pwr.anova(design, alpha = 0.05, ...)
+pwr.anova(object, sig.level = 0.05, type = c("III", "II", "I", "3", "2", "1"))
 }
 \arguments{
-\item{design}{a design object created using design generating functions.}
+\item{object}{a design object created in pwr4exp}
 
-\item{alpha}{significance level (type I error rate), default 0.05}
+\item{sig.level}{significance level, default 0.05}
 
-\item{...}{Additional arguments passed to \link[lmerTest]{anova.lmerModLmerTest}
-for linear mixed models and to \link[car]{Anova} for linear models. The type
-of sum of squares (SS, default is Type III) and the method for computing denominator
-degrees of freedom (DDF, default is Satterthwaite's method) can be modified.
-For balanced designs, types of SS and DDF do not affect results. Note that
-these additional arguments should be consistent in the design-generating
-function and \code{pwr.anova} for linear mixed models.}
+\item{type}{the type of ANOVA table requested, default Type III}
 }
 \value{
 a data frame with numerator degrees of freedom (NumDF), denominator
-degrees of freedom (DenDF), non-centrality parameter, type I error rate (alpha),
-and power.
+degrees of freedom (DenDF), type I error rate (sig.level), and power.
 }
 \description{
 Calculate power for testing overall effects of treatment factors and their
-interactions, i.e., statistical power of ANOVA.
+interactions, i.e., statistical power of F-test.
 }
 \examples{
 # generate an RCBD
-rcbd = designRCBD(treatments = c(2, 2), blocks = 10, beta = c(10, 9, 8, 7), VarCov = 10, sigma2 = 9)
+rcbd <- designRCBD(
+  treatments = c(2, 2),
+  label = list(facA = c("1", "2"), facB = c("1", "2")),
+  blocks = 12,
+  formula = ~ facA*facB + (1|block),
+  means = c(32, 35, 30, 37),
+  vcomp = 4,
+  sigma2 = 6
+)
 # power of omnibus test
-pwr.anova(rcbd, alpha  = 0.05)
+pwr.anova(rcbd)
+
 }
 \seealso{
-\code{\link[=designCRD]{designCRD()}}, \code{\link[=designRCBD]{designRCBD()}}, \code{\link[=designLSD]{designLSD()}}, \code{\link[=designCOD]{designCOD()}}, \code{\link[=designSPD]{designSPD()}}, \code{\link[=designCustom]{designCustom()}}, and \code{\link[=pwr.contrast]{pwr.contrast()}}
+\code{\link[=mkdesign]{mkdesign()}}, \code{\link[=designCRD]{designCRD()}}, \code{\link[=designRCBD]{designRCBD()}}, \code{\link[=designLSD]{designLSD()}}, \code{\link[=designCOD]{designCOD()}}, \code{\link[=designSPD]{designSPD()}}, \code{\link[=pwr.summary]{pwr.summary()}} and \code{\link[=pwr.contrast]{pwr.contrast()}}
 }
