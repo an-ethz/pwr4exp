@@ -8,8 +8,8 @@
 <title>Power Analysis for Research Experiments • pwr4exp</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
-<link href="deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Power Analysis for Research Experiments">
 <meta name="description" content="Provides tools for calculating statistical power and determining sample size for a variety of experimental designs used in agricultural and biological research, including completely randomized, block, and split-plot designs. Supports customized designs and allows specification of main effects, interactions, and contrasts for accurate power analysis.">
 <meta property="og:description" content="Provides tools for calculating statistical power and determining sample size for a variety of experimental designs used in agricultural and biological research, including completely randomized, block, and split-plot designs. Supports customized designs and allows specification of main effects, interactions, and contrasts for accurate power analysis.">
@@ -47,7 +47,20 @@
   </div>
 </nav><div class="container template-home">
 <div class="row">
-  <main id="main" class="col-md-9"><div class="section level1">
+  <main id="main" class="col-md-9"><div class="section level2">
+<h2 id="development-version">Development Version<a class="anchor" aria-label="anchor" href="#development-version"></a>
+</h2>
+<p>A development version of this package is available on the <code>dev</code> branch. This version enables applying various correlation structures (corClasses from nlme package) for repeated measures and some new improvements are still being tested.</p>
+<p>For more details on the development version, visit the <a href="https://github.com/an-ethz/pwr4exp/tree/dev" class="external-link">dev branch README</a>.</p>
+<p>To install the development version, use the following command in R:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Install the 'devtools' package if not already installed</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"devtools"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Install the development version from the dev branch</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"an-ethz/pwr4exp"</span>, ref <span class="op">=</span> <span class="st">"dev"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level1">
 <div class="page-header"><h1 id="pwr4exp">pwr4exp<a class="anchor" aria-label="anchor" href="#pwr4exp"></a>
 </h1></div>
 <p>The <code>pwr4exp</code> R package provides functions for power calculation and sample size determination in standard experimental designs in animal science and beyond. The package emphasizes the importance of specifying models for conducting power analyses and supports power analyses for main effects, interactions, and specific contrasts. Additionally, <code>pwr4exp</code> offers a flexible framework to perform power analysis on customized designs which are currently not predefined in the package.</p>
@@ -56,13 +69,13 @@
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># You can install pwr4exp from CRAN</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"pwr4exp"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Or the the development version from GitHub:</span></span>
 <span><span class="co"># install.packages("devtools")</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"an-ethz/pwr4exp"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"an-ethz/pwr4exp"</span>, ref <span class="op">=</span> <span class="st">"dev"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="functions">Functions<a class="anchor" aria-label="anchor" href="#functions"></a>
@@ -72,7 +85,7 @@
 <h3 id="example-usage">Example Usage<a class="anchor" aria-label="anchor" href="#example-usage"></a>
 </h3>
 <p>Here’s an example of how you can generate a design and calculate power:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/an-ethz/pwr4exp" class="external-link">pwr4exp</a></span><span class="op">)</span></span>
 <span><span class="co"># Create a design</span></span>
 <span><span class="va">rcbd</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/create_designs.html">designRCBD</a></span><span class="op">(</span></span>
@@ -102,6 +115,7 @@
 <p>The documentation for this package is being updated. If you have any questions or suggestions, please feel free to contact the package maintainer.</p>
 </div>
 </div>
+
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
