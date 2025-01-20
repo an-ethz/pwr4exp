@@ -1,3 +1,4 @@
+#' @export
 #' @import stats
 #' @importFrom lme4 lmerControl
 designStr <- function(formula,
@@ -60,6 +61,7 @@ designStr <- function(formula,
   return(desStr)
 }
 
+#' @export
 #' @noRd
 corStr <- function(data,
                    sigma2,
