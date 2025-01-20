@@ -77,7 +77,7 @@ corStr <- function(data,
   }
 
   corform <- corcall$form
-  data <- data[, colnames(data) %in% all.vars(corform)]
+  data <- data[, colnames(data) %in% all.vars(corform), drop = FALSE]
   grp.var <- strsplit(deparse1(corform[[2]]), " \\| ")[[1]][2]
   srt.var <- strsplit(deparse1(corform[[2]]), " \\| ")[[1]][1]
   grpform <- reformulate(grp.var)
@@ -86,21 +86,62 @@ corStr <- function(data,
     df[, "idx_data"] <- as.integer(rownames(df))
     return(df)
   })
-  if (srt.var != 1) {
+
+  if (any(class(correlation) %in% c("corSymm", "corAR1"))) {
+    if (srt.var != 1) {
+      corframe <- lapply(corframe, function(df){
+        if (!is.integer(df[[srt.var]])) {
+          df[[srt.var]] <- as.integer(df[[srt.var]])
+        }
+        df <- df[do.call(order, df[srt.var]), , drop = FALSE]
+        return(df)
+      })
+    }
+  }
+
+  if (any(class(correlation) %in% c("corCAR1"))) {
+    if (srt.var != 1) {
+      corframe <- lapply(corframe, function(df){
+        if (!is.numeric(df[[srt.var]])) {
+          df[[srt.var]] <- as.numeric(df[[srt.var]])
+        }
+        df <- df[do.call(order, df[srt.var]), , drop = FALSE]
+        return(df)
+      })
+    }
+  }
+
+  if (any(class(correlation) %in% c("corARMA"))) {
+    if (srt.var != 1) {
+      corframe <- lapply(corframe, function(df){
+        if (!is.integer(df[[srt.var]])) {
+          df[[srt.var]] <- as.integer(df[[srt.var]])
+        }
+        df <- df[do.call(order, df[srt.var]), , drop = FALSE]
+        return(df)
+      })
+    }
+  }
+
+  if (any(class(correlation) %in% c("corExp", "corGaus", "corLin", "corRatio,", "corSpher."))) {
+    srt.var <- strsplit(gsub("\\s", "", srt.var), "\\+")[[1]]
     corframe <- lapply(corframe, function(df){
-      df <- df[do.call(order, df[srt.var]), , drop = FALSE]
-      if (!is.integer(df[[srt.var]])) {
-        df[[srt.var]] <- as.integer(df[[srt.var]])
-      }
+      fr_d <- subset(df, select = colnames(df) %in% srt.var)
+      dist <- as.matrix(dist(fr_d))
+      ord <- order(as.matrix(dist)[, 1])
+      df <- df[ord, , drop = FALSE]
       return(df)
     })
   }
+
   corframe <- do.call(rbind, corframe)
   corframe[, "idx_R"] <- 1:nrow(corframe)
   corframe <- corframe[order(corframe$idx_R), ]
 
   R_list <- nlme::corMatrix(nlme::Initialize(correlation, data = corframe))
   corframe <- corframe[order(corframe$idx_data), ]
+  # FIXME: more robust way of matching positions in data and in R_list?
+  rownames(corframe) <- corframe$idx_data
   # R <- Matrix::.bdiag(R_list)*sigma2
   R <- Matrix::.bdiag(R_list)
   R <- R[corframe$idx_R, corframe$idx_R]

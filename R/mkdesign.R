@@ -78,6 +78,9 @@ mkdesign <- function(
     ...
 ) {
 
+  # FIXME: more robust way?
+  rownames(data) <- 1:nrow(data)
+
   if (is.null(beta) & is.null(means) & is.null(sigma2))
     template <- TRUE
   mc <- mf <- match.call()
