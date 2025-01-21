@@ -1,6 +1,9 @@
-#' Creation of Experimental Designs
+#' Creation of Standard Experimental Designs
 #'
-#' These functions are used to create some common designs in agricultural studies by specifying the design characteristics.
+#' These functions facilitate the creation of standard experimental designs
+#' commonly used in agricultural studies for power analysis. Instead of supplying
+#' a data frame to [mkdesign], users can specify key design characteristics to generate the design.
+#' Other design parameters are consistent with those in [mkdesign].
 #'
 #' @param treatments An integer-valued vector specifying the treatment structure,
 #' in which the length of the vector indicates the number of treatment factors,
@@ -30,20 +33,23 @@
 #' there are multiple squares. Options are: "row" for reusing row blocks, "col"
 #' for reusing column blocks, or "both" for reusing both row and column blocks
 #' to replicate a single square.
-#' @param formula a right-hand-side formula to be used for testing treatment effects
-#' Use the syntax of \code{\link{lm}} for fixed effects and \link[lme4]{lmer} for random effects.
+#' @param formula A right-hand-side [formula] specifying the model for testing treatment effects,
+#' with terms on the right of [~] , following [lme4::lmer()] syntax for random effects.
 #' If not specified, a default formula with main effects and all interactions is used internally.
-#' @param beta model coefficients, an optional input of fixed effects.
-#' The coefficients of factor variables are the coefficients of dummy variables created
-#' using "contr.treatment".
-#' @param means marginal means or conditioned means if factors have interaction.
-#' Regression coefficients should be provided for numerical variables. Use `template = TRUE` to create
-#' a template for these inputs.
-#' @param vcomp variance-covariance parameters of random effects provided in a vector.
-#' Use `template = TRUE` to create a template for these inputs.
+#' @param beta One of the optional inputs for fixed effects.
+#' A vector of model coefficients where factor variable coefficients correspond
+#' to dummy variables created using "contr.treatment".
+#' @param means One of the optional inputs for fixed effects.
+#' A vector of marginal or conditioned means (if factors have interactions).
+#' Regression coefficients are required for numerical variables.
+#' Either `beta` or `means` must be provided, and their values must strictly follow a specific order.
+#' A template can be created to indicate the required input values and their order.
+#' See [mkdesign] for more information.
+#' @param vcomp A vector of variance-covariance components for random effects, if present.
+#' The values must follow a strict order. See [mkdesign].
 #' @param sigma2 error variance.
-#' @param template if TRUE, a template for `beta`, `means`, and `vcomp` is
-#' generated to indicate the orders of inputs
+#' @param template Default is `FALSE`.
+#' If `TRUE`, a template for `beta`, `means`, and `vcomp` is generated to indicate the required input order.
 #'
 #' @details Each function creates a specific design as described below:
 #' \describe{

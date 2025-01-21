@@ -11,7 +11,7 @@
 \alias{designLSD}
 \alias{designCOD}
 \alias{designSPD}
-\title{Creation of Experimental Designs}
+\title{Creation of Standard Experimental Designs}
 \usage{
 designCRD(
   treatments,
@@ -95,27 +95,30 @@ labeled as \code{list(trt = c("1", "2", ...))} and
 randomized design or the number of experimental units (main plots) per treatment
 of main plot factors.}
 
-\item{formula}{a right-hand-side formula to be used for testing treatment effects
-Use the syntax of \code{\link{lm}} for fixed effects and \link[lme4]{lmer} for random effects.
+\item{formula}{A right-hand-side \link{formula} specifying the model for testing treatment effects,
+with terms on the right of \link{~} , following \code{\link[lme4:lmer]{lme4::lmer()}} syntax for random effects.
 If not specified, a default formula with main effects and all interactions is used internally.}
 
-\item{beta}{model coefficients, an optional input of fixed effects.
-The coefficients of factor variables are the coefficients of dummy variables created
-using "contr.treatment".}
+\item{beta}{One of the optional inputs for fixed effects.
+A vector of model coefficients where factor variable coefficients correspond
+to dummy variables created using "contr.treatment".}
 
-\item{means}{marginal means or conditioned means if factors have interaction.
-Regression coefficients should be provided for numerical variables. Use \code{template = TRUE} to create
-a template for these inputs.}
+\item{means}{One of the optional inputs for fixed effects.
+A vector of marginal or conditioned means (if factors have interactions).
+Regression coefficients are required for numerical variables.
+Either \code{beta} or \code{means} must be provided, and their values must strictly follow a specific order.
+A template can be created to indicate the required input values and their order.
+See \link{mkdesign} for more information.}
 
 \item{sigma2}{error variance.}
 
-\item{template}{if TRUE, a template for \code{beta}, \code{means}, and \code{vcomp} is
-generated to indicate the orders of inputs}
+\item{template}{Default is \code{FALSE}.
+If \code{TRUE}, a template for \code{beta}, \code{means}, and \code{vcomp} is generated to indicate the required input order.}
 
 \item{blocks}{The number of blocks.}
 
-\item{vcomp}{variance-covariance parameters of random effects provided in a vector.
-Use \code{template = TRUE} to create a template for these inputs.}
+\item{vcomp}{A vector of variance-covariance components for random effects, if present.
+The values must follow a strict order. See \link{mkdesign}.}
 
 \item{squares}{The number of replicated squares. By default, 1, i.e., no
 replicated squares.}
@@ -135,7 +138,10 @@ sub plot level for a split plot design, similar to \code{treatments}.}
 a list with critical components for power analysis
 }
 \description{
-These functions are used to create some common designs in agricultural studies by specifying the design characteristics.
+These functions facilitate the creation of standard experimental designs
+commonly used in agricultural studies for power analysis. Instead of supplying
+a data frame to \link{mkdesign}, users can specify key design characteristics to generate the design.
+Other design parameters are consistent with those in \link{mkdesign}.
 }
 \details{
 Each function creates a specific design as described below:

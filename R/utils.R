@@ -62,7 +62,7 @@ designStr <- function(formula,
 }
 
 #' @export
-#' @noRd
+#' @import stats
 corStr <- function(data,
                    sigma2,
                    corcall = NULL) {
@@ -522,7 +522,8 @@ numeric_terms <- function(object) {
   ## is numeric
   ## (interactions involving one or more numerics variables are numeric).
   Terms <- delete.response(terms(object$fixed.frame))
-  all_vars <- all.vars(attr(Terms, "variables"))
+  # all_vars <- all.vars(attr(Terms, "variables"))
+  all_vars <- sapply(attr(Terms, "variables")[-1], deparse)
   # FIXME: dataClasses in frame terms are different from fixed.frame terms
   # data_classes <- attr(attr(object$frame, "terms"), "dataClasses")
   data_classes <- attr(terms(object$fixed.frame), "dataClasses")
@@ -635,9 +636,9 @@ lsmeans_contrasts <- function(object, which=NULL, by = NULL) {
     numvar_names <- names(get_num_list(object))
     numvars_in_term <- numvar_names[factor_mat[numvar_names, which] == 1]
     facvars_in_term <- setdiff(vars_in_term, numvar_names)
-    grid[[numvars_in_term]] <- 1
+    grid[, numvars_in_term] <- 1
     grid0 <- grid
-    grid0[[numvars_in_term]] <- 0
+    grid0[, numvars_in_term] <- 0
     uX <- model.matrix(formula, data=grid, contrasts.arg=Contr[facvars_in_term])
     uX0 <- model.matrix(formula, data=grid0, contrasts.arg=Contr[facvars_in_term])
     uX <- uX - uX0
@@ -667,34 +668,64 @@ means2beta_contrasts <- function(object){
     if (trm %in% factor_terms) {
       drop_vars <- factor_mat[var_names, trm] == 1
     } else {
-      drop_vars <- factor_mat[var_names, trm] == 1 & var_names %in% numvar_names
+      if (all(var_names[factor_mat[var_names, trm] == 1] %in% numvar_names))
+        dropvars <- logical(length(var_names)) else
+          drop_vars <- factor_mat[var_names, trm] == 1 & var_names %in% numvar_names
     }
   })
   dropvars <- Reduce("|", dropvars)
   dropvars <- names(dropvars[dropvars])
   which <- setdiff(term_names, dropvars)
   which <- setNames(which, which)
-  # FIXME: for more flexible containments
+  # Check if 2nd-order terms should be dropped
+  # FIXME: add flexibility for more higher orders
   if (any(attr(terms, "order") > 2)) {
-    ord3_terms <- term_names[attr(terms, "order") == 3]
-    ord2_terms <- term_names[attr(terms, "order") == 2]
-    is_contained <- function(x, y) {
-      x_parts <- unlist(strsplit(x, ":", fixed = TRUE))
-      y_parts <- unlist(strsplit(y, ":", fixed = TRUE))
-      all(x_parts %in% y_parts)
-    }
-    factor_mat2 <- outer(ord2_terms, ord3_terms, Vectorize(is_contained))
-    droptrms <- lapply(ord3_terms, function(trm){
-      if (trm %in% factor_terms) {
-        drop_trms <- factor_mat2[, trm] == 1
-      } else {
-        drop_trms <- factor_mat2[, trm] == 1 & ord2_terms %in% numvar_names
+    max_order <- max(attr(terms, "order"))
+    for (i in seq(3, max_order, by = 1)) {
+      ordh_terms <- term_names[attr(terms, "order") == i]
+      ordl_terms <- term_names[attr(terms, "order") == i-1]
+      is_contained <- function(x, y) {
+        x_parts <- unlist(strsplit(x, ":", fixed = TRUE))
+        y_parts <- unlist(strsplit(y, ":", fixed = TRUE))
+        all(x_parts %in% y_parts)
       }
-    })
-    droptrms <- Reduce("|", droptrms)
-    droptrms <- names(droptrms[droptrms])
-    which <- setdiff(which, droptrms)
+      factor_matl <- outer(ordl_terms, ordh_terms, Vectorize(is_contained))
+      droptrms <- lapply(ordh_terms, function(trm){
+        if (trm %in% factor_terms) {
+          drop_trms <- factor_matl[, trm] == 1
+        } else {
+          if (all(ordl_terms[factor_matl[, trm] == 1] %in% numeric_terms))
+            drop_trms <- logical(length(ordl_terms)) else
+              drop_trms <- factor_matl[, trm] == 1 & ordl_terms %in% numeric_terms
+        }
+      })
+      droptrms <- Reduce("|", droptrms)
+      droptrms <- names(droptrms[droptrms])
+      which <- setdiff(which, droptrms)
+    }
   }
+  # if (any(attr(terms, "order") > 2)) {
+  #   ord3_terms <- term_names[attr(terms, "order") == 3]
+  #   ord2_terms <- term_names[attr(terms, "order") == 2]
+  #   is_contained <- function(x, y) {
+  #     x_parts <- unlist(strsplit(x, ":", fixed = TRUE))
+  #     y_parts <- unlist(strsplit(y, ":", fixed = TRUE))
+  #     all(x_parts %in% y_parts)
+  #   }
+  #   factor_mat2 <- outer(ord2_terms, ord3_terms, Vectorize(is_contained))
+  #   droptrms <- lapply(ord3_terms, function(trm){
+  #     if (trm %in% factor_terms) {
+  #       drop_trms <- factor_mat2[, trm] == 1
+  #     } else {
+  #       if (all(ord2_terms[factor_mat2[, trm] == 1] %in% numeric_terms))
+  #         drop_trms <- logical(length(ord2_terms)) else
+  #           drop_trms <- factor_mat2[, trm] == 1 & ord2_terms %in% numeric_terms
+  #     }
+  #   })
+  #   droptrms <- Reduce("|", droptrms)
+  #   droptrms <- names(droptrms[droptrms])
+  #   which <- setdiff(which, droptrms)
+  # }
   Llist <- lapply(which, function(wic){
     lsmeans_contrasts(object, wic)
   })
