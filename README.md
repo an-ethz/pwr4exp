@@ -1,6 +1,10 @@
 # pwr4exp
 
-The `pwr4exp` R package provides functions for power calculation and sample size determination in standard experimental designs in animal science and beyond. The package emphasizes the importance of specifying models for conducting power analyses and supports power analyses for main effects, interactions, and specific contrasts. Additionally, `pwr4exp` offers a flexible framework to perform power analysis on customized designs which are currently not predefined in the package. The development version incorporates various correlation structures for repeated measures and spatial data directly from the `nlme` package.
+pwr4exp is an R package developed to calculate statistical power for experimental designs, with a particular focus on applications in animal science and related fields. The package supports approximate F-tests for general linear hypotheses in linear mixed models and t-tests for specific contrasts, using the Satterthwaite method to approximate degrees of freedom.
+
+The development version introduces support for various correlation structures in repeated measures and spatial data, along with options for creating input templates, simplifying the setup and execution of power analyses.
+
+In addition, pwr4exp offers a flexible framework for performing power calculations in more complex experimental designs.
 
 <!-- badges: start -->
 
@@ -19,7 +23,7 @@ devtools::install_github("an-ethz/pwr4exp", ref = "dev")
 
 ## Functions
 
-Performing power analysis in `pwr4exp` involves the following steps: - First, create a design object using the design generating functions. - Once the design object is created, calculating power or determining sample size using `pwr4exp` is straightforward. Simply pass the design object to the power calculator for main effects and interactions, `pwr.anova()`, or for contrasts, `pwr.contrast()`.
+Performing power analysis in `pwr4exp` involves two main steps: - First, create a design object. - Second, pass the design object to power calculators.
 
 ### Example Usage
 
@@ -28,11 +32,13 @@ Here's an example of how you can generate a design and calculate power:
 ``` r
 library(pwr4exp)
 
-## representing a CRD with repeated measures at 8 time points
+# Step 1. Create a design
+## Define a completely randomized design with repeated measures
+## by specifying it's data sturecture
 
-n_subject = 6
-n_trt = 3
-n_hour = 8
+n_subject = 6 # Subjects per treatment
+n_trt = 3 # Number of treatments
+n_hour = 8 # Number of repeated measures (time points)
 trt = c("CON", "TRT1", "TRT2")
 
 df.rep <- data.frame(
@@ -41,10 +47,11 @@ df.rep <- data.frame(
   trt = rep(trt, each = n_subject*n_hour)
 )
 
-# templates
+## Generate a template for required input
+
 mkdesign(formula = ~ trt*hour, data = df.rep)
 
-# create the design
+## Create the design object
 
 design.rep <- mkdesign(
 formula = ~ trt*hour,
@@ -61,15 +68,21 @@ sigma2 = 2,
 correlation = corAR1(value = 0.6, form = ~ hour|subject)
 )
 
+# Step 2: Calculate power
+## Omnibus test
 pwr.anova(design.rep)
+
+## Contrast test (pairwise comparisons by hour)
+pwr.contrast(design.rep, which = "trt", by = "hour", contrast = "pairwise")
 ```
 
 ## Learn More
 
-The page will be updated recently to reflect the newly add functions.
+To learn more about power analysis with `pwr4exp`, refer to the [vignette](https://an-ethz.github.io/pwr4exp/articles/pwr4exp.html) which contains:
 
-~~To learn more about `pwr4exp`, read through the [vignette](https://an-ethz.github.io/pwr4exp/articles/pwr4exp.html) for `pwr4exp` which contains:~~
+- Fundamental concepts of statistical power in linear mixed models.
+- Instructions for preparing and providing the required inputs.
+- Examples of power calculations for standard designs available in the package.
+- Examples of power analysis for more complex designs.
 
-~~- Foundational Concepts.~~ ~~- Instructions for providing the required inputs.~~ \~\~- Examples of conducting power analysis for the standard designs available in the package. ~~- Examples of using `pwr4exp` to assess the power of customized designs.~~
-
-The documentation for this package is being updated. If you have any questions or suggestions, please feel free to contact the package maintainer.
+The package documentation is being updated. For any questions or suggestions, please feel free to contact the package maintainer.
