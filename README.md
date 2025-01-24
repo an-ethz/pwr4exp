@@ -16,7 +16,7 @@ install.packages("pwr4exp")
 
 # Or the development version from GitHub:
 # install.packages("devtools")
-devtools::install_github("an-ethz/pwr4exp")
+devtools::install_github("an-ethz/pwr4exp", ref = "dev")
 ```
 
 ## Functions
