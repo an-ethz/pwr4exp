@@ -1,10 +1,8 @@
 # pwr4exp
 
-pwr4exp is an R package developed to calculate statistical power for experimental designs, with a particular focus on applications in animal science and related fields. The package supports approximate F-tests for general linear hypotheses in linear mixed models and t-tests for specific contrasts, using the Satterthwaite method to approximate degrees of freedom.
+`pwr4exp` provides a flexible framework for calculating statistical power across a range of experimental designs, with a particular focus on applications in animal science and related fields. The package supports approximate F-tests for general linear hypotheses in linear mixed models and t-tests for specific contrasts, utilizing the Satterthwaite method to approximate degrees of freedom.
 
-The development version introduces support for various correlation structures in repeated measures and spatial data, along with options for creating input templates, simplifying the setup and execution of power analyses.
-
-In addition, pwr4exp offers a flexible framework for performing power calculations in more complex experimental designs.
+The development version adds support for various correlation structures in repeated measures and spatial data. It also introduces options for creating input templates, making it easier to set up and perform power analyses. Note that sample size determination has been removed from this version.
 
 <!-- badges: start -->
 
@@ -18,12 +16,16 @@ install.packages("pwr4exp")
 
 # Or the development version from GitHub:
 # install.packages("devtools")
-devtools::install_github("an-ethz/pwr4exp", ref = "dev")
+devtools::install_github("an-ethz/pwr4exp")
 ```
 
 ## Functions
 
-Performing power analysis in `pwr4exp` involves two main steps: - First, create a design object. - Second, pass the design object to power calculators.
+Performing power analysis in `pwr4exp` involves two main steps:
+
+1.  Create a design object.
+
+2.  Pass the design object to power calculators.
 
 ### Example Usage
 
@@ -34,7 +36,7 @@ library(pwr4exp)
 
 # Step 1. Create a design
 ## Define a completely randomized design with repeated measures
-## by specifying it's data sturecture
+## by specifying it's data structure
 
 n_subject = 6 # Subjects per treatment
 n_trt = 3 # Number of treatments
@@ -80,9 +82,9 @@ pwr.contrast(design.rep, which = "trt", by = "hour", contrast = "pairwise")
 
 To learn more about power analysis with `pwr4exp`, refer to the [vignette](https://an-ethz.github.io/pwr4exp/articles/pwr4exp.html) which contains:
 
-- Fundamental concepts of statistical power in linear mixed models.
-- Instructions for preparing and providing the required inputs.
-- Examples of power calculations for standard designs available in the package.
-- Examples of power analysis for more complex designs.
+-   Fundamental concepts of statistical power in linear mixed models.
+-   Instructions for preparing and providing the required inputs.
+-   Examples of power calculations for standard designs available in the package.
+-   Examples of power analysis for more complex designs.
 
 The package documentation is being updated. For any questions or suggestions, please feel free to contact the package maintainer.

@@ -17,23 +17,663 @@ knitr::opts_chunk$set(
 )
 ```
 
+# Introduction
+
+`pwr4exp` provides tools for statistical power calculation in
+experimental designs analyzed within the linear mixed model framework,
+including both fixed-effects and mixed-effects models. Currently, the
+package does not support generalized linear models; thus, only normal
+response variables are supported. Degrees of freedom are approximated
+using the Satterthwaite method.
+
+This vignette is based on the development version of the package, which
+incorporates various correlation structures in repeated measures and
+spatial data. It also includes options for generating input templates,
+simplifying the setup and execution of power analyses. The development
+version can be downloaded from GitHub:
+
+```{r eval=FALSE}
+# devtools::install_github("an-ethz/pwr4exp")
+```
+
 ```{r setup}
 library(pwr4exp)
 ```
 
-# This page will be updated recently for the new version
+## Package overview
 
-# Foundational Concepts
+Performing a power analysis in `pwr4exp` involves two main steps:
 
-The **pwr4exp** R package offers functionality for power analysis. The
-package is developed based on linear mixed model (LMM) theory, offering
-tailored functions for standard experimental designs in animal science
-and beyond. The current version does not yet support non-normal response
-variables, such as those encountered in generalized LMM.
+1.  [Create a design object](#design): A design object, on which the
+    power analysis will be conducted, needs to be created first. This is
+    done using the function [**`mkdesign`**](#mkdesign) for any designs,
+    or the functions [**`designCRD`**](#designCRD),
+    [**`designRCBD`**](#designRCBD), [**`designLSD`**](#designLSD),
+    [**`designCOD`**](#designCOD), and [**`designSPD`**](#designSPD) for
+    the specific designs.
 
-Linear mixed model is a powerful tool for analyzing data from various
-experimental designs, especially when accounting for both fixed and
-random effects. The general form of an LMM can be expressed as:
+2.  [Calculate power](#power): The statistical power of the F-test for
+    model terms and the t-test for specific contrasts can be evaluated
+    using the functions [**`pwr.anova`**](#pwr.anova)
+    [**`pwr.contrast`**](#pwr.contrast)
+
+The sections following the introduction are dedicated to these two
+steps. Additional theory and concepts are listed at the end.
+
+# Create a design object {#design}
+
+## mk_design {#mkdesign}
+
+The function `mkdesign` is designed to create any design by specifying
+the design's data structure, the intended model, and the necessary
+parameters.
+
+**Inputs**
+
+-   `formula`: The right-hand-side model formula (uses `lme4::lmer()`
+    syntax for random effects).
+-   `data`: A long-format data frame with one row per observation and
+    columns for all independent variables specified in the formula
+    (e.g., treatments, blocks, subjects). The data should reflect the
+    design structure but exclude the response variable. Unused variables
+    in the `formula` are ignored.
+-   `beta` or `means`: Fixed-effects expectations. Specify either `beta`
+    (a vector of regression coefficients) or `means` (expected mean
+    values for fixed effects). Only one of these must be provided.
+-   `vcomp`: Expected variance-covariance components for the random
+    effects.
+-   `sigma2`: Expected error variance (residual variance).
+-   `correlation`: Correlation structure for repeated measures or
+    spatial data.
+-   `template`: Logical; when `TRUE`, generates templates for `beta`,
+    `means`, and `vcomp` instead of the full design object.
+
+**Output**
+
+-   Returns a list of essential components required for power
+    calculation functions.
+
+## Templates {#templates}
+
+Templates for `beta`, `means`, and `vcomp` can be generated when
+`template = TRUE` or when only the formula and data are provided. These
+templates serve as guides, outlining the elements and the order of
+parameter values in `beta`, `means`, and `vcomp`, based on the model and
+data structure.
+
+Below, we create an example data frame to illustrate these templates,
+which may not represent a realistic design. The data frame includes:
+
+-   Four categorical variables (`fA`, `fB`, `fC`, `fD`), and
+-   Two numerical variables (`x`, `z`).
+
+```{r}
+ df1 <- expand.grid(
+   fA = factor(1:2), # factor A with 2 levels
+   fB = factor(1:2), # factor B with 2 levels
+   fC = factor(1:3), # factor C with 3 levels
+   fD = factor(1:3), # factor D with 3 levels
+   subject = factor(1:10)  # 10 subjects for each combination of factors
+ )
+ df1$x <- rnorm(nrow(df1))  # Numerical variable x
+ df1$z <- rnorm(nrow(df1))  # Numerical variable z
+```
+
+### `beta` template:
+
+The template for `beta` specifies the order of model coefficients as
+they would appear in a fitted model. It is especially useful when
+directly providing expected model coefficients as measures of effect
+size.
+
+For example, the expected values of the model coefficients for
+`~ fA*fB + x` should be provided in the following sequence:
+
+```{r}
+mkdesign( ~ fA * fB + x, df1)$fixeff$beta
+```
+
+### `means` template:
+
+In many situations, it is more direct and convenient to provide means
+for categorical variables. The template for `means` represents marginal
+means for categorical variables, regression coefficients for numerical
+variables, and conditional means or regression coefficients for
+interactions.
+
+**Categorical variables without interactions**
+
+Marginal means for each level of the categorical variable(s) are
+required. For example, the expectations for each level of `fA` and `fB`
+follow this sequence:
+
+```{r}
+mkdesign(~ fA + fB, df1, template = T)$fixeff$means
+```
+
+**Interactions among categorical variables**
+
+Conditional (cell) means are required for all combinations of levels of
+the interacting categorical variables. For instance, cell means for all
+12 combinations of the levels of `fA`, `fB`, and `fC`, are required in
+the following order:
+
+```{r}
+mkdesign(~ fA * fB * fC, df1)$fixeff$means
+```
+
+**Numerical variables**
+
+Regression coefficients are required for numerical variables. If the
+model includes only numerical variables, the `(intercept)` must also be
+included. In such cases, `means` are identical to `beta`.
+
+```{r}
+mkdesign(~ x + z, df1)$fixeff$means
+```
+
+If there are interactions between numerical variables, regression
+coefficients for both main effects and interaction terms are required.
+Such as:
+
+```{r}
+mkdesign(~ x * z, df1)$fixeff$means
+```
+
+**Categorical-by-numerical interactions**
+
+Marginal means for the categorical variable and regression coefficients
+for the numerical variable at each level of the categorical variable are
+required. For example, the means for levels of `fA` and regression
+coefficients for `x` at each level of `fA` are required for the model
+`~ fA * x`:
+
+```{r}
+mkdesign(~ fA * x, df1)$fixeff$means
+```
+
+**Combining Multiple Situations**
+
+The rules for categorical and numerical variables described above also
+apply in mixed situations. For example, consider a model combining: -
+Interactions among three categorical variables (`fA`, `fB`, `fC`) - A
+categorical-by-numerical interaction (`fD * x`)\
+- Main effects for another numerical variable (`z`)
+
+```{r}
+mkdesign(~ fA * fB * fC + fD * x + z, df1)$fixeff$means
+```
+
+The required elements and their order in `means` are: - Means for each
+level of `fD` (positions 1-3) - Regression coefficients for `z`
+(position 4) - Regression coefficients for `x` at each level of `fD`
+(positions 5-7) - Cell means for all combinations of levels of `fA`,
+`fB`, and `fC` (positions 8-19)
+
+### `vcomp` template:
+
+The template for `vcomp` represents a variance-covariance matrix, where
+integers indicate the order of variance components in the input vector.
+
+For a single random effect, a template is unnecessary, as it corresponds
+to a single variance value. For multiple random effects, the template
+outlines the sequence of variance and covariance components to be
+provided. It helps users specify and align variance components for
+random effects in the model.
+
+For example, a model contains both random intercept and random slop for
+`fA` by `subject`:
+
+```{r}
+mkdesign(~ fA * fB * fC * fD + (1 + fA | subject), df1)$varcov
+```
+
+The template specifies the following required inputs: 1. Variance of the
+random intercept (1st component) 2. Covariance between the random
+intercept and fA2 (2nd component) 3. Variance of fA2 (3rd component)
+
+**Note**: This example may not be statistically correct for the given
+data. It is provided solely to illustrate the structure of
+variance-covariance templates.
+
+## Correlation structures
+
+Various correlation structures can be specified following the
+instructions from
+[`nlme::corClasses`](%22https://rdrr.io/cran/nlme/man/corClasses.html%22),
+including -
+[`corAR1`](%22https://rdrr.io/cran/nlme/man/corAR1.html%22) -
+[`corARMA`](%22https://rdrr.io/cran/nlme/man/corARMA.html%22) -
+[`corCAR1`](%22https://rdrr.io/cran/nlme/man/corCAR1.html%22) -
+[`corCompSymm`](%22https://rdrr.io/cran/nlme/man/corCompSymm.html%22) -
+[`corExp`](%22https://rdrr.io/cran/nlme/man/corExp.html%22) -
+[`corGaus`](%22https://rdrr.io/cran/nlme/man/corGaus.html%22) -
+[`corLin`](%22https://rdrr.io/cran/nlme/man/corLin.html%22) -
+[`corSymm`](%22https://rdrr.io/cran/nlme/man/corSymm.html%22) -
+[`corRatio`](%22https://rdrr.io/cran/nlme/man/corRatio.html%22) -
+[`corSpher`](%22https://rdrr.io/cran/nlme/man/corSpher.html%22)
+
+Note: In `nlme::corAR1()` and `nlme::corARMA()` when `p=1` and `q=0`,
+the time variable must be an integer. However, in `pwr4exp`, this
+restriction has been released, factors are also supported.
+
+## Specific design functions
+
+While `mkdesign` is highly flexible for creating any design, as long as
+the design's data structure is provided, `pwr4exp` also includes
+specific functions for some common standard designs. These specialized
+functions define a design by its characteristics, such as treatment
+structure and replications, simplifying the process of manually creating
+a data frame.
+
+### Completely randomized design
+
+``` r
+designCRD(treatments, label, replicates, formula, beta, means, sigma2, template = FALSE)
+```
+
+### Randomized complete block design
+
+``` r
+designRCBD(treatments, label, blocks, formula, beta, means, vcomp, sigma2, template = FALSE)
+```
+
+### Latin square design
+
+``` r
+designLSD(treatments, label, squares, reuse, formula, beta, means, vcomp, sigma2, template = FALSE)
+```
+
+### Crossover design
+
+This is a special case of LSD where time periods and individuals act as
+blocks. Period blocks are reused when replicating squares.
+
+``` r
+designCOD(treatments, label, squares, formula, beta, means, vcomp, sigma2, template = FALSE)
+```
+
+### Split-plot design
+
+``` r
+designSPD(trt.main, trt.sub, label, replicates, formula, beta, means, vcomp, sigma2, template = FALSE)
+```
+
+The inputs for these functions are the same as those for `mkdesign`,
+except that `data` is replaced by specifying the treatment profile and
+the number of replications.
+
+**Specific inputs**
+
+-   `treatments`: a integer-valued vector specifying the number of
+    levels of treatment factors. A maximum of two factors is allowed,
+    and arranged in a factorial design. For example,
+    `treatments = c(3, 2)` specifies one treatment factor with 3 levels
+    and another with 2 levels, forming a factorial treatment design.
+
+-   `trt.main` and `trt.sub`: define the treatments on main plot and
+    subplot, respectively, following the same rules of `treatment`.
+
+-   `label`: an optional list, whose entries are labels to used for
+    factor levels and whose names are treatment factors. If `label` is
+    not specified, default names and labels are assigned to the factors
+    and levels. For one treatment factor, the default is
+    `list(trt = c("1", "2", ...))`. For two factors, the default is
+    `list(facA = c("1", "2", ...), facB = c("1", "2", ...))`, where
+    "facA" and "facB" represent the two factors, and "1", "2", etc.,
+    represent the levels of each factor.
+
+-   `replicates`: the number of experimental units per treatment in a
+    CRD or the number of main plots (i.e., the number of experimental
+    units per treatment at the main plot level) in a SPD.
+
+-   `blocks`: the number of blocks in a RCBD.
+
+-   `squares`: the number of squares in a replicated LSD or COD.
+
+-   `reuse`: specifies how to replicate squares when there are multiple
+    squares. One of: `row` for reusing row blocks, `col` for reusing
+    column blocks, or `both` for reusing both row and column blocks to
+    replicate a single square.
+
+Each of these specific design-generating functions has a default
+`formula` based on the treatment structure (e.g., one factor or
+factorial factors). If `formula` is not specified, a default formula
+with main effects and all interactions (if applicable) is used
+internally. In RCBD, LSD, COD, and SPD designs, all block factors are
+fitted as random effects. The `formula` component in the output list can
+be inspected.
+
+# Power calculation
+
+Once the design object has been created, calculating power is
+straightforward. Statistical power of F-test for for omnibus tests can
+be calculated using the `pwr.anova` function.
+
+**Inputs** - `object`: the design object created in the previous step -
+`sig.level`: significance level, default 0.05 - `type`: the type of
+ANOVA table, default Type III
+
+Statistical power of t-test for specific contrast can be evaluated using
+the `pwr.contrast` function.
+
+**Inputs** - `object`: the design object - `which`: the factor of
+interest - `by`: the variable to condition on - `contrast`: contrast
+method, include "pairwise", "poly", and "trt.vs.ctrl", or any manually
+defined contrast vector - `sig.level`: significance level, default
+0.05 - `p.adj`: whether the sig.level should be adjusted using the
+Bonferroni method, default FALSE - `alternative`: "two.sided" or
+"one.sided". - `strict`: If `TRUE`, default, the power will include the
+probability of rejection in the opposite direction of the true effect,
+in the two-sided case. Otherwise, the power will be half the
+significance level if the true difference is zero.
+
+# Practical Examples
+
+## Example 1. Completely Randomized Design
+
+In this example, we will create a CRD with one treatment factor. The
+design parameters are as follows:
+
+1.  Treatments: 1 treatment factor with 4 levels.
+2.  Replicates: 8 experimental units per treatment.
+3.  Mean and effect size: The expected means for four levels are 35, 30,
+    37, 38
+4.  Error variance: 15
+
+**Create the CRD**
+
+```{r}
+crd <- designCRD(
+  treatments = 4,
+  replicates = 8,
+  means = c(35, 30, 37, 38),
+  sigma2 = 15
+)
+```
+
+**Power for omnibus test**
+
+```{r}
+pwr.anova(crd)
+```
+
+**Power for specific contrasts**
+
+The power for detecting differences between treatments and the control:
+
+```{r}
+pwr.contrast(crd, which =  "trt", contrast = "trt.vs.ctrl")
+```
+
+The power for detecting polynomial contrasts across the treatment
+levels:
+
+```{r}
+pwr.contrast(crd, which =  "trt", contrast = "poly")
+```
+
+The power for detecting pairwise comparison.
+
+```{r}
+pwr.contrast(crd, which =  "trt", contrast = "pairwise")
+```
+
+In data analysis, the **P-value** or **significance level** often needs
+to be adjusted for multiple comparisons (MCP). Most commonly used
+methods for MCP in experimental data are post-hoc, meaning they cannot
+be directly applied during the power analysis stage. However, one can
+tune the significance level to mimic these situations—for instance, by
+using a lower significance level to account for MCP.
+
+```{r}
+pwr.contrast(crd, which =  "trt", contrast = "pairwise", sig.level = 0.01)
+```
+
+The `pwr.contrast` function also includes an option to adjust the
+significance level using the **Bonferroni method**, though this approach
+may be overly conservative.
+
+```{r}
+pwr.contrast(crd, which =  "trt", contrast = "pairwise", sig.level = 0.01)
+```
+
+## Example 2. Randomized complete block design
+
+In this example, we will create an RCBD with two treatment factors. The
+design parameters are as follows:
+
+1.  Treatments: A 2x2 factorial design.
+2.  Replicates: 8 blocks.
+3.  Means: $$
+        \begin{array}{c|c|c}
+     & B1 & B2 \\
+        \hline
+        A1 & 35 & 38 \\
+        A2 & 40  & 41 \\
+        \end{array}
+        $$ The corresponding `beta` values are as follows:
+
+-   The intercept (`A1B1`): 35.
+-   The effect of `A2` alone: 5 units
+-   The effect of `B2` alone: 3 units
+-   The interaction between `A2` and `B2`: -2 units, meaning the
+    combined effect of `A2` and `B2` is 2 units below the additive
+    effects.
+
+4.  Variance among blocks: 11.
+5.  Error variance: 4. The total variance of the response variable (15)
+    is decomposed into variance between blocks (11) and variance within
+    blocks (4).
+
+**Create the RCBD**
+
+-   templates:
+
+```{r}
+designRCBD(treatments = c(2, 2), blocks = 8, template = TRUE)
+```
+
+Provide design paramters, `beta` or `means`, and `vcomp` according to
+the order above.
+
+```{r}
+rcbd <- designRCBD(
+  treatments = c(2, 2),
+  blocks = 8,
+  # beta = c(35, 5, 3, -2), # identical to means
+  means = c(35, 40, 38, 41),
+  vcomp = 11,
+  sigma2 = 4
+)
+```
+
+**Evaluate statistical power**
+
+The power for main and interaction effects.
+
+```{r}
+pwr.anova(rcbd)
+```
+
+The power for testing difference between levels of factor A conditioned
+on factor B:
+
+```{r}
+pwr.contrast(rcbd, which = "facA", by = "facB")
+```
+
+## Example 3. Latin square design
+
+In this example, we extend the design from *Example 2* by introducing
+another blocking factor, thus creating an LSD. The treatment structure
+and effect sizes remain the same as in *Example 2*. The design controls
+for two sources of variability (row and column blocks) while evaluating
+the treatment effects. In the LSD, the total variance (15) is further
+decomposed into three components:
+
+-   Variance between row blocks (11),
+-   Variance between column blocks (2), and
+-   Residual error variance (2).
+
+**Input templates**
+
+```{r}
+designLSD(
+  treatments = c(2, 2),
+  squares = 4,
+  reuse = "both",
+  template = TRUE
+)
+```
+
+Either `beta` or `means` can be provided as in *Example 2*. Variance of
+row blocking factors and column block factors are requried sequentially.
+
+**Create the LSD**
+
+```{r}
+lsd <- designLSD(
+  treatments = c(2, 2),
+  label = list(temp = c("T1", "T2"), dosage = c("D1", "D2")),
+  squares = 4,
+  reuse = "both",
+  means = c(35, 40, 38, 41),
+  vcomp = list(11, 2),
+  sigma2 = 2
+)
+```
+
+Once the design has been created, `pwr.anova` and `pwr.contrast` can be
+used to evaludate statistical power as demonstrated above.
+
+## Example 4: Split-plot Design
+
+In this example, we will create a SPD with two treatment factors, one at
+each level. The design parameters are as follows:
+
+```         
+1.  Treatments: One main plot factor having 2 levels, and another factor with 3 levels at the sub-plot level.
+2.  **Replicates**: There are 5 plots per main plot treatment, resulting in a total of 10 plots. This is a standard SPD, where the plot (block at the subplot level) size is assumed to equal the number of treatments. Thus, the design follows an RCBD structure at the subplot level.
+3.  The corresponding cell means are:$$
+\begin{array}{c|c|c}
+  & trt.sub1 & trt.sub2 & trt.sub3 \\
+\hline
+trt.main1 & 20 & 22 & 24\\
+trt.main2 & 22 & 24 & 28 \\
+\end{array}
+$$
+4. The total variance (15) is assumed to decompose into 4 for
+whole-plot error and 11 for subplot error.
+```
+
+**Inputs templates**
+
+```{r}
+designSPD(
+  trt.main = 2,
+  trt.sub = 3, 
+  replicates = 10, 
+  template = T
+)
+```
+
+**Create the SPD**
+
+```{r}
+spd <- designSPD(
+  trt.main = 2,
+  trt.sub = 3, 
+  replicates = 10, 
+  means = c(20, 22, 22, 24, 24, 28),
+  vcomp = 4,
+  sigma2 = 11
+)
+```
+
+## EXample 5: Repeated measures
+
+This example illustrates a repeated measures design with three
+treatments (`CON`, `TRT1`, `TRT2`) measured hourly over 8 hours.
+Within-subject correlations are modeled using an AR(1) structure with
+$\rho = 0.6$ and $\sigma^2 = 2$.
+
+**Design Details** 1. **Subjects**: 6 per treatment group (total: 18
+subjects).\
+2. **Treatments**: `CON`, `TRT1`, and `TRT2`.\
+3. **Time Points**: 8 hourly measurements.
+
+4\. **Means**:$$
+\begin{array}{c|cccccccc}
+\textbf{Treatment} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} & \textbf{7} & \textbf{8} \\
+\hline
+\text{CON} & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 \\
+\text{TRT1} & 2.50 & 3.50 & 3.98 & 4.03 & 3.68 & 3.35 & 3.02 & 2.94 \\
+\text{TRT2} & 3.50 & 4.54 & 5.80 & 5.84 & 5.49 & 4.71 & 4.08 & 3.78 \\
+\end{array}
+$$
+
+**Create a data frame for this design**
+
+```{r}
+n_subject = 6 # Subjects per treatment
+n_trt = 3 # Number of treatments
+n_hour = 8 # Number of repeated measures (time points)
+trt = c("CON", "TRT1", "TRT2")
+
+df.rep <- data.frame(
+  subject = as.factor(rep(seq_len(n_trt*n_subject), each = n_hour)),
+  hour = as.factor(rep(seq_len(n_hour), n_subject*n_trt)),
+  trt = rep(trt, each = n_subject*n_hour)
+)
+```
+
+**Input templates**
+
+Either values of `beta` or `means` are required in the following order:
+
+```{r}
+mkdesign(formula = ~ trt*hour, data = df.rep)
+```
+
+**Create a design**
+
+```{r}
+design.rep <- mkdesign(
+formula = ~ trt*hour,
+data = df.rep,
+means =  c(1, 2.50, 3.5,
+           1, 3.50, 4.54,
+           1, 3.98, 5.80,
+           1, 4.03, 5.4,
+           1, 3.68, 5.49,
+           1, 3.35, 4.71,
+           1, 3.02, 4.08,
+           1, 2.94, 3.78),
+sigma2 = 2,
+correlation = corAR1(value = 0.6, form = ~ hour|subject)
+)
+```
+
+**Power calculation**
+
+Statistical power for main effects of treatment and time, and their
+interaction:
+
+```{r}
+pwr.anova(design.rep)
+```
+
+Statistical power for treatment difference at each hour:
+
+```{r}
+pwr.contrast(design.rep, which = "trt", by = "hour", contrast = "trt.vs.ctrl", p.adj = TRUE)
+```
+
+# Fundamental concepts
+
+`pwr4exp` is developed based on linear mixed model (LMM) theory. The
+general form of an LMM can be expressed as:
 
 $$
 y = X\beta + Zu + \varepsilon
@@ -61,10 +701,10 @@ and contrasts. These can be formulated using the general linear
 hypothesis:
 
 $$
-H_0: K'\beta = 0
+H_0: K\beta = 0
 $$
 
-where $K'$ is a contrast matrix. When the variance-covariance parameters
+where $K$ is a contrast matrix. When the variance-covariance parameters
 in $G$ and $R$ are known, the estimate of $\beta$ is:
 
 $$
@@ -104,11 +744,11 @@ $$
 \hat{C} = (X^T\hat{V}^{-1}X)^{-1}
 $$
 
-When testing the null hypothesis $H_0: K'\beta = 0$, an approximate
+When testing the null hypothesis $H_0: K\beta = 0$, an approximate
 F-statistic is used. The F-statistic is given by:
 
 $$
-F = \frac{(K'\hat{\beta})' [K'\hat{C}K']^{-1} (K'\hat{\beta})}{\text{rank}(K)}
+F = \frac{(K\hat{\beta})^T [K\hat{C}K^T]^{-1} (K\hat{\beta})}{v_1}
 $$
 
 $F$ follows an approximate F-distribution $F(v_1, v_2)$ under $H_0$,
@@ -120,22 +760,56 @@ the t-statistic:
 
 $$
 F = t^2
-$$where $t = \frac{K'\hat{\beta}}{\sqrt{K'\hat{C}K}}$ with $v_2$ df.
+$$where $t = \frac{k'\hat{\beta}}{\sqrt{k'\hat{C}K}}$ with $v_2$ df.
 
 In balanced designs, where data is analyzed using a variance components
 model—commonly applied in experimental animal research—$v_2$​ can be
 precisely determined through degrees of freedom decomposition, as
-applied in analysis of variance (ANOVA):
+applied in analysis of variance (ANOVA).
+
+However, for more general cases, $v_2$ must be approximated using
+methods.
+
+The Satterthwaite approximation (Satterthwaite, 1946) for DF in t-tests
+can be calculated as outlined by Giesbrecht and Burns (1985):
 
 $$
-v_2 = n - 1 - [\text{rank}(X) - 1] - [\text{rank}(Z) - 1]
+v_2 = \frac{2(k^T \hat{C} k)^2}{g^T A g}
 $$
 
-However, for general cases, such as unbalanced designs or models with
-correlated random intercept and slope effects, $v_2$ must be
-approximated using methods like Satterthwaite’s approximation (Fai and
-Cornelius, 1996) or Kenward-Roger’s method (Kenward and Roger, 1997), as
-implemented in the **lmerTest** package.
+where: - $g$ is the gradient of $k^T C(\hat{\theta}) k$ with respect to
+$\theta$, the variance-covariance parameters in $V$, evaluated at
+$\hat{\theta}$. - Matrix $A$ is the asymptotic variance-covariance
+matrix of $\hat{\theta}$, obtained from the information matrix of ML or
+REML estimation of $\hat{\theta}$ (Stroup, 2012).
+
+In F-tests, $v_2$ can be calculated by following the procedures
+described by Fai and Cornelius (1996). First, $KC\hat{K}^T$ is
+decomposed to yield $KC\hat{K}^T = P^T D P$, where $P$ is an orthogonal
+matrix of eigenvectors, and $D$ is a diagonal matrix of eigenvalues.
+Define $k_m Ck_m^T$, where $k_m$ is the $m$-th row of $P K$, and let:
+
+$$
+v_m = \frac{2(D_m)^2}{g_m^T A g_m}
+$$
+
+where: - $$D_m$$ is the $$m$$-th diagonal element of $D$. - $g_m$ is the
+gradient of $k_m C k_m^T$ with respect to $\theta$, evaluated at
+$\hat{\theta}$.
+
+Then let:
+
+$$
+E = \sum_{m=1}^{v_1} \frac{v_m}{v_m - 2} I(v_m > 2)
+$$
+
+where $I(v_m > 2)$ denotes the indicator function. The denominator DF
+$v_2$ is calculated as:
+
+$$
+v_2 = \frac{2E}{E - v_1}
+$$
+The Satterthwaite approximation can be applied in power analysis by plugging in the assumed values of variance parameters (Stroup, 2002). 
 
 ## Power Calculation Under the Alternative Hypothesis
 
@@ -145,7 +819,7 @@ the non-centrality parameter that measures the departure from the null
 hypothesis $H_0$. The non-centrality parameter $\phi$ is given by:
 
 $$
-\phi = (K'\hat{\beta})' [K'\hat{C}K']^{-1} (K'\hat{\beta})
+\phi = (K\hat{\beta})^T [K\hat{C}K^T]^{-1} (K\hat{\beta})
 $$
 
 Once the distribution of the F-statistic under $H_A$ is known, the power
@@ -163,9 +837,7 @@ error rate.
 
 The determination of the degrees of freedom $v_1$ and $v_2$, as well as
 the non-centrality parameter $\phi$, are critical steps for power
-calculation. Notably, $\phi$ resembles the numerator of the F-statistic
-but with population parameters for $\beta$, $G$, and $R$ replacing their
-sample estimates $\hat{\beta}$, $\hat{G}$, and $\hat{R}$.
+calculation. 
 
 Generally, power analysis requires specifying the following components:
 
@@ -200,669 +872,9 @@ lead to incorrect conclusions, either overestimating the likelihood of
 detecting a treatment effect or requiring an unnecessarily large sample
 size.
 
-# Getting Started
-
-This section provides an overview of the package's functionality. The
-**pwr4exp** package is designed to streamline statistical power
-calculations into a simple, user-friendly pipeline. Performing a power
-analysis in **pwr4exp** involves two steps: creating a design object and
-then calculating power or determining sample size.
-
-## Step1: Creating a Design Object
-
-Design objects in **pwr4exp** can be created using functions that
-generate several standard experimental designs available in the package.
-These functions include:
-
--   `designCRD(treatments, label, replicates, formula, beta, sigma2)`:
-    For completely randomized design (CRD).
--   `designRCBD(treatments, label, blocks, formula, beta, VarCov, sigma2, ...)`:
-    For randomized complete block design (RCBD).
--   `designLSD(treatments, label, squares, reuse, formula, beta, VarCov, sigma2, ...)`:
-    For Latin square design (LSD).
--   `designCOD(treatments, label, squares, formula, beta, VarCov, sigma2, ...)`:
-    For crossover design (COD), which is a special case of LSD with time
-    periods and individuals as blocks. Period blocks are reused when
-    replicating squares.
--   `designSPD(trt.main, trt.sub, label, replicates, formula, beta, VarCov, sigma2, ...)`:
-    For split-plot design (SPD).
-
-### Arguments
-
-The arguments of these functions fall into the following main
-categories:
-
-#### **Treatment structure**
-
-The arguments `treatments`, `trt.main`, and `trt.sub` are used to
-specify the treatment structure. For designs other than SPD,
-`treatments` defines the structure, whereas in SPD, `trt.main` and
-`trt.sub` refer to the main plot and subplot levels, respectively. The
-treatment structure is specified by an integer-valued vector, where the
-length of the vector represents the number of treatment factors, and
-each value indicates the number of levels for each factor. A maximum of
-two factors is allowed (for SPD, this applies to both the main plot and
-subplot levels), arranged in a factorial design.
-
-For instance, `treatments = 2` defines an experiment involving two
-treatments (e.g., control vs. intervention). For two factors,
-`treatments = c(2, 2)` sets up a "2x2" factorial design to study main
-effects and interactions. In the case of SPD, `trt.main = 2` specifies
-two levels of the main plot factor, while `trt.sub = c(2, 2)` defines a
-"2x2" factorial design at the subplot level.
-
-#### **Label**
-
-The optional `label` argument is a list of character vectors that
-specifies the names of treatment factors and their corresponding levels.
-Each vector in the list represents a treatment factor, where the name of
-the vector defines the name of the factor, and the values in the vector
-are the labels for the levels of that factor.
-
-If the `label` argument is not provided, default names are assigned to
-the factors and levels. For one treatment factor, the default is
-`list(trt = c("1", "2", ...))`. For two factors, the default is
-`list(facA = c("1", "2", ...), facB = c("1", "2", ...))`, where "facA"
-and "facB" represent the two factors, and "1", "2", etc., represent the
-levels of each factor.
-
-For example, `list(trt = c("ad libitum", "fasting"))` customizes the
-levels of a single treatment factor to "ad libitum" and "fasting." For
-multiple factors,
-`list(feed = c("ad libitum", "fasting"), dosage = c("D0", "D1", "D2"))`
-names the first factor "feed" with levels "ad libitum" and "fasting,"
-and the second factor "dosage" with levels "D0," "D1," and "D2."
-
-#### **Replication**
-
-Given the distinct randomization and replication mechanisms across
-designs, the arguments `replicates`, `blocks`, and `squares` are used to
-represent replication and to indicate the sample size for different
-designs:
-
--   The argument `replicates` specifies the number of experimental units
-    per treatment in a CRD or the number of main plots (i.e., the number
-    of experimental units per treatment at the main plot level) in a
-    SPD.
--   `blocks` specifies the number of blocks in a RCBD.
--   `squares` specifies the number of squares in a replicated LSD or
-    COD.
-
-In a CRD, setting `replicates = 10` and `treatments = 4` (or
-`treatments = c(2, 2)`) means that each treatment group consists of 10
-experimental units, resulting in a total of 40 experimental units. When
-configuring an SPD, `replicates = 10` with `trt.main = 4` (or
-`trt.main = c(2, 2)`) signifies that each main plot treatment is
-replicated across 10 experimental units, totaling 40 main plots. For an
-RCBD, using `blocks = 10` along with `treatments = 4` (or
-`treatments = c(2, 2)`) ensures that all four treatments are replicated
-across 10 different blocks, leading to a total of 40 experimental units.
-In an LSD, setting `squares = 3` with `treatments = 4` (or
-`treatments = c(2, 2)`) implies the replication of a single "4×4" square
-layout 3 times, resulting in a total of 48 experimental units.
-
-#### **Model**
-
-The `formula` argument specifies the model formula that will be used to
-test effects during post-experimental data analysis. This formula
-follows the same syntax used in R’s `lm` function (for linear models)
-and `lmer` function (for linear mixed models) to specify fixed and
-random effects. Each design-generating function within the package comes
-with a default model formula. The default formula incorporates
-interaction terms when two treatment factors are present and fits
-blocking factors as random effects where applicable. You can inspect the
-default formula from the generated design object using `design$formula`,
-or by checking the function's documentation (`?function`).
-
-For example, in a SPD with one treatment factor at the main plot level
-and two factors at the subplot level, the default model formula would
-be: `y ~ trt.main * facA.sub * facB.sub + (1 | mainplot)`. This formula
-tests all interactions, including three-way interactions. If no
-interaction between the main plot and subplot factors is assumed, the
-model formula can specify the model as :
-`y ~ trt.main + facA.sub * facB.sub + (1 | mainplot)` by the user.
-
-Notably, when specifying the model formula manually, the names of the
-treatment factors must be consistent with those provided in the `label`
-argument.
-
-#### **Effect Size**
-
-The `beta` argument is a numeric vector of expected model coefficients,
-representing the effect sizes. The first element corresponds to the
-intercept term, which represents the mean of the reference level for
-categorical variables. Subsequent elements correspond to the effect
-sizes of the independent variables in the order they appear in the model
-matrix. For categorical variables, each coefficient represents the
-difference between a non-reference level and the reference level
-(intercept), as the `contr.treatment` contrast coding is used to
-construct the model matrix. It is important to ensure that the `beta`
-vector aligns with the columns of the model matrix, including any dummy
-variables created for categorical predictors.
-
-These values can either be specified directly or transformed from group
-means. For example, consider a factor with 2 levels (`treatments = 2`),
-representing control vs. intervention
-(`label = list(trt = c("control", "intervention"))`). If
-`beta = c(10, 5)`, this indicates that the mean of the control group is
-10, and the effect of the intervention is 5 units higher than the
-control.
-
-In another example, consider a "2 × 2" factorial arrangement
-(`treatments = c(2, 2)` &
-`label= list(A = c("A1", "A2"), B = c("B1", "B2"))`):
-
-$$
-\begin{array}{c|c|c}
-  & B1 & B2 \\
-\hline
-A1 & 10 & 6 \\
-A2 & 8  & 12 \\
-\end{array}
-$$
-
-The `beta` argument is specified as `beta = c(10, -2, -4, 8)`, which
-represents the following effects:
-
--   The mean of the reference level (`A1B1`) is 10.
-
--   The effect of `A2` alone is -2 (i.e., `A2B1 - A1B1`).
-
--   The effect of `B2` alone is -4 (i.e., `A1B2 - A1B1`).
-
--   The interaction between `A2` and `B2` is 8, representing the
-    additional effect of combining `A2` and `B2` compared to what would
-    be expected from the sum of their individual effects
-    (`A2B2 - A2B1 - A1B2 + A1B1`).
-
-#### **Variance-Covariance**
-
-The `VarCov` argument specifies the variance-covariance components of
-random effects. If multiple terms exist for a single random effect
-group, the variance-covariance matrix should be provided. For example,
-the covariance matrix for random intercepts and random slopes for a
-single grouping factor is structured as:
-
-$$
-\begin{pmatrix}
-\tau_0^2 & \tau_{12} \\
-\tau_{12} & \tau_1^2
-\end{pmatrix}
-$$
-
-where $\tau_0^2$ represents the variance of the random intercept,
-$\tau_1^2$ represents the variance of the random slope, and $\tau_{12}$
-is the covariance between them.
-
-For multiple random effect groups, supply the variance (for a single
-random effect term) or the variance-covariance matrix (for two or more
-random effect terms) of each group in a list, following the order
-specified in the model formula.
-
-In the standard designs available in **pwr4exp**, the corresponding LMMs
-are typically variance component models, i.e., models without random
-slopes. For example, in an RCBD with block as a random effect, the
-required input is the variance between blocks: `VarCov = \tau_b^2`. If
-there are multiple random effects, for example, in an LSD with both row
-and column blocks as random effects, the required input would be
-`VarCov = list(\tau_r^2, \tau_c^2)`, representing the variances of the
-row and column blocks, respectively.
-
-#### **Error Variance**
-
-The `sigma2` argument represents the variance of the random error in the
-model. This value specifies the error variance, which captures the
-unexplained variability within the model that is not accounted for by
-the fixed or random effects. It is an important parameter for
-determining the power.
-
-### Customized design
-
--   `designCustom(design.df, formula, beta, VarCov, sigma2, design.name, ...)`
-
-If a design is not predefined in the package, it can be constructed
-using the `designCustom` function. The required inputs are `design.df`,
-`formula`, `beta`, `VarCov`, `sigma2`, and optionally, `design.name`.
-All arguments have been defined above, except for `design.df`, which
-refers to a data frame containing the columns of independent variables,
-outlining the structure of the data to be collected in the experiment.
-Note that this data frame does not include a response variable. The
-`design.name` argument allows for specifying a custom name for the
-design, if desired.
-
-## Step2: Calculating Power or Sample Size
-
-Once the design object is created, calculating power or sample size is
-straightforward. Power for omnibus tests, including main effects and
-their interactions (if specified in the model during the creation of the
-design object), can be calculated using:
-
--   `pwr.anova(design, alpha = 0.05, ...)`
-
-The required inputs include:
-
-1.  `design`, the object created in [Step
-    1](##%20Step1:%20Creating%20a%20Design%20Object);
-2.  `alpha`, indicating the Type I error rate, with a default value of
-    0.05.
-
-For specific contrasts, power can be calculated using:
-
--   `pwr.contrast(design, alpha = 0.05, spec, method, ...)`
-
-The syntax of the **emmeans** package is inherited to specify contrasts
-of interest. The required inputs are:
-
-1.  `design`;
-2.  `alpha`;
-3.  `spec`, an argument inherited from **emmeans**, which specifies the
-    names of the factors over which the contrasts are performed.
-4.  `method`, another argument inherited from **emmeans**, which
-    specifies the method of contrasts (e.g., "pairwise", "trt.vs.ctrl",
-    "poly").
-
-The minimal sample size needed to achieve a target power can be
-determined using:
-
--   `find_sample_size(design.quote, alpha = 0.05, target.power = 0.8, n_init = 2, n_max = 99)`
-
-This function calculates the minimum sample size necessary by
-incrementally checking integers from `n_init` to `n_max`. The required
-inputs are:
-
-1.  `design.quote`: A quoted design object with an unknown and
-    unevaluated replication argument, to be evaluated with varying
-    values;
-2.  `alpha`;
-3.  `target.power`: A single value specifying the target power for all
-    effects, or a vector specifying individual target power levels for
-    each effect, with a default value of 0.05;
-4.  `n_init`: The initial number of replications for the iterative
-    process, with a default value of 2;
-5.  `n_max`: The maximum number of replications for the iterative
-    process, with a default value of 99.
-
-Currently, sample size determination is available only for omnibus tests
-and not for specific contrasts in **pwr4exp**.
-
-# Practical Examples
-
-## Example 1. Completely Randomized Design
-
-In this example, we will create a CRD with one treatment factor. The
-design parameters are as follows:
-
-1.  Treatments: 1 treatment factor with 4 levels;
-2.  Replicates: 8 experimental units per treatment.
-3.  Mean and effect size: The mean of control is 35, and the effects of
-    other three treatments are -5, +2, and +3.
-4.  Error variance: The variance of response variable is 15.
-
-**Create the CRD**
-
-```{r}
-# crd <- designCRD(
-#   treatments = 4,
-#   replicates = 8,
-#   beta = c(35, -5, 2, 3),
-#   sigma2 = 15
-# )
-```
-
-**Power for the omnibus test**
-
-The power of the omnibus test (i.e., F-test) can be calculated using the
-`pwr.anova` function. Under the type I error rate of 0.05, the power for
-testing an overall difference among treatments is 0.95467.
-
-```{r}
-# pwr.anova(design = crd)
-```
-
-**Power for specific contrasts**
-
-To assess the power for specific contrasts, use the `pwr.contrast`
-function. For example, to calculate the power for detecting differences
-between treatments and the control:
-
-```{r}
-# pwr.contrast(design = crd, specs =  ~ trt, method = "trt.vs.ctrl")
-```
-
-To calculate the power for detecting linear or polynomial trends across
-the treatment levels:
-
-```{r}
-# pwr.contrast(design = crd, specs =  ~ trt, method = "poly")
-```
-
-## Example 2. Randomized Complete Block Design
-
-In this example, we will create an RCBD with two treatment factors. The
-design parameters are as follows:
-
-1.  Treatments: A 2x2 factorial design.
-2.  Replicates: 8 blocks.
-3.  Mean and effect size: The mean of the control (A1B1) is 35. The
-    effect of A2 alone is an increase of 5 units, and the effect of B2
-    alone is an increase of 3 units. The interaction between A2 and B2
-    introduces an additional effect of -2 units, meaning the combined
-    effect of A2 and B2 is 2 units below the sum of their individual
-    effects. The corresponding cell means are:$$
-    \begin{array}{c|c|c}
-      & B1 & B2 \\
-    \hline
-    A1 & 35 & 38 \\
-    A2 & 40  & 41 \\
-    \end{array}
-    $$
-4.  Variance among blocks: 11.
-5.  Error variance: 4. The total variance of the response variable (15)
-    is decomposed into variance between blocks (11) and variance within
-    blocks (4).
-
-**Create the RCBD**
-
-```{r}
-# rcbd <- designRCBD(
-#   treatments = c(2, 2),
-#   blocks = 8,
-#   beta = c(35, 5, 3, -2),
-#   VarCov = 11,
-#   sigma2 = 4
-# )
-```
-
-**Power for the omnibus test**
-
-```{r}
-#pwr.anova(design = rcbd)
-```
-
-**Power for specific contrasts**
-
-The power for detecting the effect of facA, both overall and within each
-level of facB, can be assessed as follows:
-
-```{r}
-# across all levels of facB
-# pwr.contrast(design = rcbd, specs = ~ "facA", method = "pairwise")
-# at each level of facB
-# pwr.contrast(design = rcbd, specs = ~ facA|facB, method = "pairwise")
-```
-
-**Sample Size Determination**
-
-To determine the number of blocks required to achieve the target power,
-the `find_sample_size` function can be used. First, we create a quoted
-design object where `blocks = n` remains unevaluated:
-
-```{r}
-# rcbd_quote <- quote(
-#   designRCBD(
-#   treatments = c(2, 2),
-#   blocks = n,
-#   beta = c(35, 5, 3, -2),
-#   VarCov = 11,
-#   sigma2 = 4
-#   )
-# )
-```
-
-The optimal sample size for the target power within the range of n_init
-and n_max can be determined as follows:
-
-```{r}
-#find_sample_size(design.quote = rcbd_quote, n_init = 2, n_max = 99)
-```
-
-## Example 3. Latin Square Design
-
-In this example, we extend the design from Example 2 by introducing
-another blocking factor, thus creating an LSD. The treatment structure
-and effect sizes remain the same as in Example 2. The design controls
-for two sources of variability (row and column blocks) while evaluating
-the treatment effects. In the LSD, the total variance (15) is further
-decomposed into three components:
-
--   Variance between row blocks (11),
--   Variance between column blocks (2), and
--   Residual error variance (2).
-
-In this example, we will customize the labels for the two factors as
-follows: "temp" with levels "T1" and "T2", and "dosage" with levels "D1"
-and "D2".
-
-**Create the LSD**
-
-```{r}
-# lsd <- designLSD(
-#   treatments = c(2, 2),
-#   label = list(temp = c("T1", "T2"), dosage = c("D1", "D2")),
-#   squares = 4,
-#   reuse = "both",
-#   beta = c(35, 5, 3, -2),
-#   VarCov = list(11, 2),
-#   sigma2 = 2
-# )
-```
-
-**Power for the omnibus test**
-
-```{r}
-# pwr.anova(design = lsd)
-```
-
-**Power for specific contrasts**
-
-The power for detecting the effect of *dosage*, both overall and within
-each level of *temp*, can be assessed as follows:
-
-```{r}
-# # the effect of dosage across all levels of temp
-# pwr.contrast(design = lsd, specs = ~ "dosage", method = "pairwise")
-# # the effect of dosage at each level of temp
-# pwr.contrast(design = lsd, specs = ~ dosage|temp, method = "pairwise")
-```
-
-**Sample Size Determination**
-
-To determine the number of squares required to achieve the target power,
-the `find_sample_size` function can be used. First, we create a quoted
-design object where `squares = n` remains unevaluated:
-
-```{r}
-# lsd_quote <- quote(
-#   designLSD(
-#   treatments = c(2, 2),
-#   squares = n,
-#   reuse = "both",
-#   beta = c(35, 5, 3, -2),
-#   VarCov = list(11, 2),
-#   sigma2 = 2
-#   )
-# )
-```
-
-The optimal sample size for the target power within the range of n_init
-and n_max can be determined as follows:
-
-```{r}
-# find_sample_size(design.quote = lsd_quote, n_init = 2, n_max = 99)
-```
-
-## Example 4: Split-plot Design
-
-In this example, we will create a SPD with two treatment factors, one at
-each level. The design parameters are as follows:
-
-1.  Treatments: One main plot factor having 2 levels, and another factor
-    with 3 levels at the sub-plot level.
-
-2.  Label: The two treatment factors are labeled as "Main" with levels
-    "Main1" and "Main2," and "Sub" with levels "Sub1" and "Sub2,"
-    corresponding to the main plot and subplot, respectively.
-
-3.  **Replicates**: There are 10 main plots, with 5 main plots per
-    "Main" treatment level, resulting in 10 experimental units (blocks)
-    for each "Sub" treatment level.
-
-4.  The mean of the control (Main1 with Sub1) is 20. The effect of Main2
-    alone is an increase of 2 units. The effects of Sub2 and Sub3 alone
-    are increases of 2 and 4 units, respectively. The interaction
-    between Main2 and Sub2 is zero. The interaction between Main2 and
-    Sub3 introduces an additional effect of 2 units, meaning the
-    combined effect of Main2 and Sub3 is 2 units above the sum of their
-    individual effects. The corresponding cell means are:$$
-    \begin{array}{c|c|c}
-      & Sub1 & Sub2 & Sub3 \\
-    \hline
-    Main1 & 20 & 22 & 24\\
-    Main2 & 22 & 24 & 28 \\
-    \end{array}
-    $$
-
-5.  The total variance (15) is assumed to decompose into 4 for
-    whole-plot error and 11 for subplot error.
-
-**Create the SPD**
-
-```{r}
-# spd <- designSPD(
-#   trt.main = 2,
-#   trt.sub = 3, 
-#   replicates = 10, 
-#   label = list(Main = c("Main1", "Main2"), Sub = c("Sub1", "Sub2", "Sub3")),
-#   beta = c(20, 2, 2, 4, 0, 2),
-#   VarCov = list(4),
-#   sigma2 = 11
-# )
-```
-
-**Power for the omnibus test**
-
-```{r}
-# pwr.anova(spd)
-```
-
-**Power for specific contrasts**
-
-The power for detecting the effect of subplot treatment under each level
-of main plot treatment, can be assessed as follows:
-
-```{r}
-# pwr.contrast(design = spd, specs = ~ Sub|Main, method = "trt.vs.ctrl")
-```
-
-## Example 5: A customized design
-
-In this example, we will create a COD arranged at the "subplot" level of
-a split-plot layout.
-
-Sixteen subjects, split evenly between two breeds (8 subjects per
-breed), are enrolled in a 4x4 crossover design. Within each breed, the
-subjects are further divided into two squares (for a total of four
-squares), with each square consisting of four subjects. Each subject
-follows one of four treatment sequences and receives treatments across
-four periods. This hybrid SPD-COD combines elements of a SPD and a COD
-to evaluate treatment effects across different breeds. The Latin Square
-structure ensures that within each square, treatments are balanced
-across periods, while the split-plot element accounts for breed as a
-whole-plot factor. The overall structure is as follows:
-
--   **Treatment structure**
-
-    -   **Whole-plot level**: Breed (2 breeds, with 8 subjects in each
-        breed)
-    -   **Sub-plot level**: A 2x2 factorial design with two treatment
-        factors, facA and facB.
-
--   **Experimental units**
-
-    -   Whole-plot factor: Subjects (randomly selected from two breeds)
-    -   Sub-plot factor: Measurements taken from subjects at each
-        period.
-
--   **Variance decomposition** The overall variance (15) is decomposed
-    into three main components: subject variance (7), period variance
-    (4), and random error (4).
-
-**Construct the design data frame**
-
-To create the design object for this hybrid SPD-COD, we first need to construct a data frame containing all the independent variables, structured to resemble the actual experimental data. This data frame can be generated using the internal function `df.cod`, which builds a data frame for a COD with the specified treatment structure and number of replications. Once the base data frame is generated, a column for the "Breed" variable is manually added. It is important to note that no randomization occurs at this stage—the data frame simply represents the data structure and is not the actual randomized experimental data. Its purpose is to create the design layout.
-
-```{r}
-# df_spd_cod <- pwr4exp:::df.cod(
-#   treatments = c(2, 2),
-#   squares = 4
-# )
-# ## Create main plot factor, i.e., breed
-# df_spd_cod$Breed <- rep(c("1", "2"), each = 32)
-# 
-# ## Check data structure
-# head(df_spd_cod, n = 4); tail(df_spd_cod, n = 4)
-```
-**Specify the model formula**
-
-Next, an appropriate model formula must be specified to fit the experimental design. The formula captures the interactions between breed, the two treatment factors (facA and facB), and the random effects for subjects and periods.
-
-```{r}
-# formula <- y ~ Breed*facA*facB + (1|subject) + (1|period)
-```
-
-**Fixed effects**
-
-We then specify the fixed effects for the model, where beta contains the baseline intercept and the effects of each factor and their interactions.
-
-```{r}
-# beta = c(
-#   `(Intercept)` = 35,        # Baseline (mean of Breed1_A1_B1)
-#   Breed2 = -5,           # Effect of the second breed alone
-#   facA2 = -5,               # Effect of A2 alone
-#   facB2 = 1,                # Effect of B2 alone
-#   `Breed2:facA2` = 1,         # Interaction between Breed2 and A2
-#   `Breed2:facB2` = 0,         # Interaction between Breed2 and B2
-#   `facA2:facB2` = 2,             # Interaction between A2 and B2
-#   `Breed2:facA2:facB2` = 1       # Three-way interaction between Breed2, A2, and B2
-# )
-
-```
-
-**Create the design object**
-
-After constructing the data frame, model formula, and fixed effects, the design object can be created using the `designCustom` function. The variance-covariance structure and error variance are also provided to complete the design.
-
-```{r}
-# SPD_COD <- designCustom(
-#   design.df = df_spd_cod,
-#   formula = formula,
-#   beta = beta,
-#   VarCov = list(7, 4),
-#   sigma2 = 4,
-#   design.name = "hybrid SPD COD"
-# )
-```
-
-**Power for the omnibus test**
-
-```{r}
-# pwr.anova(SPD_COD)
-```
-
-**Power for specific contrasts**
-
-We can also calculate the power for specific contrasts. For example, to assess the power for detecting differences between facA1 and facA2 at each level of facB within each breed:
-
-```{r}
-# pwr.contrast(SPD_COD, ~facA|facB|Breed, "pairwise")
-```
-
 # References
 
+Satterthwaite, F. E. 1946. An approximate distribution of estimates of variance components. Biometrics Bull. 2:110–114.
 Hrong-Tai Fai, A., & Cornelius, P. L. (1996). Approximate F-tests of multiple degree of freedom hypotheses in generalized least squares analyses of unbalanced split-plot experiments. Journal of statistical computation and simulation, 54(4), 363-378.
 
-Kenward, M. G., & Roger, J. H. (1997). Small sample inference for fixed effects from restricted maximum likelihood. Biometrics, 983-997.
 
-# Acknowledgments
-
-The development of **pwr4exp** has benefited greatly from several R packages. Specifically, it leverages and modifies critical functionality from **lmerTest**, **car**, and **emmeans** to determine degrees of freedom (\(v_1\) and \(v_2\)) and the non-centrality parameter (\(\phi\)), making power analysis more accessible and efficient. We are particularly grateful to the authors and contributors of these packages, as well as the broader R community for their valuable tools and resources.
