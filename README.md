@@ -1,72 +1,90 @@
-## Development Version
-
-A development version of this package is available on the `dev` branch. This version enables applying various correlation structures (corClasses from nlme package) for repeated measures and some new improvements are still being tested.
-
-For more details on the development version, visit the [dev branch README](https://github.com/an-ethz/pwr4exp/tree/dev).
-
-To install the development version, use the following command in R:
-
-```r
-# Install the 'devtools' package if not already installed
-install.packages("devtools")
-
-# Install the development version from the dev branch
-devtools::install_github("an-ethz/pwr4exp", ref = "dev")
-```
-
 # pwr4exp
 
-The `pwr4exp` R package provides functions for power calculation and sample size determination in standard experimental designs in animal science and beyond. The package emphasizes the importance of specifying models for conducting power analyses and supports power analyses for main effects, interactions, and specific contrasts. Additionally, `pwr4exp` offers a flexible framework to perform power analysis on customized designs which are currently not predefined in the package.
+`pwr4exp` provides a flexible framework for calculating statistical power across a range of experimental designs, with a particular focus on applications in animal science and related fields. The package supports approximate F-tests for general linear hypotheses in linear mixed models and t-tests for specific contrasts, utilizing the Satterthwaite method to approximate degrees of freedom.
+
+The development version adds support for various correlation structures in repeated measures and spatial data. It also introduces options for creating input templates, making it easier to set up and perform power analyses. Note that sample size determination has been removed from this version.
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
 ## Installation
 
-```r
+``` r
 # You can install pwr4exp from CRAN
 install.packages("pwr4exp")
 
-# Or the the development version from GitHub:
+# Or the development version from GitHub:
 # install.packages("devtools")
 devtools::install_github("an-ethz/pwr4exp", ref = "dev")
 ```
 
 ## Functions
 
-Performing power analysis in `pwr4exp` involves the following steps:
-- First, create a design object using the design generating functions.
-- Once the design object is created, calculating power or determining sample size using `pwr4exp` is straightforward. Simply pass the design object to the power calculator for main effects and interactions, `pwr.anova()`, or for contrasts, `pwr.contrast()`.
-- To determine the minimal sample size to achieve a target power, a quoted design object can be passed to the function `find_sample_size()`.
+Performing power analysis in `pwr4exp` involves two main steps:
+
+1.  Create a design object.
+
+2.  Pass the design object to power calculators.
 
 ### Example Usage
 
 Here's an example of how you can generate a design and calculate power:
 
-```r
+``` r
 library(pwr4exp)
-# Create a design
-rcbd <- designRCBD(
-  treatments = c(2, 2),
-  blocks = 10,
-  beta = c(470, 30, -55, 5),
-  VarCov = 3200,
-  sigma2 = 3200
-)
-# Calculate power for the ominubus test (i.e., F-test)
-pwr.anova(design = rcbd)
 
-# Calculate power for specific contrasts
-pwr.contrast(design = rcbd, specs = ~ facB | facA, contrast = "pairwise")
+# Step 1. Create a design
+## Define a completely randomized design with repeated measures
+## by specifying it's data structure
+
+n_subject = 6 # Subjects per treatment
+n_trt = 3 # Number of treatments
+n_hour = 8 # Number of repeated measures (time points)
+trt = c("CON", "TRT1", "TRT2")
+
+df.rep <- data.frame(
+  subject = as.factor(rep(seq_len(n_trt*n_subject), each = n_hour)),
+  hour = as.factor(rep(seq_len(n_hour), n_subject*n_trt)),
+  trt = rep(trt, each = n_subject*n_hour)
+)
+
+## Generate a template for required input
+
+mkdesign(formula = ~ trt*hour, data = df.rep)
+
+## Create the design object
+
+design.rep <- mkdesign(
+formula = ~ trt*hour,
+data = df.rep,
+means =  c(1, 2.50, 3.5,
+           1, 3.50, 4.54,
+           1, 3.98, 5.80,
+           1, 4.03, 5.4,
+           1, 3.68, 5.49,
+           1, 3.35, 4.71,
+           1, 3.02, 4.08,
+           1, 2.94, 3.78),
+sigma2 = 2,
+correlation = corAR1(value = 0.6, form = ~ hour|subject)
+)
+
+# Step 2: Calculate power
+## Omnibus test
+pwr.anova(design.rep)
+
+## Contrast test (pairwise comparisons by hour)
+pwr.contrast(design.rep, which = "trt", by = "hour", contrast = "pairwise")
 ```
 
 ## Learn More
 
-To learn more about `pwr4exp`, read through the [vignette](https://an-ethz.github.io/pwr4exp/articles/pwr4exp.html) for `pwr4exp` which contains:
+To learn more about power analysis with `pwr4exp`, refer to the [vignette](https://an-ethz.github.io/pwr4exp/articles/pwr4exp.html) which contains:
 
-- Foundational Concepts.
-- Instructions for providing the required inputs.
-- Examples of conducting power analysis for the standard designs available in the package.
-- Examples of using `pwr4exp` to assess the power of customized designs.
+-   Fundamental concepts of statistical power in linear mixed models.
+-   Instructions for preparing and providing the required inputs.
+-   Examples of power calculations for standard designs available in the package.
+-   Examples of power analysis for more complex designs.
 
-The documentation for this package is being updated. If you have any questions or suggestions, please feel free to contact the package maintainer.
+The package documentation is being updated. For any questions or suggestions, please feel free to contact the package maintainer.

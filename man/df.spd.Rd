@@ -13,7 +13,7 @@ main plot level, similar to \code{\link{df.crd}}.}
 \item{trt.sub}{an integer-valued vector specifying the treatment structure at
 sub plot level, similar to \code{trt.main}.}
 
-\item{label}{Optional. A list of character vectors specifying the names of
+\item{label}{A optional list of strings specifying the names of
 treatment factors and factor levels. Each vector in the list represents a
 treatment factor, where the name of the vector specifies the name of the
 factor, and the values in the vector are the labels for that factor's levels.

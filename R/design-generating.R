@@ -1,7 +1,9 @@
-#' Creation of Experimental Designs
+#' Creation of Standard Experimental Designs
 #'
-#' These functions are used to create design objects for the further evaluation
-#' of statistical power.
+#' These functions facilitate the creation of standard experimental designs
+#' commonly used in agricultural studies for power analysis. Instead of supplying
+#' a data frame to [mkdesign], users can specify key design characteristics to generate the design.
+#' Other design parameters are consistent with those in [mkdesign].
 #'
 #' @param treatments An integer-valued vector specifying the treatment structure,
 #' in which the length of the vector indicates the number of treatment factors,
@@ -14,11 +16,7 @@
 #' main plot level for a split plot design, similar to `treatments`.
 #' @param trt.sub An integer-valued vector specifying the treatment structure at
 #' sub plot level for a split plot design, similar to `treatments`.
-#' @param design.df Required input for creating a customized design. A data frame
-#' with all independent variables of the design as columns, representing the actual
-#' data structure (long format data frame) without response variables.
-#' @param design.name Optional input for creating a customized design. A character.
-#' @param label Optional. A list of character vectors specifying the names of
+#' @param label A optional list of strings specifying the names of
 #' treatment factors and factor levels. Each vector in the list represents a
 #' treatment factor, where the name of the vector specifies the name of the
 #' factor, and the values in the vector are the labels for that factor's levels.
@@ -35,30 +33,24 @@
 #' there are multiple squares. Options are: "row" for reusing row blocks, "col"
 #' for reusing column blocks, or "both" for reusing both row and column blocks
 #' to replicate a single square.
-#' @param formula A model formula for testing treatment effects in
-#' post-experimental data analysis. Use the syntax of \code{\link{lm}} for fixed
-#' effects and \link[lme4]{lmer} for random effects. The response variable is
-#' always denoted as `y`. By default, all interaction terms between treatment
-#' factors are included in the formula.
-#' @param beta A numeric vector of expected model coefficients, representing the
-#' effect sizes. The first element represents the intercept term, corresponding
-#' to the mean of the reference level for categorical variables. Subsequent
-#' elements correspond to the effect sizes of the independent variables in the
-#' order they appear in the model matrix. For categorical variables, each coefficient
-#' represents the difference between a non-reference level and the reference level
-#' (intercept), as \code{\link{contr.treatment}} contrast coding is used for
-#' constructing the model matrix. Ensure that \code{beta} aligns with the columns of the
-#' model matrix, including any dummy variables created for categorical predictors.
-#' @param VarCov Variance-covariance components of random effects. For multiple
-#' random effect groups, supply the variance (for a single random effect term)
-#' or variance-covariance matrix (for two or more random effect terms) of each
-#' group in a list, following the order in the model formula.
+#' @param formula A right-hand-side [formula] specifying the model for testing treatment effects,
+#' with terms on the right of [~] , following [lme4::lmer()] syntax for random effects.
+#' If not specified, a default formula with main effects and all interactions is used internally.
+#' @param beta One of the optional inputs for fixed effects.
+#' A vector of model coefficients where factor variable coefficients correspond
+#' to dummy variables created using "contr.treatment".
+#' @param means One of the optional inputs for fixed effects.
+#' A vector of marginal or conditioned means (if factors have interactions).
+#' Regression coefficients are required for numerical variables.
+#' Either `beta` or `means` must be provided, and their values must strictly follow a specific order.
+#' A template can be created to indicate the required input values and their order.
+#' See [mkdesign] for more information.
+#' @param vcomp A vector of variance-covariance components for random effects, if present.
+#' The values must follow a strict order. See [mkdesign].
 #' @param sigma2 error variance.
-#' @param ... Additional arguments passed to the \code{anova} function in
-#' \code{lmerTest}. The type of ANOVA table (default is Type III) and the method
-#' for computing denominator degrees of freedom (default is Satterthwaite's method)
-#' can be modified. For balanced designs, the choice of sum of squares (SS) and
-#' degrees of freedom (df) does not affect the results.
+#' @param template Default is `FALSE`.
+#' If `TRUE`, a template for `beta`, `means`, and `vcomp` is generated to indicate the required input order.
+#'
 #' @details Each function creates a specific design as described below:
 #' \describe{
 #'   \item{\code{designCRD}}{Completely Randomized Design.
@@ -95,10 +87,9 @@
 #' }
 #'
 #' @rdname create_designs
-#' @aliases design.CRD design.RCBD design.LSD design.COD design.SPD design.Custom
-#' @return a list with the design name, data structure (data frame), model
-#' formula, and a pseudo model object with the expected fixed and random effects.
-#' @seealso [pwr.anova()], [pwr.contrast()]
+#' @aliases design.CRD design.RCBD design.LSD design.COD design.SPD
+#' @return a list with critical components for power analysis
+#' @seealso [mkdesign], [pwr.anova()], [pwr.contrast()]
 #' @examples
 #' # Example 1: Evaluate the power of a CRD with one treatment factor
 #'
@@ -107,8 +98,7 @@
 #' crd <- designCRD(
 #'   treatments = 4, # 4 levels of one treatment factor
 #'   replicates = 12, # 12 units per level, 48 units totally
-#'   # mean of level1, and the means of other levels minus level1, respectively
-#'   beta = c(30, -2, 3, 5),
+#'   means = c(30, 28, 33, 35), # means of the 4 levels
 #'   sigma2 = 10 # error variance
 #' )
 #'
@@ -116,85 +106,45 @@
 #' pwr.anova(crd)
 #'
 #' ## power of contrast
-#' pwr.contrast(crd, specs = "trt", method = "pairwise") # pairwise comparisons
-#' pwr.contrast(crd, specs = "trt", method = "poly") # polynomial contrasts
-#'
-#' # Example 2: Evaluate the power of an RCBD with 2 x 2 factorial treatments
-#'
-#' # Treatment factors are A (A1 vs. A2) and B (B1 vs. B2).
-#' # To illustrate how to provide `beta`, treatment means are presented:
-#' #     B1  B2
-#' # A1  20  24
-#' # A2  17  22
-#' #
-#' # From these means, we calculate:
-#' # 1. the mean of reference level (A1B1): 20
-#' # 2. the effect of A2 alone: Effect_A2 = A2B1 - A1B1 = 17 - 20 = -3
-#' # 3. the effect of B2 alone: Effect_A2 = A1B2 - A1B1 = 24 - 20 = 4
-#' # 4. the interaction effect of A2 and B2:
-#' #    Interaction_A2B2 = A2B2 - A2B1 - A1B2 + A1B1 = 22 - 17 - 24 + 20 = 1, representing
-#' #    the additional effect of combining A2B2 compared to what would be expected
-#' #    from the sum of individual effects of A2 and B2.
-#'
-#' # The `beta` vector is constructed as:
-#' # beta = c(mean_A1B1, Effect_A2, Effect_B2, Interaction_A2B2)
-#' # beta = c(20, -3, 4, 1)
-#'
-#' ## Create a design object
-#'
-#' rcbd <- designRCBD(
-#'   # 2x2 factorial design
-#'   treatments = c(2, 2),
-#'   # Specify treatment names
-#'   label = list(A = c("A1", "A2"), B = c("B1", "B2")),
-#'   # 12 blocks, totaling 48 experimental units
-#'   blocks = 12,
-#'   # Mean of the reference level and effect sizes as calculated above
-#'   beta = c(20, -3, 4, 1),
-#'   # Variance of block effects (between-block variance)
-#'   VarCov = 30,
-#'   # Error variance (within-block variance)
-#'   sigma2 = 20
-#' )
-#'
-#' ## power of omnibus test
-#'
-#' pwr.anova(rcbd)
-#'
-#' ## power of B2 vs. B1 at each level of A
-#' pwr.contrast(rcbd, specs = ~B|A, method = "pairwise")
+#' pwr.contrast(crd, which = "trt", contrast = "pairwise") # pairwise comparisons
+#' pwr.contrast(crd, which = "trt", contrast = "poly") # polynomial contrasts
 #'
 #' # More examples are available in the package vignette("pwr4exp")
 #' # and on the package website: https://an-ethz.github.io/pwr4exp/
+#'
 #' @export
-designCRD <- function(treatments, label, replicates, formula, beta, sigma2) {
+designCRD <- function(treatments,
+                      label,
+                      replicates,
+                      formula,
+                      beta = NULL,
+                      means = NULL,
+                      sigma2,
+                      template = FALSE) {
   design_df <- df.crd(treatments = treatments, replicates = replicates, label = label)
   if (missing(formula)) {
     if (length(treatments) == 1) {
-      formula <- y ~ trt
+      formula <- ~ trt
       if (!missing(label)) {
-        formula <- stats::as.formula(paste("y ~", names(label)))
+        formula <- stats::reformulate(names(label))
       }
     } else {
-      formula <- y ~ facA*facB
+      formula <- ~ facA*facB
       if (!missing(label)) {
-        formula <- stats::as.formula(paste("y ~", paste(names(label), collapse = "*")))
+        formula <- stats::reformulate(paste(names(label), collapse = "*"))
       }
     }
   }
-  pseu_model <- fit.pseu.model(formula = formula, data = design_df, beta = beta, sigma = sqrt(sigma2))
-  output <- list(design = "Completely Randomized Design", design_df = design_df, formula = formula, pseu_model = pseu_model)
-  if (inherits(pseu_model, "customLmerMod")) {
-    class(output) <- "lmmDesign"
-  } else if (inherits(pseu_model, "lm")) {
-    class(output) <- "lmDesign"
+  if (template) {
+    return(mkdesign(formula, design_df, template = TRUE))
   }
-  return(output)
+  object <- mkdesign(formula = formula, data = design_df, beta = beta, means = means, sigma2 = sigma2)
+  return(object)
 }
 
 #' @rdname create_designs
 #' @export
-designRCBD <- function(treatments, label, blocks, formula, beta, VarCov, sigma2, ...) {
+designRCBD <- function(treatments, label, blocks, formula, beta = NULL, means = NULL, vcomp, sigma2, template = FALSE) {
   design_df <- df.rcbd(treatments = treatments, blocks = blocks, label = label)
   if (missing(formula)) {
     if (length(treatments) == 1) {
@@ -209,20 +159,26 @@ designRCBD <- function(treatments, label, blocks, formula, beta, VarCov, sigma2,
       }
     }
   }
-  pseu_model <- fit.pseu.model(formula = formula, data = design_df, beta = beta, VarCov = VarCov, sigma = sqrt(sigma2), ...)
-  output <- list(design = "Randomized Complete Block Design", design_df = design_df, formula = formula, pseu_model = pseu_model)
-  if (inherits(pseu_model, "customLmerMod")) {
-    class(output) <- "lmmDesign"
-  } else if (inherits(pseu_model, "lm")) {
-    class(output) <- "lmDesign"
+  if (template) {
+    return(mkdesign(formula, design_df))
   }
-
-  return(output)
+  object <- mkdesign(formula = formula, data = design_df, beta = beta, means = means, vcomp = vcomp, sigma2 = sigma2)
+  return(object)
 }
+
 
 #' @rdname create_designs
 #' @export
-designLSD <- function(treatments, label, squares = 1, reuse = c("row", "col", "both"), formula, beta, VarCov, sigma2, ...) {
+designLSD <- function(treatments,
+                      label,
+                      squares = 1,
+                      reuse = c("row", "col", "both"),
+                      formula,
+                      beta = NULL,
+                      means= NULL,
+                      vcomp,
+                      sigma2,
+                      template=FALSE) {
   design_df <- df.lsd(treatments = treatments, squares = squares, reuse = reuse, label = label)
   if (missing(formula)) {
     if (length(treatments) == 1) {
@@ -249,19 +205,16 @@ designLSD <- function(treatments, label, squares = 1, reuse = c("row", "col", "b
     #   }
     # }
   }
-  pseu_model <- fit.pseu.model(formula = formula, data = design_df, beta = beta, VarCov = VarCov, sigma = sqrt(sigma2), ...)
-  output <- list(design = "Latin Square Design", design_df = design_df, formula = formula, pseu_model = pseu_model)
-  if (inherits(pseu_model, "customLmerMod")) {
-    class(output) <- "lmmDesign"
-  } else if (inherits(pseu_model, "lm")) {
-    class(output) <- "lmDesign"
+  if (template) {
+    return(mkdesign(formula, design_df))
   }
-  return(output)
+  object <- mkdesign(formula = formula, data = design_df, beta = beta, means = means, vcomp = vcomp, sigma2 = sigma2)
+  return(object)
 }
 
 #' @rdname create_designs
 #' @export
-designCOD <- function(treatments, label, squares = 1, formula, beta, VarCov, sigma2, ...) {
+designCOD <- function(treatments, label, squares = 1, formula, beta =NULL, means =NULL, vcomp, sigma2, template=FALSE) {
   design_df <- df.cod(treatments = treatments, squares = squares, label = label)
   if (missing(formula)) {
     if (length(treatments) == 1) {
@@ -276,19 +229,16 @@ designCOD <- function(treatments, label, squares = 1, formula, beta, VarCov, sig
       }
     }
   }
-  pseu_model <- fit.pseu.model(formula = formula, data = design_df, beta = beta, VarCov = VarCov, sigma = sqrt(sigma2), ...)
-  output <- list(design = "Crossover Design", design_df = design_df, formula = formula, pseu_model = pseu_model)
-  if (inherits(pseu_model, "customLmerMod")) {
-    class(output) <- "lmmDesign"
-  } else if (inherits(pseu_model, "lm")) {
-    class(output) <- "lmDesign"
+  if (template) {
+    return(mkdesign(formula, design_df))
   }
-  return(output)
+  object <- mkdesign(formula = formula, data = design_df, beta = beta, means = means, vcomp = vcomp, sigma2 = sigma2)
+  return(object)
 }
 
 #' @rdname create_designs
 #' @export
-designSPD <- function(trt.main, trt.sub, label, replicates, formula, beta, VarCov, sigma2, ...) {
+designSPD <- function(trt.main, trt.sub, label, replicates, formula, beta = NULL, means = NULL, vcomp, sigma2, template = FALSE) {
   design_df <- df.spd(trt.main, trt.sub, replicates, label = label)
   if (missing(formula)) {
     formula <- y ~ (1|mainplot)
@@ -302,43 +252,26 @@ designSPD <- function(trt.main, trt.sub, label, replicates, formula, beta, VarCo
         formula <- stats::update(formula, . ~ . + trt.main*facA.sub*facB.sub)
         if (!missing(label)) {
           formula <- stats::as.formula(paste("y ~", paste(names(label), collapse = "*"), "+ (1|mainplot)"))
-          }
         }
+      }
     }
     if (length(trt.main) == 2) {
       if (length(trt.sub) == 1) {
         formula <- stats::update(formula, . ~ . + facA.main*facB.main*trt.sub)
         if (!missing(label)) {
           formula <- stats::as.formula(paste("y ~", paste(names(label), collapse = "*"), "+ (1|mainplot)"))
-          }
+        }
       } else {
         formula <- stats::update(formula, . ~ . + facA.main*facB.main*facA.sub*facB.sub)
         if (!missing(label)) {
-        formula <- stats::as.formula(paste("y ~", paste(names(label), collapse = "*"), "+ (1|mainplot)"))
+          formula <- stats::as.formula(paste("y ~", paste(names(label), collapse = "*"), "+ (1|mainplot)"))
         }}
     }
   }
-  pseu_model <- fit.pseu.model(formula = formula, data = design_df, beta = beta, VarCov = VarCov, sigma = sqrt(sigma2), ...)
-  output <- list(design = "Split Plot Design", design_df = design_df, formula = formula, pseu_model = pseu_model)
-  if (inherits(pseu_model, "customLmerMod")) {
-    class(output) <- "lmmDesign"
-  } else if (inherits(pseu_model, "lm")) {
-    class(output) <- "lmDesign"
+  if (template) {
+    return(mkdesign(formula, design_df))
   }
-
-  return(output)
+  object <- mkdesign(formula = formula, data = design_df, beta = beta, means = means, vcomp = vcomp, sigma2 = sigma2)
+  return(object)
 }
 
-#' @rdname create_designs
-#' @export
-designCustom <- function(design.df, formula, beta, VarCov, sigma2, design.name, ...) {
-  if (missing(design.name)) {design.name = "Customized Design"}
-  pseu_model <- fit.pseu.model(formula = formula, data = design.df, beta = beta, VarCov = VarCov, sigma = sqrt(sigma2), ...)
-  output <- list(design = design.name, design_df = design.df, formula = formula, pseu_model = pseu_model)
-  if (inherits(pseu_model, "customLmerMod")) {
-    class(output) <- "lmmDesign"
-  } else if (inherits(pseu_model, "lm")) {
-    class(output) <- "lmDesign"
-  }
-  return(output)
-}
