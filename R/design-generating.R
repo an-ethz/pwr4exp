@@ -54,32 +54,32 @@
 #' @details Each function creates a specific design as described below:
 #' \describe{
 #'   \item{\code{designCRD}}{Completely Randomized Design.
-#' By default, the model formula is \code{y ~ trt} for one factor and
-#' \code{y ~ facA*facB} for two factors, unless explicitly specified. If the
+#' By default, the model formula is \code{~ trt} for one factor and
+#' \code{~ facA*facB} for two factors, unless explicitly specified. If the
 #' `label` argument is provided, the formula is automatically updated with the
 #' specified treatment factor names.}
 #'   \item{\code{designRCBD}}{Randomized Complete Block Design.
-#' The default model formula is \code{y ~ trt + (1|block)} for one factor and
-#' \code{y ~ facA*facB + (1|block)} for two factors. If `label` is provided, the
+#' The default model formula is \code{~ trt + (1|block)} for one factor and
+#' \code{~ facA*facB + (1|block)} for two factors. If `label` is provided, the
 #' fixed effect parts of the formula are automatically updated with the specified
 #' names. The label of block factor ("block") in the formula is not changeable.}
 #'   \item{\code{designLSD}}{Latin Square Design.
-#' The default formula is \code{y ~ trt + (1|row) + (1|col)} for one factor and
-#' \code{y ~ facA*facB + (1|row) + (1|col)} for two factors. If `label` is provided,
+#' The default formula is \code{~ trt + (1|row) + (1|col)} for one factor and
+#' \code{~ facA*facB + (1|row) + (1|col)} for two factors. If `label` is provided,
 #' the fixed effect parts of the formula are automatically updated with the specified
 #' names. The labels of row ("row") and column ("col") block factors are not changeable.}
 #'   \item{\code{designCOD}}{Crossover Design, which is a special case of LSD
 #' with time periods and individuals as blocks. Period blocks are reused when
 #' replicating squares.
-#' The default formula is \code{y ~ trt + (1|subject) + (1|period)} for one factor
-#' and \code{y ~ facA*facB + (1|subject) + (1|period)} for two factors. If `label`
+#' The default formula is \code{~ trt + (1|subject) + (1|period)} for one factor
+#' and \code{~ facA*facB + (1|subject) + (1|period)} for two factors. If `label`
 #' is provided, the fixed effect parts of the formula are automatically updated
 #' with the specified names. Note that "subject" and "period" are the labels for
 #' the two blocking factors and cannot be changed.}
 #'   \item{\code{designSPD}}{Split Plot Design.
 #' The default formula includes the main effects of all treatment factors at
 #' both the main and sub-plot levels, their interactions, and the random effects
-#' of main plots: \code{y ~ . + (1|mainplot)}. If `label` is provided, the fixed
+#' of main plots: \code{~ . + (1|mainplot)}. If `label` is provided, the fixed
 #' effect parts of the formula are automatically updated with the specified names.
 #' The experimental unit at the main plot level (i.e., the block factor at the
 #' subplot level) is always denoted as "mainplot".}
@@ -148,14 +148,14 @@ designRCBD <- function(treatments, label, blocks, formula, beta = NULL, means = 
   design_df <- df.rcbd(treatments = treatments, blocks = blocks, label = label)
   if (missing(formula)) {
     if (length(treatments) == 1) {
-      formula <- y ~ trt + (1|block)
+      formula <- ~ trt + (1|block)
       if (!missing(label)) {
-        formula <- stats::as.formula(paste("y ~", names(label), "+ (1|block)"))
+        formula <- stats::as.formula(paste("~", names(label), "+ (1|block)"))
       }
     } else {
-      formula <- y ~ facA*facB + (1|block)
+      formula <- ~ facA*facB + (1|block)
       if (!missing(label)) {
-        formula <- stats::as.formula(paste("y ~", paste(names(label), collapse = "*"), "+ (1|block)"))
+        formula <- stats::as.formula(paste("~", paste(names(label), collapse = "*"), "+ (1|block)"))
       }
     }
   }
@@ -182,14 +182,14 @@ designLSD <- function(treatments,
   design_df <- df.lsd(treatments = treatments, squares = squares, reuse = reuse, label = label)
   if (missing(formula)) {
     if (length(treatments) == 1) {
-      formula <- y ~ trt + (1|row) + (1|col)
+      formula <- ~ trt + (1|row) + (1|col)
       if (!missing(label)) {
-        formula <- stats::as.formula(paste("y ~", names(label), "+ (1|row) + (1|col)"))
+        formula <- stats::as.formula(paste("~", names(label), "+ (1|row) + (1|col)"))
       }
     } else {
-      formula <- y ~ facA*facB + (1|row) + (1|col)
+      formula <- ~ facA*facB + (1|row) + (1|col)
       if (!missing(label)) {
-        formula <- stats::as.formula(paste("y ~", paste(names(label), collapse = "*"), "+ (1|row) + (1|col)"))
+        formula <- stats::as.formula(paste("~", paste(names(label), collapse = "*"), "+ (1|row) + (1|col)"))
       }
     }
     # The model specification depends on the level coding of blocks.
@@ -218,14 +218,14 @@ designCOD <- function(treatments, label, squares = 1, formula, beta =NULL, means
   design_df <- df.cod(treatments = treatments, squares = squares, label = label)
   if (missing(formula)) {
     if (length(treatments) == 1) {
-      formula <- y ~ trt + (1|subject) + (1|period)
+      formula <- ~ trt + (1|subject) + (1|period)
       if (!missing(label)) {
-        formula <- stats::as.formula(paste("y ~", names(label), "+ (1|subject) + (1|period)"))
+        formula <- stats::as.formula(paste("~", names(label), "+ (1|subject) + (1|period)"))
       }
     } else {
-      formula <- y ~ facA*facB + (1|subject) + (1|period)
+      formula <- ~ facA*facB + (1|subject) + (1|period)
       if (!missing(label)) {
-        formula <- stats::as.formula(paste("y ~", paste(names(label), collapse = "*"), "+ (1|subject) + (1|period)"))
+        formula <- stats::as.formula(paste("~", paste(names(label), collapse = "*"), "+ (1|subject) + (1|period)"))
       }
     }
   }
@@ -241,17 +241,17 @@ designCOD <- function(treatments, label, squares = 1, formula, beta =NULL, means
 designSPD <- function(trt.main, trt.sub, label, replicates, formula, beta = NULL, means = NULL, vcomp, sigma2, template = FALSE) {
   design_df <- df.spd(trt.main, trt.sub, replicates, label = label)
   if (missing(formula)) {
-    formula <- y ~ (1|mainplot)
+    formula <- ~ (1|mainplot)
     if (length(trt.main) == 1) {
       if (length(trt.sub) == 1) {
         formula <- stats::update(formula, . ~ . + trt.main*trt.sub)
         if (!missing(label)) {
-          formula <- stats::as.formula(paste("y ~", paste(names(label), collapse = "*"), "+ (1|mainplot)"))
+          formula <- stats::as.formula(paste("~", paste(names(label), collapse = "*"), "+ (1|mainplot)"))
         }
       } else {
         formula <- stats::update(formula, . ~ . + trt.main*facA.sub*facB.sub)
         if (!missing(label)) {
-          formula <- stats::as.formula(paste("y ~", paste(names(label), collapse = "*"), "+ (1|mainplot)"))
+          formula <- stats::as.formula(paste("~", paste(names(label), collapse = "*"), "+ (1|mainplot)"))
         }
       }
     }
@@ -259,12 +259,12 @@ designSPD <- function(trt.main, trt.sub, label, replicates, formula, beta = NULL
       if (length(trt.sub) == 1) {
         formula <- stats::update(formula, . ~ . + facA.main*facB.main*trt.sub)
         if (!missing(label)) {
-          formula <- stats::as.formula(paste("y ~", paste(names(label), collapse = "*"), "+ (1|mainplot)"))
+          formula <- stats::as.formula(paste("~", paste(names(label), collapse = "*"), "+ (1|mainplot)"))
         }
       } else {
         formula <- stats::update(formula, . ~ . + facA.main*facB.main*facA.sub*facB.sub)
         if (!missing(label)) {
-          formula <- stats::as.formula(paste("y ~", paste(names(label), collapse = "*"), "+ (1|mainplot)"))
+          formula <- stats::as.formula(paste("~", paste(names(label), collapse = "*"), "+ (1|mainplot)"))
         }}
     }
   }

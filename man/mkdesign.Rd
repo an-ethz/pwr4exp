@@ -65,7 +65,7 @@ including design matrices, assumed values of model effects, and other necessary 
 \itemize{
 \item \strong{data}: A long-format data frame is required, as typically used in R for fitting linear models.
 This data frame can be created manually or with the help of design creation packages
-such as \link[agricolae]{agricolae}, \link[crossdes]{crossdes},
+such as \link[agricolae]{agricolae}, \link[crossdes]{crossdes}, \link[AlgDesign]{AlgDesign},
 or \link[FrF2]{FrF2}.
 It should include all independent variables specified in the model (e.g., treatments, blocks, subjects),
 which are generally determined during the experimental design phase.
