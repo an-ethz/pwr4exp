@@ -33,7 +33,7 @@ simplifying the setup and execution of power analyses. The development
 version can be downloaded from GitHub:
 
 ```{r eval=FALSE}
-# devtools::install_github("an-ethz/pwr4exp")
+devtools::install_github("an-ethz/pwr4exp")
 ```
 
 ```{r setup}
@@ -539,7 +539,7 @@ lsd <- designLSD(
   squares = 4,
   reuse = "both",
   means = c(35, 40, 38, 41),
-  vcomp = list(11, 2),
+  vcomp = c(11, 2),
   sigma2 = 2
 )
 ```
@@ -552,20 +552,23 @@ used to evaludate statistical power as demonstrated above.
 In this example, we will create a SPD with two treatment factors, one at
 each level. The design parameters are as follows:
 
-```         
-1.  Treatments: One main plot factor having 2 levels, and another factor with 3 levels at the sub-plot level.
-2.  **Replicates**: There are 5 plots per main plot treatment, resulting in a total of 10 plots. This is a standard SPD, where the plot (block at the subplot level) size is assumed to equal the number of treatments. Thus, the design follows an RCBD structure at the subplot level.
-3.  The corresponding cell means are:$$
-\begin{array}{c|c|c}
-  & trt.sub1 & trt.sub2 & trt.sub3 \\
-\hline
-trt.main1 & 20 & 22 & 24\\
-trt.main2 & 22 & 24 & 28 \\
-\end{array}
-$$
-4. The total variance (15) is assumed to decompose into 4 for
-whole-plot error and 11 for subplot error.
-```
+1.  Treatments: One main plot factor having 2 levels, and another factor
+    with 3 levels at the sub-plot level.
+2.  **Replicates**: There are 5 plots per main plot treatment, resulting
+    in a total of 10 plots. This is a standard SPD, where the plot
+    (block at the subplot level) size is assumed to equal the number of
+    treatments. Thus, the design follows an RCBD structure at the
+    subplot level.
+3.  The corresponding cell means are: $$
+    \begin{array}{c|c|c}
+      & trt.sub1 & trt.sub2 & trt.sub3 \\
+    \hline
+    trt.main1 & 20 & 22 & 24\\
+    trt.main2 & 22 & 24 & 28 \\
+    \end{array}
+    $$
+4.  The total variance (15) is assumed to decompose into 4 for
+    whole-plot error and 11 for subplot error.
 
 **Inputs templates**
 
@@ -591,7 +594,7 @@ spd <- designSPD(
 )
 ```
 
-## EXample 5: Repeated measures
+## Example 5: Repeated measures
 
 This example illustrates a repeated measures design with three
 treatments (`CON`, `TRT1`, `TRT2`) measured hourly over 8 hours.
@@ -808,8 +811,8 @@ $v_2$ is calculated as:
 
 $$
 v_2 = \frac{2E}{E - v_1}
-$$
-The Satterthwaite approximation can be applied in power analysis by plugging in the assumed values of variance parameters (Stroup, 2002). 
+$$ The Satterthwaite approximation can be applied in power analysis by
+plugging in the assumed values of variance parameters (Stroup, 2002).
 
 ## Power Calculation Under the Alternative Hypothesis
 
@@ -837,7 +840,7 @@ error rate.
 
 The determination of the degrees of freedom $v_1$ and $v_2$, as well as
 the non-centrality parameter $\phi$, are critical steps for power
-calculation. 
+calculation.
 
 Generally, power analysis requires specifying the following components:
 
@@ -874,7 +877,9 @@ size.
 
 # References
 
-Satterthwaite, F. E. 1946. An approximate distribution of estimates of variance components. Biometrics Bull. 2:110–114.
-Hrong-Tai Fai, A., & Cornelius, P. L. (1996). Approximate F-tests of multiple degree of freedom hypotheses in generalized least squares analyses of unbalanced split-plot experiments. Journal of statistical computation and simulation, 54(4), 363-378.
-
-
+Satterthwaite, F. E. 1946. An approximate distribution of estimates of
+variance components. Biometrics Bull. 2:110–114. Hrong-Tai Fai, A., &
+Cornelius, P. L. (1996). Approximate F-tests of multiple degree of
+freedom hypotheses in generalized least squares analyses of unbalanced
+split-plot experiments. Journal of statistical computation and
+simulation, 54(4), 363-378.

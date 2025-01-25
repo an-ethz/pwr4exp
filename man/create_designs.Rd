@@ -147,32 +147,32 @@ Other design parameters are consistent with those in \link{mkdesign}.
 Each function creates a specific design as described below:
 \describe{
 \item{\code{designCRD}}{Completely Randomized Design.
-By default, the model formula is \code{y ~ trt} for one factor and
-\code{y ~ facA*facB} for two factors, unless explicitly specified. If the
+By default, the model formula is \code{~ trt} for one factor and
+\code{~ facA*facB} for two factors, unless explicitly specified. If the
 \code{label} argument is provided, the formula is automatically updated with the
 specified treatment factor names.}
 \item{\code{designRCBD}}{Randomized Complete Block Design.
-The default model formula is \code{y ~ trt + (1|block)} for one factor and
-\code{y ~ facA*facB + (1|block)} for two factors. If \code{label} is provided, the
+The default model formula is \code{~ trt + (1|block)} for one factor and
+\code{~ facA*facB + (1|block)} for two factors. If \code{label} is provided, the
 fixed effect parts of the formula are automatically updated with the specified
 names. The label of block factor ("block") in the formula is not changeable.}
 \item{\code{designLSD}}{Latin Square Design.
-The default formula is \code{y ~ trt + (1|row) + (1|col)} for one factor and
-\code{y ~ facA*facB + (1|row) + (1|col)} for two factors. If \code{label} is provided,
+The default formula is \code{~ trt + (1|row) + (1|col)} for one factor and
+\code{~ facA*facB + (1|row) + (1|col)} for two factors. If \code{label} is provided,
 the fixed effect parts of the formula are automatically updated with the specified
 names. The labels of row ("row") and column ("col") block factors are not changeable.}
 \item{\code{designCOD}}{Crossover Design, which is a special case of LSD
 with time periods and individuals as blocks. Period blocks are reused when
 replicating squares.
-The default formula is \code{y ~ trt + (1|subject) + (1|period)} for one factor
-and \code{y ~ facA*facB + (1|subject) + (1|period)} for two factors. If \code{label}
+The default formula is \code{~ trt + (1|subject) + (1|period)} for one factor
+and \code{~ facA*facB + (1|subject) + (1|period)} for two factors. If \code{label}
 is provided, the fixed effect parts of the formula are automatically updated
 with the specified names. Note that "subject" and "period" are the labels for
 the two blocking factors and cannot be changed.}
 \item{\code{designSPD}}{Split Plot Design.
 The default formula includes the main effects of all treatment factors at
 both the main and sub-plot levels, their interactions, and the random effects
-of main plots: \code{y ~ . + (1|mainplot)}. If \code{label} is provided, the fixed
+of main plots: \code{~ . + (1|mainplot)}. If \code{label} is provided, the fixed
 effect parts of the formula are automatically updated with the specified names.
 The experimental unit at the main plot level (i.e., the block factor at the
 subplot level) is always denoted as "mainplot".}
