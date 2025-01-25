@@ -47,75 +47,96 @@
   </div>
 </nav><div class="container template-home">
 <div class="row">
-  <main id="main" class="col-md-9"><div class="section level2">
-<h2 id="development-version">Development Version<a class="anchor" aria-label="anchor" href="#development-version"></a>
-</h2>
-<p>A development version of this package is available on the <code>dev</code> branch. This version enables applying various correlation structures (corClasses from nlme package) for repeated measures and some new improvements are still being tested.</p>
-<p>For more details on the development version, visit the <a href="https://github.com/an-ethz/pwr4exp/tree/dev" class="external-link">dev branch README</a>.</p>
-<p>To install the development version, use the following command in R:</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Install the 'devtools' package if not already installed</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"devtools"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Install the development version from the dev branch</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"an-ethz/pwr4exp"</span>, ref <span class="op">=</span> <span class="st">"dev"</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level1">
+  <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header"><h1 id="pwr4exp">pwr4exp<a class="anchor" aria-label="anchor" href="#pwr4exp"></a>
 </h1></div>
-<p>The <code>pwr4exp</code> R package provides functions for power calculation and sample size determination in standard experimental designs in animal science and beyond. The package emphasizes the importance of specifying models for conducting power analyses and supports power analyses for main effects, interactions, and specific contrasts. Additionally, <code>pwr4exp</code> offers a flexible framework to perform power analysis on customized designs which are currently not predefined in the package.</p>
+<p><code>pwr4exp</code> provides a flexible framework for calculating statistical power across a range of experimental designs, with a particular focus on applications in animal science and related fields. The package supports approximate F-tests for general linear hypotheses in linear mixed models and t-tests for specific contrasts, utilizing the Satterthwaite method to approximate degrees of freedom.</p>
+<p>The development version adds support for various correlation structures in repeated measures and spatial data. It also introduces options for creating input templates, making it easier to set up and perform power analyses. Note that sample size determination has been removed from this version.</p>
 <!-- badges: start -->
 <!-- badges: end -->
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># You can install pwr4exp from CRAN</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"pwr4exp"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Or the the development version from GitHub:</span></span>
+<span><span class="co"># Or the development version from GitHub:</span></span>
 <span><span class="co"># install.packages("devtools")</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"an-ethz/pwr4exp"</span>, ref <span class="op">=</span> <span class="st">"dev"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="functions">Functions<a class="anchor" aria-label="anchor" href="#functions"></a>
 </h2>
-<p>Performing power analysis in <code>pwr4exp</code> involves the following steps: - First, create a design object using the design generating functions. - Once the design object is created, calculating power or determining sample size using <code>pwr4exp</code> is straightforward. Simply pass the design object to the power calculator for main effects and interactions, <code><a href="reference/pwr.anova.html">pwr.anova()</a></code>, or for contrasts, <code><a href="reference/pwr.contrast.html">pwr.contrast()</a></code>. - To determine the minimal sample size to achieve a target power, a quoted design object can be passed to the function <code><a href="reference/find_sample_size.html">find_sample_size()</a></code>.</p>
+<p>Performing power analysis in <code>pwr4exp</code> involves two main steps:</p>
+<ol style="list-style-type: decimal">
+<li><p>Create a design object.</p></li>
+<li><p>Pass the design object to power calculators.</p></li>
+</ol>
 <div class="section level3">
 <h3 id="example-usage">Example Usage<a class="anchor" aria-label="anchor" href="#example-usage"></a>
 </h3>
 <p>Here’s an example of how you can generate a design and calculate power:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/an-ethz/pwr4exp" class="external-link">pwr4exp</a></span><span class="op">)</span></span>
-<span><span class="co"># Create a design</span></span>
-<span><span class="va">rcbd</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/create_designs.html">designRCBD</a></span><span class="op">(</span></span>
-<span>  treatments <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>,</span>
-<span>  blocks <span class="op">=</span> <span class="fl">10</span>,</span>
-<span>  beta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">470</span>, <span class="fl">30</span>, <span class="op">-</span><span class="fl">55</span>, <span class="fl">5</span><span class="op">)</span>,</span>
-<span>  VarCov <span class="op">=</span> <span class="fl">3200</span>,</span>
-<span>  sigma2 <span class="op">=</span> <span class="fl">3200</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co"># Calculate power for the ominubus test (i.e., F-test)</span></span>
-<span><span class="fu"><a href="reference/pwr.anova.html">pwr.anova</a></span><span class="op">(</span>design <span class="op">=</span> <span class="va">rcbd</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Calculate power for specific contrasts</span></span>
-<span><span class="fu"><a href="reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span>design <span class="op">=</span> <span class="va">rcbd</span>, specs <span class="op">=</span> <span class="op">~</span> <span class="va">facB</span> <span class="op">|</span> <span class="va">facA</span>, contrast <span class="op">=</span> <span class="st">"pairwise"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># Step 1. Create a design</span></span>
+<span><span class="co">## Define a completely randomized design with repeated measures</span></span>
+<span><span class="co">## by specifying it's data structure</span></span>
+<span></span>
+<span><span class="va">n_subject</span> <span class="op">=</span> <span class="fl">6</span> <span class="co"># Subjects per treatment</span></span>
+<span><span class="va">n_trt</span> <span class="op">=</span> <span class="fl">3</span> <span class="co"># Number of treatments</span></span>
+<span><span class="va">n_hour</span> <span class="op">=</span> <span class="fl">8</span> <span class="co"># Number of repeated measures (time points)</span></span>
+<span><span class="va">trt</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CON"</span>, <span class="st">"TRT1"</span>, <span class="st">"TRT2"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">df.rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  subject <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_trt</span><span class="op">*</span><span class="va">n_subject</span><span class="op">)</span>, each <span class="op">=</span> <span class="va">n_hour</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  hour <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_hour</span><span class="op">)</span>, <span class="va">n_subject</span><span class="op">*</span><span class="va">n_trt</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>  trt <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">trt</span>, each <span class="op">=</span> <span class="va">n_subject</span><span class="op">*</span><span class="va">n_hour</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Generate a template for required input</span></span>
+<span></span>
+<span><span class="fu"><a href="reference/mkdesign.html">mkdesign</a></span><span class="op">(</span>formula <span class="op">=</span> <span class="op">~</span> <span class="va">trt</span><span class="op">*</span><span class="va">hour</span>, data <span class="op">=</span> <span class="va">df.rep</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Create the design object</span></span>
+<span></span>
+<span><span class="va">design.rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mkdesign.html">mkdesign</a></span><span class="op">(</span></span>
+<span>formula <span class="op">=</span> <span class="op">~</span> <span class="va">trt</span><span class="op">*</span><span class="va">hour</span>,</span>
+<span>data <span class="op">=</span> <span class="va">df.rep</span>,</span>
+<span>means <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2.50</span>, <span class="fl">3.5</span>,</span>
+<span>           <span class="fl">1</span>, <span class="fl">3.50</span>, <span class="fl">4.54</span>,</span>
+<span>           <span class="fl">1</span>, <span class="fl">3.98</span>, <span class="fl">5.80</span>,</span>
+<span>           <span class="fl">1</span>, <span class="fl">4.03</span>, <span class="fl">5.4</span>,</span>
+<span>           <span class="fl">1</span>, <span class="fl">3.68</span>, <span class="fl">5.49</span>,</span>
+<span>           <span class="fl">1</span>, <span class="fl">3.35</span>, <span class="fl">4.71</span>,</span>
+<span>           <span class="fl">1</span>, <span class="fl">3.02</span>, <span class="fl">4.08</span>,</span>
+<span>           <span class="fl">1</span>, <span class="fl">2.94</span>, <span class="fl">3.78</span><span class="op">)</span>,</span>
+<span>sigma2 <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>correlation <span class="op">=</span> <span class="fu">corAR1</span><span class="op">(</span>value <span class="op">=</span> <span class="fl">0.6</span>, form <span class="op">=</span> <span class="op">~</span> <span class="va">hour</span><span class="op">|</span><span class="va">subject</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Step 2: Calculate power</span></span>
+<span><span class="co">## Omnibus test</span></span>
+<span><span class="fu"><a href="reference/pwr.anova.html">pwr.anova</a></span><span class="op">(</span><span class="va">design.rep</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">## Contrast test (pairwise comparisons by hour)</span></span>
+<span><span class="fu"><a href="reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span><span class="va">design.rep</span>, which <span class="op">=</span> <span class="st">"trt"</span>, by <span class="op">=</span> <span class="st">"hour"</span>, contrast <span class="op">=</span> <span class="st">"pairwise"</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
 <h2 id="learn-more">Learn More<a class="anchor" aria-label="anchor" href="#learn-more"></a>
 </h2>
-<p>To learn more about <code>pwr4exp</code>, read through the <a href="https://an-ethz.github.io/pwr4exp/articles/pwr4exp.html">vignette</a> for <code>pwr4exp</code> which contains:</p>
+<p>To learn more about power analysis with <code>pwr4exp</code>, refer to the <a href="https://an-ethz.github.io/pwr4exp/articles/pwr4exp.html">vignette</a> which contains:</p>
 <ul>
-<li>Foundational Concepts.</li>
-<li>Instructions for providing the required inputs.</li>
-<li>Examples of conducting power analysis for the standard designs available in the package.</li>
-<li>Examples of using <code>pwr4exp</code> to assess the power of customized designs.</li>
+<li>Fundamental concepts of statistical power in linear mixed models.</li>
+<li>Instructions for preparing and providing the required inputs.</li>
+<li>Examples of power calculations for standard designs available in the package.</li>
+<li>Examples of power analysis for more complex designs.</li>
 </ul>
-<p>The documentation for this package is being updated. If you have any questions or suggestions, please feel free to contact the package maintainer.</p>
+<p>The package documentation is being updated. For any questions or suggestions, please feel free to contact the package maintainer.</p>
 </div>
 </div>
-
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
