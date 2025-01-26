@@ -120,6 +120,9 @@ See \link{mkdesign} for more information.}
 \item{template}{Default is \code{FALSE}.
 If \code{TRUE}, a template for \code{beta}, \code{means}, and \code{vcomp} is generated to indicate the required input order.}
 
+\item{REML}{Specifies whether to use REML or ML estimates for variance-covariance parameters.
+Default is \code{TRUE}.}
+
 \item{blocks}{The number of blocks.}
 
 \item{vcomp}{A vector of variance-covariance components for random effects, if present.
