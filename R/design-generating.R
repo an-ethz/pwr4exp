@@ -120,7 +120,8 @@ designCRD <- function(treatments,
                       beta = NULL,
                       means = NULL,
                       sigma2,
-                      template = FALSE) {
+                      template = FALSE,
+                      REML = TRUE) {
   design_df <- df.crd(treatments = treatments, replicates = replicates, label = label)
   if (missing(formula)) {
     if (length(treatments) == 1) {
@@ -138,13 +139,13 @@ designCRD <- function(treatments,
   if (template) {
     return(mkdesign(formula, design_df, template = TRUE))
   }
-  object <- mkdesign(formula = formula, data = design_df, beta = beta, means = means, sigma2 = sigma2)
+  object <- mkdesign(formula = formula, data = design_df, beta = beta, means = means, sigma2 = sigma2, REML = REML)
   return(object)
 }
 
 #' @rdname create_designs
 #' @export
-designRCBD <- function(treatments, label, blocks, formula, beta = NULL, means = NULL, vcomp, sigma2, template = FALSE) {
+designRCBD <- function(treatments, label, blocks, formula, beta = NULL, means = NULL, vcomp, sigma2, template = FALSE, REML = TRUE) {
   design_df <- df.rcbd(treatments = treatments, blocks = blocks, label = label)
   if (missing(formula)) {
     if (length(treatments) == 1) {
@@ -162,7 +163,7 @@ designRCBD <- function(treatments, label, blocks, formula, beta = NULL, means = 
   if (template) {
     return(mkdesign(formula, design_df))
   }
-  object <- mkdesign(formula = formula, data = design_df, beta = beta, means = means, vcomp = vcomp, sigma2 = sigma2)
+  object <- mkdesign(formula = formula, data = design_df, beta = beta, means = means, vcomp = vcomp, sigma2 = sigma2, REML = REML)
   return(object)
 }
 
@@ -178,7 +179,8 @@ designLSD <- function(treatments,
                       means= NULL,
                       vcomp,
                       sigma2,
-                      template=FALSE) {
+                      template=FALSE,
+                      REML = TRUE) {
   design_df <- df.lsd(treatments = treatments, squares = squares, reuse = reuse, label = label)
   if (missing(formula)) {
     if (length(treatments) == 1) {
@@ -208,13 +210,13 @@ designLSD <- function(treatments,
   if (template) {
     return(mkdesign(formula, design_df))
   }
-  object <- mkdesign(formula = formula, data = design_df, beta = beta, means = means, vcomp = vcomp, sigma2 = sigma2)
+  object <- mkdesign(formula = formula, data = design_df, beta = beta, means = means, vcomp = vcomp, sigma2 = sigma2, REML = REML)
   return(object)
 }
 
 #' @rdname create_designs
 #' @export
-designCOD <- function(treatments, label, squares = 1, formula, beta =NULL, means =NULL, vcomp, sigma2, template=FALSE) {
+designCOD <- function(treatments, label, squares = 1, formula, beta =NULL, means =NULL, vcomp, sigma2, template=FALSE, REML = TRUE) {
   design_df <- df.cod(treatments = treatments, squares = squares, label = label)
   if (missing(formula)) {
     if (length(treatments) == 1) {
@@ -232,13 +234,13 @@ designCOD <- function(treatments, label, squares = 1, formula, beta =NULL, means
   if (template) {
     return(mkdesign(formula, design_df))
   }
-  object <- mkdesign(formula = formula, data = design_df, beta = beta, means = means, vcomp = vcomp, sigma2 = sigma2)
+  object <- mkdesign(formula = formula, data = design_df, beta = beta, means = means, vcomp = vcomp, sigma2 = sigma2, REML = REML)
   return(object)
 }
 
 #' @rdname create_designs
 #' @export
-designSPD <- function(trt.main, trt.sub, label, replicates, formula, beta = NULL, means = NULL, vcomp, sigma2, template = FALSE) {
+designSPD <- function(trt.main, trt.sub, label, replicates, formula, beta = NULL, means = NULL, vcomp, sigma2, template = FALSE, REML = TRUE) {
   design_df <- df.spd(trt.main, trt.sub, replicates, label = label)
   if (missing(formula)) {
     formula <- ~ (1|mainplot)
@@ -271,7 +273,7 @@ designSPD <- function(trt.main, trt.sub, label, replicates, formula, beta = NULL
   if (template) {
     return(mkdesign(formula, design_df))
   }
-  object <- mkdesign(formula = formula, data = design_df, beta = beta, means = means, vcomp = vcomp, sigma2 = sigma2)
+  object <- mkdesign(formula = formula, data = design_df, beta = beta, means = means, vcomp = vcomp, sigma2 = sigma2, REML = REML)
   return(object)
 }
 

@@ -209,15 +209,26 @@ vcovbeta_vp <- function(varpar, desStr) {
 informat <- function(varpar, desStr) {
   V <- vcovy_vp(varpar = varpar, desStr = desStr)
   V_inv <- Matrix::solve(V)
-  P <- V_inv - V_inv %*% desStr$X %*% solve(t(desStr$X) %*% V_inv %*% desStr$X) %*% t(desStr$X) %*% V_inv
+  if (desStr$REML)
+    P <- V_inv - V_inv %*% desStr$X %*% solve(t(desStr$X) %*% V_inv %*% desStr$X) %*% t(desStr$X) %*% V_inv
   n_params <- length(varpar)
   info_mat <- matrix(0, nrow = n_params, ncol = n_params)
   dV_dvarpar <- numDeriv::jacobian(func = vcovy_vp, x = varpar, desStr = desStr)
   dV_dvarpar <- lapply(1:ncol(dV_dvarpar), function(i)
     array(dV_dvarpar[, i], dim=rep(nrow(V), 2)))
+  if (desStr$REML) {
+    for (i in 1:n_params) {
+      for (j in i:n_params) {
+        trace_ij <- sum(diag(P %*% dV_dvarpar[[i]] %*% P %*% dV_dvarpar[[j]]))
+        info_mat[i, j] <- 0.5 * trace_ij
+        info_mat[j, i] <- info_mat[i, j]
+      }
+    }
+    return(info_mat)
+  }
   for (i in 1:n_params) {
     for (j in i:n_params) {
-      trace_ij <- sum(diag(P %*% dV_dvarpar[[i]] %*% P %*% dV_dvarpar[[j]]))
+      trace_ij <- sum(diag(V_inv %*% dV_dvarpar[[i]] %*% V_inv %*% dV_dvarpar[[j]]))
       info_mat[i, j] <- 0.5 * trace_ij
       info_mat[j, i] <- info_mat[i, j]
     }

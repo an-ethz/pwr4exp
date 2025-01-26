@@ -24,10 +24,10 @@
 #' @param sigma2 error variance.
 #' @param correlation Specifies correlation structures using [nlme::corClasses] functions.
 #' See "Details" for more information.
-#' @param REML Specifies whether to use REML or ML estimates for variance-covariance parameters.
-#' Default is `TRUE`.
 #' @param template Default is `FALSE`.
 #' If `TRUE`, a template for `beta`, `means`, and `vcomp` is generated to indicate the required input order.
+#' @param REML Specifies whether to use REML or ML estimates for variance-covariance parameters.
+#' Default is `TRUE`.
 #' @param ... Additional arguments passed to internal functions.
 #' @details
 #' - **data**: A long-format data frame is required, as typically used in R for fitting linear models.
@@ -179,7 +179,7 @@
 #' mkdesign(formula = ~ trt + hour + I(hour^2) + trt:hour + trt:I(hour^2), data = df2)$fixeff$means
 mkdesign <- function(formula, data,
                      beta = NULL, means = NULL, vcomp = NULL,
-                     sigma2 = NULL, correlation = NULL, REML = TRUE, template = FALSE, ...) {
+                     sigma2 = NULL, correlation = NULL, template = FALSE, REML = TRUE, ...) {
 
   # FIXME: more robust way?
   rownames(data) <- 1:nrow(data)
@@ -228,7 +228,7 @@ mkdesign <- function(formula, data,
   varpar <- c(vcomp, eval(corcall$value), sigma2)
   desStr$vcov_beta <- vcovbeta_vp(varpar, desStr)
 
-  # FIXME: ML information matrix
+  # REML or ML information matrix? default REML
   info_mat <- informat(varpar = varpar, desStr = desStr)
   desStr$vcov_varpar <- solve(info_mat)
 
