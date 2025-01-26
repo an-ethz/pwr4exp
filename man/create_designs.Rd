@@ -21,7 +21,8 @@ designCRD(
   beta = NULL,
   means = NULL,
   sigma2,
-  template = FALSE
+  template = FALSE,
+  REML = TRUE
 )
 
 designRCBD(
@@ -33,7 +34,8 @@ designRCBD(
   means = NULL,
   vcomp,
   sigma2,
-  template = FALSE
+  template = FALSE,
+  REML = TRUE
 )
 
 designLSD(
@@ -46,7 +48,8 @@ designLSD(
   means = NULL,
   vcomp,
   sigma2,
-  template = FALSE
+  template = FALSE,
+  REML = TRUE
 )
 
 designCOD(
@@ -58,7 +61,8 @@ designCOD(
   means = NULL,
   vcomp,
   sigma2,
-  template = FALSE
+  template = FALSE,
+  REML = TRUE
 )
 
 designSPD(
@@ -71,7 +75,8 @@ designSPD(
   means = NULL,
   vcomp,
   sigma2,
-  template = FALSE
+  template = FALSE,
+  REML = TRUE
 )
 }
 \arguments{

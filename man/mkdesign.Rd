@@ -12,8 +12,8 @@ mkdesign(
   vcomp = NULL,
   sigma2 = NULL,
   correlation = NULL,
-  REML = TRUE,
   template = FALSE,
+  REML = TRUE,
   ...
 )
 }
@@ -43,11 +43,11 @@ The values must follow a strict order. See "Details".}
 \item{correlation}{Specifies correlation structures using \link[nlme:corClasses]{nlme::corClasses} functions.
 See "Details" for more information.}
 
-\item{REML}{Specifies whether to use REML or ML estimates for variance-covariance parameters.
-Default is \code{TRUE}.}
-
 \item{template}{Default is \code{FALSE}.
 If \code{TRUE}, a template for \code{beta}, \code{means}, and \code{vcomp} is generated to indicate the required input order.}
+
+\item{REML}{Specifies whether to use REML or ML estimates for variance-covariance parameters.
+Default is \code{TRUE}.}
 
 \item{...}{Additional arguments passed to internal functions.}
 }

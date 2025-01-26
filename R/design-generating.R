@@ -50,7 +50,8 @@
 #' @param sigma2 error variance.
 #' @param template Default is `FALSE`.
 #' If `TRUE`, a template for `beta`, `means`, and `vcomp` is generated to indicate the required input order.
-#'
+#' @param REML Specifies whether to use REML or ML estimates for variance-covariance parameters.
+#' Default is `TRUE`.
 #' @details Each function creates a specific design as described below:
 #' \describe{
 #'   \item{\code{designCRD}}{Completely Randomized Design.
