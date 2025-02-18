@@ -57,7 +57,8 @@ Other design parameters are consistent with those in <a href="mkdesign.html">mkd
 <span>  beta <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  means <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">sigma2</span>,</span>
-<span>  template <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  template <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  REML <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">designRCBD</span><span class="op">(</span></span>
@@ -69,7 +70,8 @@ Other design parameters are consistent with those in <a href="mkdesign.html">mkd
 <span>  means <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">vcomp</span>,</span>
 <span>  <span class="va">sigma2</span>,</span>
-<span>  template <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  template <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  REML <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">designLSD</span><span class="op">(</span></span>
@@ -82,7 +84,8 @@ Other design parameters are consistent with those in <a href="mkdesign.html">mkd
 <span>  means <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">vcomp</span>,</span>
 <span>  <span class="va">sigma2</span>,</span>
-<span>  template <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  template <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  REML <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">designCOD</span><span class="op">(</span></span>
@@ -94,7 +97,8 @@ Other design parameters are consistent with those in <a href="mkdesign.html">mkd
 <span>  means <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">vcomp</span>,</span>
 <span>  <span class="va">sigma2</span>,</span>
-<span>  template <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  template <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  REML <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">designSPD</span><span class="op">(</span></span>
@@ -107,7 +111,8 @@ Other design parameters are consistent with those in <a href="mkdesign.html">mkd
 <span>  means <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">vcomp</span>,</span>
 <span>  <span class="va">sigma2</span>,</span>
-<span>  template <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  template <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  REML <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -169,6 +174,11 @@ See <a href="mkdesign.html">mkdesign</a> for more information.</p></dd>
 <dt id="arg-template">template<a class="anchor" aria-label="anchor" href="#arg-template"></a></dt>
 <dd><p>Default is <code>FALSE</code>.
 If <code>TRUE</code>, a template for <code>beta</code>, <code>means</code>, and <code>vcomp</code> is generated to indicate the required input order.</p></dd>
+
+
+<dt id="arg-reml">REML<a class="anchor" aria-label="anchor" href="#arg-reml"></a></dt>
+<dd><p>Specifies whether to use REML or ML estimates for variance-covariance parameters.
+Default is <code>TRUE</code>.</p></dd>
 
 
 <dt id="arg-blocks">blocks<a class="anchor" aria-label="anchor" href="#arg-blocks"></a></dt>

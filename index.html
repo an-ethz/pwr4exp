@@ -50,8 +50,7 @@
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header"><h1 id="pwr4exp">pwr4exp<a class="anchor" aria-label="anchor" href="#pwr4exp"></a>
 </h1></div>
-<p><code>pwr4exp</code> provides a flexible framework for calculating statistical power across a range of experimental designs, with a particular focus on applications in animal science and related fields. The package supports approximate F-tests for general linear hypotheses in linear mixed models and t-tests for specific contrasts, utilizing the Satterthwaite method to approximate degrees of freedom.</p>
-<p>The development version adds support for various correlation structures in repeated measures and spatial data. It also introduces options for creating input templates, making it easier to set up and perform power analyses. Note that sample size determination has been removed from this version.</p>
+<p><code>pwr4exp</code> supports statistical power calculations for a variety of experimental designs where data analysis is conducted using linear mixed models. It provides approximate F-tests for general linear hypotheses and t-tests for specific contrasts in linear mixed models, employing the Satterthwaite method to approximate degrees of freedom. Various correlation structures (R-side) defined in the <code>nlme</code> package can be used to model the relationship between residuals.</p>
 <!-- badges: start -->
 <!-- badges: end -->
 <div class="section level2">
@@ -63,31 +62,30 @@
 <span></span>
 <span><span class="co"># Or the development version from GitHub:</span></span>
 <span><span class="co"># install.packages("devtools")</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"an-ethz/pwr4exp"</span>, ref <span class="op">=</span> <span class="st">"dev"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"an-ethz/pwr4exp"</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Load the library</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/an-ethz/pwr4exp" class="external-link">pwr4exp</a></span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="functions">Functions<a class="anchor" aria-label="anchor" href="#functions"></a>
 </h2>
-<p>Performing power analysis in <code>pwr4exp</code> involves two main steps:</p>
-<ol style="list-style-type: decimal">
-<li><p>Create a design object.</p></li>
-<li><p>Pass the design object to power calculators.</p></li>
-</ol>
+<p>Performing a power analysis in <code>pwr4exp</code> involves two main steps:</p>
 <div class="section level3">
-<h3 id="example-usage">Example Usage<a class="anchor" aria-label="anchor" href="#example-usage"></a>
+<h3 id="step-1-define-the-design">Step 1. <strong>Define the design</strong>
+<a class="anchor" aria-label="anchor" href="#step-1-define-the-design"></a>
 </h3>
-<p>Here’s an example of how you can generate a design and calculate power:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/an-ethz/pwr4exp" class="external-link">pwr4exp</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Step 1. Create a design</span></span>
-<span><span class="co">## Define a completely randomized design with repeated measures</span></span>
-<span><span class="co">## by specifying it's data structure</span></span>
-<span></span>
-<span><span class="va">n_subject</span> <span class="op">=</span> <span class="fl">6</span> <span class="co"># Subjects per treatment</span></span>
+<div class="section level4">
+<h4 id="mkdesign">mkdesign<a class="anchor" aria-label="anchor" href="#mkdesign"></a>
+</h4>
+<p><code>mkdesign</code> is the most flexible function for defining an experimental design based on its data structure, statistical model, treatment effects, and variance-covariance components.</p>
+<p>For example, the following code defines a completely randomized design with repeated measures:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Create a data frame reflecting the data structure</span></span>
 <span><span class="va">n_trt</span> <span class="op">=</span> <span class="fl">3</span> <span class="co"># Number of treatments</span></span>
-<span><span class="va">n_hour</span> <span class="op">=</span> <span class="fl">8</span> <span class="co"># Number of repeated measures (time points)</span></span>
 <span><span class="va">trt</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CON"</span>, <span class="st">"TRT1"</span>, <span class="st">"TRT2"</span><span class="op">)</span></span>
+<span><span class="va">n_subject</span> <span class="op">=</span> <span class="fl">6</span> <span class="co"># Number of subjects per treatment</span></span>
+<span><span class="va">n_hour</span> <span class="op">=</span> <span class="fl">8</span> <span class="co"># Number of repeated measures (time points)</span></span>
 <span></span>
 <span><span class="va">df.rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  subject <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_trt</span><span class="op">*</span><span class="va">n_subject</span><span class="op">)</span>, each <span class="op">=</span> <span class="va">n_hour</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -95,33 +93,87 @@
 <span>  trt <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">trt</span>, each <span class="op">=</span> <span class="va">n_subject</span><span class="op">*</span><span class="va">n_hour</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co">## Generate a template for required input</span></span>
-<span></span>
-<span><span class="fu"><a href="reference/mkdesign.html">mkdesign</a></span><span class="op">(</span>formula <span class="op">=</span> <span class="op">~</span> <span class="va">trt</span><span class="op">*</span><span class="va">hour</span>, data <span class="op">=</span> <span class="va">df.rep</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co">## Create the design object</span></span>
-<span></span>
-<span><span class="va">design.rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mkdesign.html">mkdesign</a></span><span class="op">(</span></span>
-<span>formula <span class="op">=</span> <span class="op">~</span> <span class="va">trt</span><span class="op">*</span><span class="va">hour</span>,</span>
-<span>data <span class="op">=</span> <span class="va">df.rep</span>,</span>
-<span>means <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2.50</span>, <span class="fl">3.5</span>,</span>
-<span>           <span class="fl">1</span>, <span class="fl">3.50</span>, <span class="fl">4.54</span>,</span>
-<span>           <span class="fl">1</span>, <span class="fl">3.98</span>, <span class="fl">5.80</span>,</span>
-<span>           <span class="fl">1</span>, <span class="fl">4.03</span>, <span class="fl">5.4</span>,</span>
-<span>           <span class="fl">1</span>, <span class="fl">3.68</span>, <span class="fl">5.49</span>,</span>
-<span>           <span class="fl">1</span>, <span class="fl">3.35</span>, <span class="fl">4.71</span>,</span>
-<span>           <span class="fl">1</span>, <span class="fl">3.02</span>, <span class="fl">4.08</span>,</span>
-<span>           <span class="fl">1</span>, <span class="fl">2.94</span>, <span class="fl">3.78</span><span class="op">)</span>,</span>
-<span>sigma2 <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>correlation <span class="op">=</span> <span class="fu">corAR1</span><span class="op">(</span>value <span class="op">=</span> <span class="fl">0.6</span>, form <span class="op">=</span> <span class="op">~</span> <span class="va">hour</span><span class="op">|</span><span class="va">subject</span><span class="op">)</span></span>
+<span><span class="co"># Create the design object</span></span>
+<span><span class="va">crd.rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mkdesign.html">mkdesign</a></span><span class="op">(</span></span>
+<span>  formula <span class="op">=</span> <span class="op">~</span> <span class="va">trt</span><span class="op">*</span><span class="va">hour</span>, <span class="co"># model</span></span>
+<span>  data <span class="op">=</span> <span class="va">df.rep</span>, <span class="co"># a data frame reflecting the data structure</span></span>
+<span>  <span class="co"># treatment means at each hour reflecting effects</span></span>
+<span>  means <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2.50</span>, <span class="fl">3.5</span>,</span>
+<span>             <span class="fl">1</span>, <span class="fl">3.50</span>, <span class="fl">4.54</span>,</span>
+<span>             <span class="fl">1</span>, <span class="fl">3.98</span>, <span class="fl">5.80</span>,</span>
+<span>             <span class="fl">1</span>, <span class="fl">4.03</span>, <span class="fl">5.4</span>,</span>
+<span>             <span class="fl">1</span>, <span class="fl">3.68</span>, <span class="fl">5.49</span>,</span>
+<span>             <span class="fl">1</span>, <span class="fl">3.35</span>, <span class="fl">4.71</span>,</span>
+<span>             <span class="fl">1</span>, <span class="fl">3.02</span>, <span class="fl">4.08</span>,</span>
+<span>             <span class="fl">1</span>, <span class="fl">2.94</span>, <span class="fl">3.78</span><span class="op">)</span>, </span>
+<span>  sigma2 <span class="op">=</span> <span class="fl">2</span>, <span class="co"># residual variance</span></span>
+<span>  <span class="co"># residual correlation structure, AR1</span></span>
+<span>  correlation <span class="op">=</span> <span class="fu">corAR1</span><span class="op">(</span>value <span class="op">=</span> <span class="fl">0.6</span>, form <span class="op">=</span> <span class="op">~</span> <span class="va">hour</span><span class="op">|</span><span class="va">subject</span><span class="op">)</span> </span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><code>pwr4exp</code> also provides functions for some common standard designs, allowing a design to be defined by specifying key characteristics like treatment structure and replications, without manually creating a data frame.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Create a completely randomized design</span></span>
+<span><span class="va">crd</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/create_designs.html">designCRD</a></span><span class="op">(</span></span>
+<span>  treatments <span class="op">=</span> <span class="fl">4</span>, <span class="co"># one treatment factor with 4 levels</span></span>
+<span>  replicates <span class="op">=</span> <span class="fl">12</span>, <span class="co"># 12 experimental units per treatment</span></span>
+<span>  means <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">28</span>, <span class="fl">33</span>, <span class="fl">35</span><span class="op">)</span>, <span class="co"># treatment means</span></span>
+<span>  sigma2 <span class="op">=</span> <span class="fl">10</span> <span class="co"># error variance</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Step 2: Calculate power</span></span>
-<span><span class="co">## Omnibus test</span></span>
-<span><span class="fu"><a href="reference/pwr.anova.html">pwr.anova</a></span><span class="op">(</span><span class="va">design.rep</span><span class="op">)</span></span>
+<span><span class="co"># Create a randomized complete block design</span></span>
+<span><span class="va">rcbd</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/create_designs.html">designRCBD</a></span><span class="op">(</span></span>
+<span>  <span class="co"># two factors, each with 2 levels (2x2 factorial)</span></span>
+<span>  treatments <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>, </span>
+<span>  blocks <span class="op">=</span> <span class="fl">10</span>, <span class="co"># 10 blocks</span></span>
+<span>  means <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">28</span>, <span class="fl">33</span>, <span class="fl">35</span><span class="op">)</span>, <span class="co"># treatment means (cell means)</span></span>
+<span>  vcomp <span class="op">=</span> <span class="fl">6</span>, <span class="co"># block variance</span></span>
+<span>  sigma2 <span class="op">=</span> <span class="fl">4</span> <span class="co"># error variance</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="co">## Contrast test (pairwise comparisons by hour)</span></span>
-<span><span class="fu"><a href="reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span><span class="va">design.rep</span>, which <span class="op">=</span> <span class="st">"trt"</span>, by <span class="op">=</span> <span class="st">"hour"</span>, contrast <span class="op">=</span> <span class="st">"pairwise"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># Create a Latin Square design</span></span>
+<span><span class="va">lsd</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/create_designs.html">designLSD</a></span><span class="op">(</span></span>
+<span>  <span class="co"># two factors, with 2 and 3 levels, respectively (2x3 factorial)</span></span>
+<span>  treatments <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span>, </span>
+<span>  squares <span class="op">=</span> <span class="fl">4</span>, <span class="co"># four squares</span></span>
+<span>  reuse <span class="op">=</span> <span class="st">"col"</span>, <span class="co"># column blocks are identical acorss squares</span></span>
+<span>  means <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">28</span>, <span class="fl">33</span>, <span class="fl">35</span>, <span class="fl">34</span>, <span class="fl">35</span><span class="op">)</span>, <span class="co"># treatment means (cell means)</span></span>
+<span>  vcomp <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">2</span><span class="op">)</span>, <span class="co"># variances of blocking factor (row and column)</span></span>
+<span>  sigma2 <span class="op">=</span> <span class="fl">3</span> <span class="co"># error variance</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Create a split-plot design</span></span>
+<span><span class="va">spd</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/create_designs.html">designSPD</a></span><span class="op">(</span></span>
+<span>  trt.main <span class="op">=</span> <span class="fl">2</span>, <span class="co"># one factor with two levels at main plot</span></span>
+<span>  trt.sub <span class="op">=</span> <span class="fl">2</span>, <span class="co"># one factor with two levels at subplot</span></span>
+<span>  <span class="co"># 10 units per main plot factor (blocks at subplot level)</span></span>
+<span>  replicates <span class="op">=</span> <span class="fl">10</span>, </span>
+<span>  means <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">28</span>, <span class="fl">33</span>, <span class="fl">35</span><span class="op">)</span>, <span class="co"># treatment means (cell means)</span></span>
+<span>  vcomp <span class="op">=</span> <span class="fl">7</span>, <span class="co"># main plot error</span></span>
+<span>  sigma2 <span class="op">=</span> <span class="fl">3</span> <span class="co"># residual error (subplot error)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># If not specified, these functions internally use a default model formula that includes main effects and all interactions, with block factors fitted as random effects.</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level3">
+<h3 id="step-2-calculate-power">Step 2. <strong>Calculate power</strong>
+<a class="anchor" aria-label="anchor" href="#step-2-calculate-power"></a>
+</h3>
+<p>Once the design has been correctly defined, the design object can be passed to power calculation functions, including:</p>
+<div class="section level4">
+<h4 id="pwranova">pwr.anova<a class="anchor" aria-label="anchor" href="#pwranova"></a>
+</h4>
+<p>Computes the power of F-tests for omnibus hypotheses.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/pwr.anova.html">pwr.anova</a></span><span class="op">(</span><span class="va">crd.rep</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="pwrcontrast">pwr.contrast<a class="anchor" aria-label="anchor" href="#pwrcontrast"></a>
+</h4>
+<p>Computes the power of t-tests for specific contrasts.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span><span class="va">crd.rep</span>, which <span class="op">=</span> <span class="st">"trt"</span>, by <span class="op">=</span> <span class="st">"hour"</span>, contrast <span class="op">=</span> <span class="st">"trt.vs.ctrl"</span><span class="op">)</span></span></code></pre></div>
+</div>
 </div>
 </div>
 <div class="section level2">
@@ -129,12 +181,12 @@
 </h2>
 <p>To learn more about power analysis with <code>pwr4exp</code>, refer to the <a href="https://an-ethz.github.io/pwr4exp/articles/pwr4exp.html">vignette</a> which contains:</p>
 <ul>
-<li>Fundamental concepts of statistical power in linear mixed models.</li>
-<li>Instructions for preparing and providing the required inputs.</li>
+<li>Instructions on preparing and providing the required inputs.</li>
 <li>Examples of power calculations for standard designs available in the package.</li>
-<li>Examples of power analysis for more complex designs.</li>
+<li>Examples of power analysis for customized designs.</li>
+<li>Fundamental concepts of statistical power in linear mixed models.</li>
 </ul>
-<p>The package documentation is being updated. For any questions or suggestions, please feel free to contact the package maintainer.</p>
+<p>The package documentation is actively being updated. For any questions or suggestions, please feel free to open an <a href="https://github.com/an-ethz/pwr4exp/issues" class="external-link">issue</a> on our GitHub repository or contact the package maintainer.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">

@@ -60,8 +60,8 @@ including design matrices, assumed values of model effects, and other necessary 
 <span>  vcomp <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  sigma2 <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  correlation <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  REML <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  template <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  REML <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -109,14 +109,14 @@ The values must follow a strict order. See "Details".</p></dd>
 See "Details" for more information.</p></dd>
 
 
-<dt id="arg-reml">REML<a class="anchor" aria-label="anchor" href="#arg-reml"></a></dt>
-<dd><p>Specifies whether to use REML or ML estimates for variance-covariance parameters.
-Default is <code>TRUE</code>.</p></dd>
-
-
 <dt id="arg-template">template<a class="anchor" aria-label="anchor" href="#arg-template"></a></dt>
 <dd><p>Default is <code>FALSE</code>.
 If <code>TRUE</code>, a template for <code>beta</code>, <code>means</code>, and <code>vcomp</code> is generated to indicate the required input order.</p></dd>
+
+
+<dt id="arg-reml">REML<a class="anchor" aria-label="anchor" href="#arg-reml"></a></dt>
+<dd><p>Specifies whether to use REML or ML estimates for variance-covariance parameters.
+Default is <code>TRUE</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
