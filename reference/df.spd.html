@@ -58,13 +58,17 @@ sub plot level, similar to <code>trt.main</code>.</p></dd>
 
 
 <dt id="arg-label">label<a class="anchor" aria-label="anchor" href="#arg-label"></a></dt>
-<dd><p>A optional list of strings specifying the names of
-treatment factors and factor levels. Each vector in the list represents a
-treatment factor, where the name of the vector specifies the name of the
-factor, and the values in the vector are the labels for that factor's levels.
-If not provided, factors and levels for one and two treatment factors are
-labeled as <code>list(trt = c("1", "2", ...))</code> and
-<code>list(facA = c("1", "2", ...), facB = c("1", "2", ...))</code>, respectively.</p></dd>
+<dd><p>Optional. A list of character vectors, each corresponding to a treatment factor.
+The name of each vector specifies the factor's name, and its elements provide the labels for that factor's levels.
+If no labels are provided, default labels will be used. For a single treatment factor, the default is
+<code>list(trt = c("1", "2", ...))</code>, and for two treatment factors, the default is
+<code>list(facA = c("1", "2", ...), facB = c("1", "2", ...))</code>.
+For split-plot designs, the defaults are similar but include the ".main" and ".sub" suffixes for main plot and subplot factors.
+For example:
+<code>list(trt.main = c("1", "2", ...), trt.sub = c("1", "2", ...))</code> and
+<code>list(facA.main = c("1", "2", ...), facB.main = c("1", "2", ...),
+      facA.sub = c("1", "2", ...), facB.sub = c("1", "2", ...))</code>.
+Label sets should be arranged so that the main plot factors come first, followed by the subplot factors.</p></dd>
 
 
 <dt id="arg-replicates">replicates<a class="anchor" aria-label="anchor" href="#arg-replicates"></a></dt>
@@ -74,7 +78,7 @@ of main plot factors.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>a data.frame with columns for main plots, main treatments, and sub-treatments</p>
+    <p>a data.frame representing the data structure of the design</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -121,23 +121,26 @@ Other design parameters are consistent with those in <a href="mkdesign.html">mkd
 
 
 <dl><dt id="arg-treatments">treatments<a class="anchor" aria-label="anchor" href="#arg-treatments"></a></dt>
-<dd><p>An integer-valued vector specifying the treatment structure,
-in which the length of the vector indicates the number of treatment factors,
-and each value represents the number of levels for each factor. A maximum of
-two factors is allowed, and they are arranged in a factorial design.
-For instance, <code>treatments = n</code> specifies one treatment factor with n
-levels, and <code>treatments=c(2,3)</code> creates a "2x3" factorial design of
-two treatment factors with 2 and 3 levels, respectively.</p></dd>
+<dd><p>An integer vector where each element represents the number of levels
+of the corresponding treatment factor. A single integer (e.g., <code>treatments = n</code>)
+specifies one treatment factor with <code>n</code> levels. When multiple factors are provided,
+they are arranged in a factorial treatment factor design. For example,
+<code>treatments = c(2, 3)</code> creates a 2x3 factorial design with the first factor having 2 levels
+and the second factor having 3 levels.</p></dd>
 
 
 <dt id="arg-label">label<a class="anchor" aria-label="anchor" href="#arg-label"></a></dt>
-<dd><p>A optional list of strings specifying the names of
-treatment factors and factor levels. Each vector in the list represents a
-treatment factor, where the name of the vector specifies the name of the
-factor, and the values in the vector are the labels for that factor's levels.
-If not provided, factors and levels for one and two treatment factors are
-labeled as <code>list(trt = c("1", "2", ...))</code> and
-<code>list(facA = c("1", "2", ...), facB = c("1", "2", ...))</code>, respectively.</p></dd>
+<dd><p>Optional. A list of character vectors, each corresponding to a treatment factor.
+The name of each vector specifies the factor's name, and its elements provide the labels for that factor's levels.
+If no labels are provided, default labels will be used. For a single treatment factor, the default is
+<code>list(trt = c("1", "2", ...))</code>, and for two treatment factors, the default is
+<code>list(facA = c("1", "2", ...), facB = c("1", "2", ...))</code>.
+For split-plot designs, the defaults are similar but include the ".main" and ".sub" suffixes for main plot and subplot factors.
+For example:
+<code>list(trt.main = c("1", "2", ...), trt.sub = c("1", "2", ...))</code> and
+<code>list(facA.main = c("1", "2", ...), facB.main = c("1", "2", ...),
+      facA.sub = c("1", "2", ...), facB.sub = c("1", "2", ...))</code>.
+Label sets should be arranged so that the main plot factors come first, followed by the subplot factors.</p></dd>
 
 
 <dt id="arg-replicates">replicates<a class="anchor" aria-label="anchor" href="#arg-replicates"></a></dt>
@@ -177,7 +180,7 @@ If <code>TRUE</code>, a template for <code>beta</code>, <code>means</code>, and 
 
 
 <dt id="arg-reml">REML<a class="anchor" aria-label="anchor" href="#arg-reml"></a></dt>
-<dd><p>Specifies whether to use REML or ML estimates for variance-covariance parameters.
+<dd><p>Specifies whether to use REML information matrix for variance-covariance parameters instead of ML method.
 Default is <code>TRUE</code>.</p></dd>
 
 
@@ -256,11 +259,7 @@ both the main and sub-plot levels, their interactions, and the random effects
 of main plots: <code>~ . + (1|mainplot)</code>. If <code>label</code> is provided, the fixed
 effect parts of the formula are automatically updated with the specified names.
 The experimental unit at the main plot level (i.e., the block factor at the
-subplot level) is always denoted as "mainplot".</p></dd>
-
-<dt><code>designCustom</code></dt>
-<dd><p>Customized Design.</p></dd>
-
+subplot level) is always named as "mainplot".</p></dd>
 
 </dl></div>
     <div class="section level2">
