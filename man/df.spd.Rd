@@ -13,19 +13,23 @@ main plot level, similar to \code{\link{df.crd}}.}
 \item{trt.sub}{an integer-valued vector specifying the treatment structure at
 sub plot level, similar to \code{trt.main}.}
 
-\item{label}{A optional list of strings specifying the names of
-treatment factors and factor levels. Each vector in the list represents a
-treatment factor, where the name of the vector specifies the name of the
-factor, and the values in the vector are the labels for that factor's levels.
-If not provided, factors and levels for one and two treatment factors are
-labeled as \code{list(trt = c("1", "2", ...))} and
-\code{list(facA = c("1", "2", ...), facB = c("1", "2", ...))}, respectively.}
+\item{label}{Optional. A list of character vectors, each corresponding to a treatment factor.
+The name of each vector specifies the factor's name, and its elements provide the labels for that factor's levels.
+If no labels are provided, default labels will be used. For a single treatment factor, the default is
+\code{list(trt = c("1", "2", ...))}, and for two treatment factors, the default is
+\code{list(facA = c("1", "2", ...), facB = c("1", "2", ...))}.
+For split-plot designs, the defaults are similar but include the ".main" and ".sub" suffixes for main plot and subplot factors.
+For example:
+\code{list(trt.main = c("1", "2", ...), trt.sub = c("1", "2", ...))} and
+\code{list(facA.main = c("1", "2", ...), facB.main = c("1", "2", ...),
+      facA.sub = c("1", "2", ...), facB.sub = c("1", "2", ...))}.
+Label sets should be arranged so that the main plot factors come first, followed by the subplot factors.}
 
 \item{replicates}{the number of experimental units (main plots) per treatment
 of main plot factors.}
 }
 \value{
-a data.frame with columns for main plots, main treatments, and sub-treatments
+a data.frame representing the data structure of the design
 }
 \description{
 Create data frame for split-plot design

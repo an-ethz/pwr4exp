@@ -7,27 +7,30 @@
 df.cod(treatments, label, squares)
 }
 \arguments{
-\item{treatments}{An integer-valued vector specifying the treatment structure,
-in which the length of the vector indicates the number of treatment factors,
-and each value represents the number of levels for each factor. A maximum of
-two factors is allowed, and they are arranged in a factorial design.
-For instance, \code{treatments = n} specifies one treatment factor with n
-levels, and \code{treatments=c(2,3)} creates a "2x3" factorial design of
-two treatment factors with 2 and 3 levels, respectively.}
+\item{treatments}{An integer vector where each element represents the number of levels
+of the corresponding treatment factor. A single integer (e.g., \code{treatments = n})
+specifies one treatment factor with \code{n} levels. When multiple factors are provided,
+they are arranged in a factorial treatment factor design. For example,
+\code{treatments = c(2, 3)} creates a 2x3 factorial design with the first factor having 2 levels
+and the second factor having 3 levels.}
 
-\item{label}{A optional list of strings specifying the names of
-treatment factors and factor levels. Each vector in the list represents a
-treatment factor, where the name of the vector specifies the name of the
-factor, and the values in the vector are the labels for that factor's levels.
-If not provided, factors and levels for one and two treatment factors are
-labeled as \code{list(trt = c("1", "2", ...))} and
-\code{list(facA = c("1", "2", ...), facB = c("1", "2", ...))}, respectively.}
+\item{label}{Optional. A list of character vectors, each corresponding to a treatment factor.
+The name of each vector specifies the factor's name, and its elements provide the labels for that factor's levels.
+If no labels are provided, default labels will be used. For a single treatment factor, the default is
+\code{list(trt = c("1", "2", ...))}, and for two treatment factors, the default is
+\code{list(facA = c("1", "2", ...), facB = c("1", "2", ...))}.
+For split-plot designs, the defaults are similar but include the ".main" and ".sub" suffixes for main plot and subplot factors.
+For example:
+\code{list(trt.main = c("1", "2", ...), trt.sub = c("1", "2", ...))} and
+\code{list(facA.main = c("1", "2", ...), facB.main = c("1", "2", ...),
+      facA.sub = c("1", "2", ...), facB.sub = c("1", "2", ...))}.
+Label sets should be arranged so that the main plot factors come first, followed by the subplot factors.}
 
 \item{squares}{The number of replicated squares. By default, 1, i.e., no
 replicated squares.}
 }
 \value{
-a data.frame with columns for treatment factors, individuals (row block factor), period (column block factor), and squares
+a data.frame representing the data structure of the design
 }
 \description{
 Create a data frame for Crossover design

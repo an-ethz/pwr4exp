@@ -1,44 +1,53 @@
 #' Create a data frame of completely randomized design
 #'
-#' @param treatments An integer-valued vector specifying the treatment structure,
-#' in which the length of the vector indicates the number of treatment factors,
-#' and each value represents the number of levels for each factor. A maximum of
-#' two factors is allowed, and they are arranged in a factorial design.
-#' For instance, \code{treatments = n} specifies one treatment factor with n
-#' levels, and \code{treatments=c(2,3)} creates a "2x3" factorial design of
-#' two treatment factors with 2 and 3 levels, respectively.
-#' @param label Optional. A list of character vectors specifying the names of
-#' treatment factors and factor levels. Each vector in the list represents a
-#' treatment factor, where the name of the vector specifies the name of the
-#' factor, and the values in the vector are the labels for that factor's levels.
-#' If not provided, factors and levels for one and two treatment factors are
-#' labeled as \code{list(trt = c("1", "2", ...))} and
-#' \code{list(facA = c("1", "2", ...), facB = c("1", "2", ...))}, respectively.
+#' @param treatments An integer vector where each element represents the number of levels
+#' of the corresponding treatment factor. A single integer (e.g., \code{treatments = n})
+#' specifies one treatment factor with \code{n} levels. When multiple factors are provided,
+#' they are arranged in a factorial treatment factor design. For example,
+#' \code{treatments = c(2, 3)} creates a 2x3 factorial design with the first factor having 2 levels
+#' and the second factor having 3 levels.
+#' @param label Optional. A list of character vectors, each corresponding to a treatment factor.
+#' The name of each vector specifies the factor's name, and its elements provide the labels for that factor's levels.
+#' If no labels are provided, default labels will be used. For a single treatment factor, the default is
+#' \code{list(trt = c("1", "2", ...))}, and for two treatment factors, the default is
+#' \code{list(facA = c("1", "2", ...), facB = c("1", "2", ...))}.
+#' For split-plot designs, the defaults are similar but include the ".main" and ".sub" suffixes for main plot and subplot factors.
+#' For example:
+#' \code{list(trt.main = c("1", "2", ...), trt.sub = c("1", "2", ...))}
+#' \code{list(facA.main = c("1", "2", ...), facB.main = c("1", "2", ...),
+#'       facA.sub = c("1", "2", ...), facB.sub = c("1", "2", ...))}
+#' Label sets should be arranged so that the main plot factors come first, followed by the subplot factors.
 #' @param replicates The number of experimental units per treatment.
-#' @return a data.frame with columns for treatment factors and replicates
-df.crd <- function(treatments, label, replicates){
-  if(length(treatments) == 1){
-    df = expand.grid(
-      trt = 1:treatments,
-      replication = 1:replicates,
-      stringsAsFactors = TRUE
-    )
+#' @return a data.frame representing the data structure of the design
+df.crd <- function(treatments, label, replicates) {
+  if (missing(label)) {
+    label <- lapply(treatments, seq_len)
   } else {
-    df = expand.grid(
-      facA = 1:treatments[1],
-      facB = 1:treatments[2],
-      replication = 1:replicates,
-      stringsAsFactors = TRUE
-    )
-  }
-  df[] <- lapply(df, as.factor)
-  if (!missing(label)) {
-    names(df)[1:length(treatments)] <- names(label)
-    df[[1]] <- factor(df[[1]], labels = label[[1]])
-    if(length(treatments) == 2) {
-      df[[2]] <- factor(df[[2]], labels = label[[2]])
+    if (!is.list(label)) label <- list(label)
+    if (length(label) != length(treatments)) {
+      stop(sprintf("The number of label sets does not match the number of treatment factors:
+                   %d label set(s) provided, %d expected.",
+                   length(label), length(treatments)))
+    }
+    if (!all(sapply(label, length) == treatments)) {
+      stop("Some label sets do not have the expected number of labels.")
+    }
+    if (any(has_name <- names(label) == "")) {
+      stop(sprintf("Label set(s) %s also need to be named", paste(which(has_name), collapse = ", ")))
     }
   }
+
+  if (is.null(names(label))) {
+    if (length(treatments) == 1) {
+      names(label) <- "trt"
+    } else {
+      names(label) <- paste0("fac", LETTERS[seq_along(treatments)])
+    }
+  }
+
+  label <- lapply(label, function(x){factor(x, levels = x, labels = x)})
+
+  df <- do.call(expand.grid, c(label, list(replication = seq_len(replicates))))
   return(df)
 }
 
@@ -46,30 +55,37 @@ df.crd <- function(treatments, label, replicates){
 #'
 #' @inheritParams designCRD
 #' @param blocks the number of blocks
-#' @return a data.frame with columns for blocks and treatment factors
+#' @return a data.frame representing the data structure of the design
 df.rcbd <- function(treatments, label, blocks){
-  if(length(treatments) == 1){
-    df = expand.grid(
-      trt = 1:treatments,
-      block = 1:blocks,
-      stringsAsFactors = TRUE
-    )
+  if (missing(label)) {
+    label <- lapply(treatments, seq_len)
   } else {
-    df = expand.grid(
-      facA = 1:treatments[1],
-      facB = 1:treatments[2],
-      block = 1:blocks,
-      stringsAsFactors = TRUE
-    )
-  }
-  df[] <- lapply(df, as.factor)
-  if (!missing(label)) {
-    names(df)[1:length(treatments)] <- names(label)
-    df[[1]] <- factor(df[[1]], labels = c(label[[1]]))
-    if(length(treatments) == 2) {
-      df[[2]] <- factor(df[[2]], labels = c(label[[2]]))
+    if (!is.list(label)) label <- list(label)
+    if (length(label) != length(treatments)) {
+      stop(sprintf("The number of label sets does not match the number of treatment factors:
+                   %d label set(s) provided, %d expected.",
+                   length(label), length(treatments)))
+    }
+    if (!all(sapply(label, length) == treatments)) {
+      stop("Some label sets do not have the expected number of labels.")
+    }
+    if (any(has_name <- names(label) == "")) {
+      stop(sprintf("Label set(s) %s also need to be named", paste(which(has_name), collapse = ", ")))
     }
   }
+
+  if (is.null(names(label))) {
+    if (length(treatments) == 1) {
+      names(label) <- "trt"
+    } else {
+      names(label) <- paste0("fac", LETTERS[seq_along(treatments)])
+    }
+  }
+
+  label <- lapply(label, function(x){factor(x, levels = x, labels = x)})
+
+  df <- do.call(expand.grid, c(label, list(block = seq_len(blocks))))
+
   return(df)
 }
 
@@ -81,25 +97,44 @@ df.rcbd <- function(treatments, label, blocks){
 #' there are multiple squares. Options are: "row" for reusing row blocks, "col"
 #' for reusing column blocks, or "both" for reusing both row and column blocks
 #' to replicate a single square.
-#' @return a data.frame with columns for treatment factors, row and column block factors, and squares
+#' @return a data.frame representing the data structure of the design
 df.lsd <- function(treatments,
                    label,
                    squares = 1,
                    reuse = c("row", "col", "both")) {
-  n <- prod(treatments)
-  # lapply(1:n, function(i){(i:(i+n-1)) %% n + 1})
-  # do.call(rbind, lapply(1:n, function(i){(i:(i+n-1)) %% n + 1}))
-  # unlist(lapply(1:n, function(i){(i:(i+n-1)) %% n + 1}))
-  df <- expand.grid(row = 1:n, col = 1:n)
-  df$trt <- unlist(
-    lapply(1:n, function(i) {(i:(i+n-1)) %% n + 1})
-  )
-  if (length(treatments) > 1) {
-    df <- cbind(
-      df,
-      expand.grid(facA = 1:treatments[1], facB = 1:treatments[2])[df$trt, ]
-    )
+  if (missing(label)) {
+    label <- lapply(treatments, seq_len)
+  } else {
+    if (!is.list(label)) label <- list(label)
+    if (length(label) != length(treatments)) {
+      stop(sprintf("The number of label sets does not match the number of treatment factors:
+                   %d label set(s) provided, %d expected.",
+                   length(label), length(treatments)))
+    }
+    if (!all(sapply(label, length) == treatments)) {
+      stop("Some label sets do not have the expected number of labels.")
+    }
+    if (any(has_name <- names(label) == "")) {
+      stop(sprintf("Label set(s) %s also need to be named", paste(which(has_name), collapse = ", ")))
+    }
   }
+
+  if (is.null(names(label))) {
+    if (length(treatments) == 1) {
+      names(label) <- "trt"
+    } else {
+      names(label) <- paste0("fac", LETTERS[seq_along(treatments)])
+    }
+  }
+
+  label <- lapply(label, function(x){factor(x, levels = x, labels = x)})
+
+  ntrts <- prod(treatments)
+  trt_seq <- unlist(lapply(1:ntrts, function(i) {(i:(i+ntrts-1)) %% ntrts + 1}))
+
+  df <- expand.grid(row = 1:ntrts, col = 1:ntrts)
+  df <- cbind(df, expand.grid(label)[trt_seq, , drop = FALSE])
+
   if (squares > 1) {
     df <- df[rep(seq_len(prod(treatments)^2), squares), ]
   }
@@ -131,27 +166,17 @@ df.lsd <- function(treatments,
         each = prod(treatments)^2
       )
   }
+
   df[] <- lapply(df, as.factor)
   rownames(df) <- 1:nrow(df)
-  if (!missing(label)) {
-    if (length(treatments) == 1) {
-      df[["trt"]] <- factor(df[["trt"]], labels = label[[1]])
-      names(df) <- sub("trt", names(label), names(df))
-    }
-    if (length(treatments) == 2) {
-      df[["facA"]] <- factor(df[["facA"]], labels = label[[1]])
-      df[["facB"]] <- factor(df[["facB"]], labels = label[[2]])
-      names(df) <- sub("facA", names(label)[1], names(df))
-      names(df) <- sub("facB", names(label)[2], names(df))
-    }
-  }
+
   return(df)
 }
 
 #' Create a data frame for Crossover design
 #'
 #' @inheritParams designCOD
-#' @return a data.frame with columns for treatment factors, individuals (row block factor), period (column block factor), and squares
+#' @return a data.frame representing the data structure of the design
 df.cod <- function(treatments, label, squares){
   df <- df.lsd(treatments = treatments, label = label, squares = squares, reuse = "col")
   names(df)[1:2] <- c("subject", "period")
@@ -169,51 +194,48 @@ df.cod <- function(treatments, label, squares){
 #' @param replicates the number of experimental units (main plots) per treatment
 #' of main plot factors.
 #'
-#' @return a data.frame with columns for main plots, main treatments, and sub-treatments
+#' @return a data.frame representing the data structure of the design
 df.spd <- function(trt.main, trt.sub, label, replicates){
-  df.main <- df.crd(treatments = trt.main, replicates = replicates)
-  df.main$mainplot <- 1:(prod(trt.main)*replicates)
+  if (missing(label)) {
+    label.main <- lapply(trt.main, seq_len)
+    label.sub <- lapply(trt.sub, seq_len)
+  } else {
+    if (length(label) != length(trt.main) + length(trt.sub))
+      stop(sprintf("The number of label sets does not match the number of treatment factors:
+                   \n%d label set(s) provided, %d expected.
+                   \nLabel sets should be arranged so that the main plot factors come first,
+                   followed by the subplot factors.",
+                   length(label), length(trt.main) + length(trt.sub)
+                       ))
+    label.main <- label[seq_along(trt.main)]
+    label.sub <- label[seq_along(trt.sub) + length(trt.main)]
+  }
 
-  if (length(trt.main) > 1) {
-    names(df.main)[1:2] <- c("facA.main", "facB.main")
-  } else {names(df.main)[1] <- "trt.main"}
-  df.sub <- df.rcbd(treatments = trt.sub, blocks = prod(trt.main)*replicates)
-  if (length(trt.sub) > 1) {
-    names(df.sub) <- c("facA.sub", "facB.sub", "mainplot")
-  } else {names(df.sub) <- c("trt.sub", "mainplot")}
-  df <- merge(df.main, df.sub)
-  df <- df[, colnames(df) != "replication"]
-  if (!missing(label)) {
+  if (is.null(names(label.main))) {
     if (length(trt.main) == 1) {
-      df[["trt.main"]] <- factor(df[["trt.main"]], labels = label[[1]])
-      names(df) <- sub("trt.main", names(label)[[1]], names(df))
-      if (length(trt.sub) == 1) {
-        df[["trt.sub"]] <- factor(df[["trt.sub"]], labels = label[[2]])
-        names(df) <- sub("trt.sub", names(label)[[2]], names(df))
-      }
-      if (length(trt.sub) == 2) {
-        df[["facA.sub"]] <- factor(df[["facA.sub"]], labels = label[[2]])
-        df[["facB.sub"]] <- factor(df[["facB.sub"]], labels = label[[3]])
-        names(df) <- sub("facA.sub", names(label)[[2]], names(df))
-        names(df) <- sub("facB.sub", names(label)[[3]], names(df))
-      }
-    }
-    if (length(trt.main) == 2) {
-      df[["facA.main"]] <- factor(df[["facA.main"]], labels = label[[1]])
-      df[["facB.main"]] <- factor(df[["facB.main"]], labels = label[[2]])
-      names(df) <- sub("facA.main", names(label)[[1]], names(df))
-      names(df) <- sub("facB.main", names(label)[[2]], names(df))
-      if (length(trt.sub) == 1) {
-        df[["trt.sub"]] <- factor(df[["trt.sub"]], labels = label[[3]])
-        names(df) <- sub("trt.sub", names(label)[[3]], names(df))
-      }
-      if (length(trt.sub) == 2) {
-        df[["facA.sub"]] <- factor(df[["facA.sub"]], labels = label[[3]])
-        df[["facB.sub"]] <- factor(df[["facB.sub"]], labels = label[[4]])
-        names(df) <- sub("facA.sub", names(label)[[3]], names(df))
-        names(df) <- sub("facB.sub", names(label)[[4]], names(df))
-      }
+      names(label.main) <- "trt.main"
+    } else {
+      names(label.main) <- paste0("fac", LETTERS[seq_along(trt.main)], ".main")
     }
   }
+
+  if (is.null(names(label.sub))) {
+    if (length(trt.sub) == 1) {
+      names(label.sub) <- "trt.sub"
+    } else {
+      names(label.sub) <- paste0("fac", LETTERS[seq_along(trt.sub)], ".sub")
+    }
+  }
+
+  df.main <- df.crd(treatments = trt.main, label = label.main, replicates = replicates)
+  df.main$mainplot <- 1:(prod(trt.main)*replicates)
+
+  df.sub <- df.rcbd(treatments = trt.sub, label = label.sub, blocks = prod(trt.main)*replicates)
+
+  names(df.sub) <- sub("block", "mainplot", names(df.sub))
+
+  df <- merge(df.main, df.sub)
+  df <- df[, colnames(df) != "replication"]
+
   return(df)
 }
