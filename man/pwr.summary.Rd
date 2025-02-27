@@ -2,7 +2,7 @@
 % Please edit documentation in R/power-calculation.R
 \name{pwr.summary}
 \alias{pwr.summary}
-\title{power of model coefficients}
+\title{Power of model coefficients}
 \usage{
 pwr.summary(object, sig.level = 0.05)
 }
@@ -12,10 +12,10 @@ pwr.summary(object, sig.level = 0.05)
 \item{sig.level}{significance level, default 0.05}
 }
 \value{
-power table for each model coefficient
+The power for testing model coefficients
 }
 \description{
-power of model coefficients
+Power of model coefficients
 }
 \examples{
 rcbd <- designRCBD(

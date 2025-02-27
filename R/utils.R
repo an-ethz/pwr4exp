@@ -589,6 +589,7 @@ get_num_list <- function(object, FUN=mean) { # FUN=function(x) mean(x, na.rm=TRU
 lsmeans_contrasts <- function(object, which=NULL, by = NULL) {
   if(is.null(which) | length(which) > 1)
     stop("exaclty one factor must be specified")
+  which <- sub("\\*", ":", which)
   # right-hand-side formula, fixed-effect-only
   formula <- update(object$formula, NULL ~ .)
   formula <- lme4::nobars(formula)

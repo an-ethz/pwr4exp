@@ -79,11 +79,17 @@ pwr.anova <- function(object,
 #'
 #' Calculate power for testing various contrasts.
 #'
-#' @param object design object created in pwr4exp
-#' @param which the factor of interest
+#' @param object a design object created in pwr4exp
+#' @param which the factor of interest. Multiple factors can be combined using
+#' ":" or "*", e.g., "facA*facB", which represents a single factor that combines
+#' the levels of both factors.
 #' @param by the variable to condition on
-#' @param contrast contrast method, include "pairwise", "poly", and "trt.vs.ctrl",
-#' or any manually defined contrast vector
+#' @param contrast A character string specifying the contrast method, one of
+#' "pairwise", "poly", or "trt.vs.ctrl". Alternatively, a numeric vector defining
+#' a single contrast or a (named) list of vectors specifying multiple custom contrasts.
+#' If a list is provided, each element must be a vector whose length matches the
+#' number of levels of the factor in each `by` group. In multi-factor scenarios,
+#' factor levels are combined and treated as a single factor.
 #' @param sig.level significance level, default 0.05
 #' @param p.adj whether the sig.level should be adjusted using the Bonferroni method, default FALSE
 #' @param alternative one- or two-sided test. Can be abbreviated.
@@ -101,7 +107,24 @@ pwr.anova <- function(object,
 #'   vcomp = 4,
 #'   sigma2 = 6
 #' )
-#' pwr.contrast(rcbd, which = "facA", by = "facB")
+#'
+#' # If contrast is not specified, pairwise comparisons are conducted
+#' pwr.contrast(rcbd, which = "facA") # Marginal effect of facA
+#' pwr.contrast(rcbd, which = "facA", by = "facB") # Conditional effect of facA within levels of facB
+#'
+#' # Custom contrast vector, identical to pairwise comparison
+#' pwr.contrast(rcbd, which = "facA", contrast = c(1, -1))
+#' pwr.contrast(rcbd, which = "facA", by = "facB", contrast = c(1, -1))
+#'
+#' # A single factor combining two factors
+#' pwr.contrast(
+#'   rcbd,
+#'   which = "facA*facB",
+#'   contrast = list(
+#'     A1B1vs.A2B1 = c(1, -1, 0, 0),
+#'     A1B1vs.A2B2 = c(1, 0, 0, -1)
+#'   )
+#' )
 pwr.contrast <- function(object,
                          which,
                          by = NULL,
@@ -110,23 +133,53 @@ pwr.contrast <- function(object,
                          p.adj = FALSE,
                          alternative = c("two.sided", "one.sided"),
                          strict = TRUE) {
-
-  contrast <- match.arg(contrast)
   alternative <- match.arg(alternative)
 
+  # Handle contrast argument to allow both character and user-defined contrasts
+  if (is.character(contrast)) {
+    contrast <- match.arg(contrast)
+  }
+
   ## FIXME: check estimability?
-  L_means <- lsmeans_contrasts(object, which, by  = by)
+  L_means <- lsmeans_contrasts(object, which, by)
 
   if (is.null(by)) {
-    if (contrast == "pairwise") cl <- emmeans::pairwise.emmc(rownames(L_means))
-    if (contrast == "poly") cl <- emmeans::poly.emmc(rownames(L_means), max.degree = 3)
-    if (contrast == "trt.vs.ctrl") cl <- emmeans::trt.vs.ctrl.emmc(rownames(L_means))
-    if (is.numeric(contrast) & is.vector(contrast)) cl <- matrix(cl, nrow = length(cl))
-    if (is.matrix(contrast) | is.data.frame(contrast)) cl <- contrast
+    if (is.character(contrast)) {
+      # Generate contrast matrix for predefined types
+      if (contrast == "pairwise") {
+        cl <- emmeans::pairwise.emmc(rownames(L_means))
+      } else if (contrast == "poly") {
+        cl <- emmeans::poly.emmc(rownames(L_means), max.degree = 3)
+      } else if (contrast == "trt.vs.ctrl") {
+        cl <- emmeans::trt.vs.ctrl.emmc(rownames(L_means))
+      }
+    } else if (is.list(contrast) | is.vector(contrast)) {
+      # Use user-supplied contrast
+      if (is.atomic(contrast)) contrast <- list(contrast)
+      if (all(lapply(contrast, length) != nrow(L_means)))
+        stop("Invalid number of contrast coefficients")
+      cl <- do.call(cbind, contrast)
+      rownames(cl) <- rownames(L_means)
+      colnames <- colnames(cl)
+      if (is.null(colnames)) colnames <- character(ncol(cl))
+      wic <- which(colnames == "")
+      colnames[wic] <- sapply(
+        contrast[wic],
+        function(x) {paste(c("c(", paste(x, collapse = ","), ")"), collapse = "")}
+      )
+      colnames(cl) <- colnames
+    } else stop("Invalid contrast specification")
+
     L <- crossprod(as.matrix(cl), L_means)
+
     if (p.adj) sig.level <- sig.level/nrow(L)
+
     tab <- apply(L, 1, function(l){
-      contest1D(object = object, L = l, sig.level = sig.level, alternative = alternative, strict = strict)
+      contest1D(
+        object = object, L = l,
+        sig.level = sig.level, alternative = alternative,
+        strict = strict
+      )
     })
     tab <- do.call(rbind, tab)
     return(tab)
@@ -134,19 +187,47 @@ pwr.contrast <- function(object,
 
   if (!is.null(by)) {
     tab_list <- lapply(L_means, function(l_means){
-      if (contrast == "pairwise") cl <- emmeans::pairwise.emmc(rownames(l_means))
-      if (contrast == "poly") cl <- emmeans::poly.emmc(rownames(l_means), max.degree = 3)
-      if (contrast == "trt.vs.ctrl") cl <- emmeans::trt.vs.ctrl.emmc(rownames(l_means))
-      if (is.numeric(contrast) & is.vector(contrast)) cl <- matrix(cl, nrow = length(cl))
-      if (is.matrix(contrast) | is.data.frame(contrast)) cl <- contrast
+      if (is.character(contrast)) {
+        # Generate contrast matrix for predefined types
+        if (contrast == "pairwise") {
+          cl <- emmeans::pairwise.emmc(rownames(l_means))
+        } else if (contrast == "poly") {
+          cl <- emmeans::poly.emmc(rownames(l_means), max.degree = 3)
+        } else if (contrast == "trt.vs.ctrl") {
+          cl <- emmeans::trt.vs.ctrl.emmc(rownames(l_means))
+        }
+      } else if (is.list(contrast) | is.vector(contrast)) {
+        # Use user-supplied contrast
+        if (is.atomic(contrast)) contrast <- list(contrast)
+        if (all(lapply(contrast, length) != nrow(l_means)))
+          stop("Invalid number of coefficients in contrast vectors")
+        cl <- do.call(cbind, contrast)
+        rownames(cl) <- rownames(l_means)
+        colnames <- colnames(cl)
+        if (is.null(colnames)) colnames <- character(ncol(cl))
+        wic <- which(colnames == "")
+        colnames[wic] <- sapply(
+          contrast[wic],
+          function(x) {paste(c("c(", paste(x, collapse = ","), ")"), collapse = "")}
+        )
+        colnames(cl) <- colnames
+      } else stop("Invalid contrast specification")
+
       L <- crossprod(as.matrix(cl), l_means)
-      if (p.adj) sig.level <- sig.level/nrow(L)
-      tab <- apply(L, 1, function(l){
-        contest1D(object = object, L = l, sig.level = sig.level, alternative = alternative)
+
+      if (p.adj) sig.level <- sig.level / nrow(L)
+
+      tab <- apply(L, 1, function(l) {
+        contest1D(
+          object = object, L = l,
+          sig.level = sig.level, alternative = alternative,
+          strict = strict
+        )
       })
-      tab <- do.call(rbind, tab)
-      return(tab)
+
+      do.call(rbind, tab)
     })
+
     by_names <- names(tab_list)
     list_names <- gsub(paste0("^", by), paste0(by, " = "), by_names)
     names(tab_list) <- list_names
@@ -155,12 +236,12 @@ pwr.contrast <- function(object,
 }
 
 
-#' power of model coefficients
+#' Power of model coefficients
 #'
 #' @param object a design object created in pwr4exp
 #' @param sig.level significance level, default 0.05
 #'
-#' @return power table for each model coefficient
+#' @return The power for testing model coefficients
 #' @export
 #'
 #' @examples

@@ -16,14 +16,20 @@ pwr.contrast(
 )
 }
 \arguments{
-\item{object}{design object created in pwr4exp}
+\item{object}{a design object created in pwr4exp}
 
-\item{which}{the factor of interest}
+\item{which}{the factor of interest. Multiple factors can be combined using
+":" or "\emph{", e.g., "facA}facB", which represents a single factor that combines
+the levels of both factors.}
 
 \item{by}{the variable to condition on}
 
-\item{contrast}{contrast method, include "pairwise", "poly", and "trt.vs.ctrl",
-or any manually defined contrast vector}
+\item{contrast}{A character string specifying the contrast method, one of
+"pairwise", "poly", or "trt.vs.ctrl". Alternatively, a numeric vector defining
+a single contrast or a (named) list of vectors specifying multiple custom contrasts.
+If a list is provided, each element must be a vector whose length matches the
+number of levels of the factor in each \code{by} group. In multi-factor scenarios,
+factor levels are combined and treated as a single factor.}
 
 \item{sig.level}{significance level, default 0.05}
 
@@ -49,5 +55,22 @@ rcbd <- designRCBD(
   vcomp = 4,
   sigma2 = 6
 )
-pwr.contrast(rcbd, which = "facA", by = "facB")
+
+# If contrast is not specified, pairwise comparisons are conducted
+pwr.contrast(rcbd, which = "facA") # Marginal effect of facA
+pwr.contrast(rcbd, which = "facA", by = "facB") # Conditional effect of facA within levels of facB
+
+# Custom contrast vector, identical to pairwise comparison
+pwr.contrast(rcbd, which = "facA", contrast = c(1, -1))
+pwr.contrast(rcbd, which = "facA", by = "facB", contrast = c(1, -1))
+
+# A single factor combining two factors
+pwr.contrast(
+  rcbd,
+  which = "facA*facB",
+  contrast = list(
+    A1B1vs.A2B1 = c(1, -1, 0, 0),
+    A1B1vs.A2B2 = c(1, 0, 0, -1)
+  )
+)
 }
