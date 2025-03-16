@@ -61,7 +61,7 @@ pwr.anova <- function(object,
     stop("'type' not recognized")
   }
   # Get power for each term and collect in table:
-  table <- do.call(rbind, lapply(L_list, function(L) contestMD(object, L, sig.level)))
+  table <- do.call(rbind, lapply(L_list, function(L) contrastMD(object, L, sig.level)))
   # Format power table and return:
   if(length(nm <- setdiff(names(L_list), rownames(table)))) {
     tab <- array(NA_real_, dim=c(length(nm), 6L),
@@ -187,7 +187,7 @@ pwr.contrast <- function(object,
     if (p.adj) sig.level <- sig.level/nrow(L)
 
     tab <- apply(L, 1, function(l){
-      contest1D(
+      contrast1D(
         object = object, L = l,
         sig.level = sig.level, alternative = alternative,
         strict = strict
@@ -230,7 +230,7 @@ pwr.contrast <- function(object,
       if (p.adj) sig.level <- sig.level / nrow(L)
 
       tab <- apply(L, 1, function(l) {
-        contest1D(
+        contrast1D(
           object = object, L = l,
           sig.level = sig.level, alternative = alternative,
           strict = strict
@@ -271,9 +271,9 @@ pwr.summary <- function(object, sig.level = 0.05) {
   X <- object$deStruct$fxTrms$X
   p <- ncol(X)
   if(p < 1)
-    return(as.matrix(contest1D(object, numeric(0L))))
+    return(as.matrix(contrast1D(object, numeric(0L))))
   Lmat <- diag(p)
-  tab <- do.call(rbind, lapply(1:p, function(i) contest1D(object, Lmat[i, ])))
+  tab <- do.call(rbind, lapply(1:p, function(i) contrast1D(object, Lmat[i, ])))
   rownames(tab) <- colnames(X)
   tab
 }
@@ -288,7 +288,7 @@ pwr.summary <- function(object, sig.level = 0.05) {
 #' @param strict whether or not use strict interpretation in two-sided case
 #' @return A data frame with columns for effect size, degrees of freedom, significance level, power, and test type.
 #' @keywords internal, modified lmerTest internal functions
-contest1D <- function(object,
+contrast1D <- function(object,
                       L,
                       method=c("Satterthwaite"),
                       sig.level = 0.05,
@@ -338,7 +338,7 @@ contest1D <- function(object,
 #' @param eps numeric tolerance
 #' @return A data frame
 #' @keywords internal, modified lmerTest internal functions
-contestMD <- function(object, L,
+contrastMD <- function(object, L,
                       sig.level = 0.05,
                       eps=sqrt(.Machine$double.eps)) {
   param <- object$deParam
