@@ -75,7 +75,7 @@ and spatial data. It also includes options for generating input
 templates, simplifying the setup and execution of power analyses. The
 development version can be downloaded from GitHub:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"an-ethz/pwr4exp"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># devtools::install_github("an-ethz/pwr4exp")</span></span></code></pre></div>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/an-ethz/pwr4exp" class="external-link">pwr4exp</a></span><span class="op">)</span></span></code></pre></div>
 <div class="section level3">
@@ -110,7 +110,7 @@ necessary parameters.</p>
 <ul>
 <li>
 <code>formula</code>: The right-hand-side model formula (uses
-<code><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lme4::lmer()</a></code> syntax for random effects).</li>
+<code>lme4::lmer()</code> syntax for random effects).</li>
 <li>
 <code>data</code>: A long-format data frame with one row per
 observation and columns for all independent variables specified in the
