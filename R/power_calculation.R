@@ -1,16 +1,13 @@
 #' Power of omnibus tests
 #'
-#' Calculate power for testing overall effects of treatment factors and their
-#' interactions, i.e., statistical power of F-test.
-#'
+#' Calculates the statistical power for testing the overall effects of treatment
+#' factors and their interactions, i.e., power of F-test.
 #' @param object a design object created in pwr4exp
 #' @param sig.level significance level, default 0.05
 #' @param type the type of ANOVA table requested, default Type III
-#'
-#' @return a data frame with numerator degrees of freedom (NumDF), denominator
-#' degrees of freedom (DenDF), type I error rate (sig.level), and power.
-#'
-#' @seealso [mkdesign()], [designCRD()], [designRCBD()], [designLSD()], [designCOD()], [designSPD()], [pwr.summary()] and [pwr.contrast()]
+#' @return a data frame with numerator degrees of freedom (`NumDF`), denominator
+#' degrees of freedom (`DenDF`), type I error rate (`sig.level`), and `power`.
+#' @seealso [mkdesign], [designCRD], [designRCBD], [designLSD], [designCOD], [designSPD], [pwr.summary] and [pwr.contrast]
 #' @export
 #' @examples
 #' # generate an RCBD
@@ -30,6 +27,7 @@
 pwr.anova <- function(object,
                       sig.level = 0.05,
                       type = c("III", "II", "I", "3", "2", "1")) {
+  fixedfr <- object$deStruct$fxTrms$fixedfr
   type <- type[1L]
   if(!is.character(type)) type <- as.character(type)
   type <- match.arg(type)
@@ -37,17 +35,17 @@ pwr.anova <- function(object,
     type <- as.character(as.integer(as.roman(type)))
   # Get list of contrast matrices (L) - one for each model term:
   L_list <- if(type == "1") {
-    get_contrasts_type1(object)
+    get_contrasts_type1(fixedfr)
   } else if(type == "2") {
-    get_contrasts_type2_unfolded(object)
+    get_contrasts_type2_unfolded(fixedfr)
   } else if(type == "2b") {
-    get_contrasts_type2(object)
+    get_contrasts_type2(fixedfr)
   } else if(type == "3") {
-    get_contrasts_type3(object)
+    get_contrasts_type3(fixedfr)
   } else if(type == "yates") {
-    get_contrasts_yates(object)
+    get_contrasts_yates(fixedfr)
   } else if(type == "marginal") {
-    get_contrasts_marginal(object)
+    get_contrasts_marginal(fixedfr)
   } else {
     stop("'type' not recognized")
   }
@@ -77,11 +75,10 @@ pwr.anova <- function(object,
 
 #' Power of contrasts
 #'
-#' Calculate power for testing various contrasts.
-#'
+#' Computes the statistical power of t-tests for comparisons among means.
 #' @param object a design object created in pwr4exp
 #' @param which the factor of interest. Multiple factors can be combined using
-#' ":" or "*", e.g., "facA*facB", which represents a single factor that combines
+#' \code{:} or \code{*}, e.g., \code{"facA*facB"}, which represents a single factor that combines
 #' the levels of both factors.
 #' @param by the variable to condition on
 #' @param contrast A character string specifying the contrast method, one of
@@ -94,9 +91,13 @@ pwr.anova <- function(object,
 #' @param p.adj whether the sig.level should be adjusted using the Bonferroni method, default FALSE
 #' @param alternative one- or two-sided test. Can be abbreviated.
 #' @param strict use strict interpretation in two-sided case
-#'
 #' @export
-#' @return a data frame or a list of data frame separated by conditions.
+#' @return
+#' For each `by` condition, returns a data frame containing the contrast value (`effect`),
+#' degrees of freedom (`df`), type I error rate (`sig.level`), `power`, and the test direction
+#' (by `alternative`).
+#' When multiple `by` conditions are present, the results are returned as a list.
+#'
 #' @examples
 #' rcbd <- designRCBD(
 #'   treatments = c(2, 2),
@@ -133,15 +134,15 @@ pwr.contrast <- function(object,
                          p.adj = FALSE,
                          alternative = c("two.sided", "one.sided"),
                          strict = TRUE) {
+  fixedfr <- object$deStruct$fxTrms$fixedfr
   alternative <- match.arg(alternative)
-
   # Handle contrast argument to allow both character and user-defined contrasts
   if (is.character(contrast)) {
     contrast <- match.arg(contrast)
   }
 
   ## FIXME: check estimability?
-  L_means <- lsmeans_contrasts(object, which, by)
+  L_means <- lsmeans_contrasts(fixedfr, which, by)
 
   if (is.null(by)) {
     if (is.character(contrast)) {
@@ -235,15 +236,15 @@ pwr.contrast <- function(object,
   }
 }
 
-
-#' Power of model coefficients
+#' Power for model coefficients
 #'
-#' @param object a design object created in pwr4exp
+#' Computes the statistical power for testing (t-test) model coefficients.
+#'
+#' @param object design object
 #' @param sig.level significance level, default 0.05
-#'
-#' @return The power for testing model coefficients
+#' @return a data frame containing model coefficients, degrees of freedom (`df`),
+#' type I error rate (`sig.level`), power, and the test direction (`alternative`).
 #' @export
-#'
 #' @examples
 #' rcbd <- designRCBD(
 #'   treatments = c(2, 2),
@@ -256,7 +257,7 @@ pwr.contrast <- function(object,
 #' )
 #' pwr.summary(rcbd)
 pwr.summary <- function(object, sig.level = 0.05) {
-  X <- object$X
+  X <- object$deStruct$fxTrms$X
   p <- ncol(X)
   if(p < 1)
     return(as.matrix(contest1D(object, numeric(0L))))
@@ -266,15 +267,23 @@ pwr.summary <- function(object, sig.level = 0.05) {
   tab
 }
 
-#' @noRd
-#' @import stats
+#' Computes power of t-test for one-dimensional contrast matrices
+#'
+#' @param object design object
+#' @param L contrast vector
+#' @param method DF approximation method, only "Satterthwaite" available currently
+#' @param sig.level significance level, default 0.05
+#' @param alternative one- or two-sided test
+#' @param strict whether or not use strict interpretation in two-sided case
+#' @return A data frame with columns for effect size, degrees of freedom, significance level, power, and test type.
+#' @keywords interval
 contest1D <- function(object,
                       L,
                       method=c("Satterthwaite"),
                       sig.level = 0.05,
                       alternative = c("two.sided", "one.sided"),
                       strict = TRUE) {
-
+  param <- object$deParam
   mk_ttable <- function(effect, se, df, sig.level, alternative, strict = TRUE) {
     tside <- switch(alternative, one.sided = 1, two.sided = 2)
     ncp <- abs(effect/se)
@@ -294,28 +303,34 @@ contest1D <- function(object,
                check.names=FALSE)
   }
   if(is.matrix(L)) L <- drop(L) # L is a column vector
-  stopifnot(is.numeric(L), length(L) == length(object$beta))
-  effect <- sum(L * object$beta) # contrast effect (expectation)
+  stopifnot(is.numeric(L), length(L) == length(param$beta))
+  effect <- sum(L * param$beta) # contrast effect (expectation)
   method <- match.arg(method) # currently, just one option
   alternative <- match.arg(alternative)
   if(method == "Satterthwaite") {
-    var_con <- sum(L * (object$vcov_beta %*% L)) # variance of contrast
+    var_con <- sum(L * (param$vcov_beta %*% L)) # variance of contrast
     # Compute denominator DF:
     grad_var_con <-
-      vapply(object$Jac_list, function(J) sum(L * (J %*% L)), numeric(1L)) # = {L' Jac L}_i
-    satt_denom <- sum(grad_var_con * (object$vcov_varpar %*% grad_var_con)) # g'Ag
+      vapply(param$Jac_list, function(J) sum(L * (J %*% L)), numeric(1L)) # = {L' Jac L}_i
+    satt_denom <- sum(grad_var_con * (param$vcov_varpar %*% grad_var_con)) # g'Ag
     df <- drop(2 * var_con^2 / satt_denom) # denominator DF
   } # TODO: other DF methods
   mk_ttable(effect, sqrt(var_con), df, sig.level, alternative)
 }
 
-#' @noRd
-#' @import stats
+
+#' Computes power of F-test for multi-dimensional contrast matrices
+#'
+#' @param object design object
+#' @param L contrast matrix
+#' @param sig.level significance level
+#' @param eps numeric tolerance
+#' @return A data frame
+#' @keywords internal
 contestMD <- function(object, L,
                       sig.level = 0.05,
-                      eps=sqrt(.Machine$double.eps),
-                      ...) {
-
+                      eps=sqrt(.Machine$double.eps)) {
+  param <- object$deParam
   get_Fstat_ddf <- function(nu, tol=1e-8) {
     fun <- function(nu) {
       if(any(nu <= 2)) 2 else {
@@ -341,13 +356,13 @@ contestMD <- function(object, L,
   }
   if(!is.matrix(L)) L <- matrix(L, ncol=length(L))
   stopifnot(is.matrix(L), is.numeric(L),
-            ncol(L) == length(object$beta))
+            ncol(L) == length(param$beta))
   if(nrow(L) == 0L) { # May happen if there are no fixed effects
     x <- numeric(0L)
     return(mk_Ftable(x, x, x, x))
   }
-  beta <- object$beta
-  vcov_con <- L %*% object$vcov_beta %*% t(L) # (co)-variance of contrasts
+  beta <- param$beta
+  vcov_con <- L %*% param$vcov_beta %*% t(L) # (co)-variance of contrasts
   eig_vcov_con <- eigen(vcov_con)
   P <- eig_vcov_con$vectors
   d <- eig_vcov_con$values
@@ -360,11 +375,11 @@ contestMD <- function(object, L,
   PtL <- crossprod(P, L)[1:q, , drop = FALSE]
   # Compute q-list of gradients of (PtL)' cov(beta) (PtL) wrt. varpar vector
   grad_PLcov <- lapply(1:q, function(m) {
-    vapply(object$Jac_list, function(J) PtL[m, , drop = FALSE] %*% J %*% t(PtL[m, , drop = FALSE]), numeric(1L))
+    vapply(param$Jac_list, function(J) PtL[m, , drop = FALSE] %*% J %*% t(PtL[m, , drop = FALSE]), numeric(1L))
   })
   # Compute degrees of freedom for the q t-statistics:
   nu_m <- vapply(1:q, function(m) {
-    2*(d[m])^2 / sum(grad_PLcov[[m]] * (object$vcov_varpar %*% grad_PLcov[[m]])) }, numeric(1L)) # 2D_m^2 / g'Ag
+    2*(d[m])^2 / sum(grad_PLcov[[m]] * (param$vcov_varpar %*% grad_PLcov[[m]])) }, numeric(1L)) # 2D_m^2 / g'Ag
   # Compute ddf for the F-value:
   ddf <- get_Fstat_ddf(nu_m, tol=1e-8)
 
@@ -380,7 +395,7 @@ contestMD <- function(object, L,
   #   return(ncp)
   # }
   #
-  # ncp <- get_ncp(L, beta, object$X, Matrix::object$reTrms$Zt, object$reTrms$G, object$rTrms$R)
+  # ncp <- get_ncp(L, beta, object$fxTrms$X, Matrix::object$reTrms$Zt, object$reTrms$G, object$rTrms$R)
   t2 <- drop(PtL %*% beta)^2 / d[1:q]
   ncp <- sum(t2)
   mk_Ftable(ndf = q, ddf = ddf, ncp = ncp, sig.level = sig.level)

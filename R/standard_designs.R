@@ -1,9 +1,11 @@
 #' Creation of Standard Experimental Designs
 #'
 #' These functions facilitate the creation of standard experimental designs
-#' commonly used in agricultural studies for power analysis. Instead of supplying
-#' a data frame to [mkdesign], users can specify key design characteristics to generate the design.
-#' Other design parameters are consistent with those in [mkdesign].
+#' commonly used in agricultural studies for power analysis. Unlike [mkdesign]
+#' which requires a pre-existing data frame, these functions allow users to
+#' directly specify key design characteristics to generate experimental layouts.
+#' Quantitative parameters describing fixed and random effects remain consistent
+#' with those in [mkdesign].
 #'
 #' @param treatments An integer vector where each element represents the number of levels
 #' of the corresponding treatment factor. A single integer (e.g., \code{treatments = n})
@@ -37,11 +39,11 @@
 #' for reusing column blocks, or "both" for reusing both row and column blocks
 #' to replicate a single square.
 #' @param formula A right-hand-side [formula] specifying the model for testing treatment effects,
-#' with terms on the right of [~] , following [lme4::lmer()] syntax for random effects.
+#' with terms on the right of [~] , following [lme4::lmer] syntax for random effects.
 #' If not specified, a default formula with main effects and all interactions is used internally.
 #' @param beta One of the optional inputs for fixed effects.
 #' A vector of model coefficients where factor variable coefficients correspond
-#' to dummy variables created using "contr.treatment".
+#' to dummy variables created using treatment contrast ([stats::contr.treatment]).
 #' @param means One of the optional inputs for fixed effects.
 #' A vector of marginal or conditioned means (if factors have interactions).
 #' Regression coefficients are required for numerical variables.
@@ -53,9 +55,8 @@
 #' @param sigma2 error variance.
 #' @param template Default is `FALSE`.
 #' If `TRUE`, a template for `beta`, `means`, and `vcomp` is generated to indicate the required input order.
-#' @param REML Specifies whether to use REML information matrix for variance-covariance parameters instead of ML method.
-#' Default is `TRUE`.
-#' @details Each function creates a specific design as described below:
+#' @param REML Specifies whether to use REML or ML information matrix. Default is `TRUE` (REML).
+#' @details Each function creates a standard design as described below:
 #' \describe{
 #'   \item{\code{designCRD}}{Completely Randomized Design.
 #' By default, the model formula is \code{~ trt} for one factor and
@@ -63,22 +64,24 @@
 #' `label` argument is provided, the formula is automatically updated with the
 #' specified treatment factor names.}
 #'   \item{\code{designRCBD}}{Randomized Complete Block Design.
+#' Experimental units are grouped into blocks, with each treatment appearing
+#' **exactly** once per block (i.e., no replicates per treatment within a block).
 #' The default model formula is \code{~ trt + (1|block)} for one factor and
 #' \code{~ facA*facB + (1|block)} for two factors. If `label` is provided, the
 #' fixed effect parts of the formula are automatically updated with the specified
-#' names. The label of block factor ("block") in the formula is not changeable.}
+#' names. The block factor is named "block" and not changeable.}
 #'   \item{\code{designLSD}}{Latin Square Design.
 #' The default formula is \code{~ trt + (1|row) + (1|col)} for one factor and
 #' \code{~ facA*facB + (1|row) + (1|col)} for two factors. If `label` is provided,
 #' the fixed effect parts of the formula are automatically updated with the specified
-#' names. The labels of row ("row") and column ("col") block factors are not changeable.}
+#' names. The names of row ("row") and column ("col") block factors are not changeable.}
 #'   \item{\code{designCOD}}{Crossover Design, which is a special case of LSD
 #' with time periods and individuals as blocks. Period blocks are reused when
 #' replicating squares.
 #' The default formula is \code{~ trt + (1|subject) + (1|period)} for one factor
 #' and \code{~ facA*facB + (1|subject) + (1|period)} for two factors. If `label`
 #' is provided, the fixed effect parts of the formula are automatically updated
-#' with the specified names. Note that "subject" and "period" are the labels for
+#' with the specified names. Note that "subject" and "period" are the names for
 #' the two blocking factors and cannot be changed.}
 #'   \item{\code{designSPD}}{Split Plot Design.
 #' The default formula includes the main effects of all treatment factors at
@@ -89,13 +92,18 @@
 #' subplot level) is always named as "mainplot".}}
 #' @rdname create_designs
 #' @aliases design.CRD design.RCBD design.LSD design.COD design.SPD
-#' @return a list with critical components for power analysis
-#' @seealso [mkdesign], [pwr.anova()], [pwr.contrast()]
+#' @return A list object containing all essential components for power calculation.
+#' This includes:
+#' - Structural components (deStruct): including the data frame, design matrices
+#' for fixed and random effects, variance-covariance matrices for random effects
+#' and residuals, etc.
+#' - Internally calculated higher-level parameters (deParam), including variance-covariance
+#' matrix of beta coefficients (vcov_beta), variance-covariance matrix of variance parameters (vcov_varpar),
+#' gradient matrices (Jac_list), etc.
+#' @seealso [mkdesign], [pwr.anova], [pwr.contrast]
 #' @examples
-#' # Example 1: Evaluate the power of a CRD with one treatment factor
-#'
+#' # Evaluate the power of a CRD with one treatment factor
 #' ## Create a design object
-#'
 #' crd <- designCRD(
 #'   treatments = 4, # 4 levels of one treatment factor
 #'   replicates = 12, # 12 units per level, 48 units totally
@@ -110,8 +118,8 @@
 #' pwr.contrast(crd, which = "trt", contrast = "pairwise") # pairwise comparisons
 #' pwr.contrast(crd, which = "trt", contrast = "poly") # polynomial contrasts
 #'
-#' # More examples are available in the package vignette("pwr4exp")
-#' # and on the package website: https://an-ethz.github.io/pwr4exp/
+#' # More examples are available in `vignette("pwr4exp")`
+#' # and on https://an-ethz.github.io/pwr4exp/
 #'
 #' @export
 designCRD <- function(treatments,

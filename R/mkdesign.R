@@ -1,18 +1,19 @@
 #' Create a Design Object for Power Calculation
 #'
-#' Generates a design object for power analysis by specifying a model formula and data frame.
+#' Generate a design object for power analysis by specifying a model formula and data frame.
 #' This object is not a true experimental design as created by design generation procedures,
 #' where randomization and unit allocation are performed.
 #' Instead, it serves as an object containing all necessary information for power analysis,
-#' including design matrices, assumed values of model effects, and other necessary components.
+#' including design matrices, assumed values of model effects, and other internally
+#' calculated parameters.
 #'
 #' @param formula A right-hand-side [formula] specifying the model for testing treatment effects,
-#' with terms on the right of [~] , following [lme4::lmer()] syntax for random effects.
+#' with terms on the right of [~] , following [lme4::lmer] syntax for random effects.
 #' @param data A data frame with all independent variables specified in the model,
 #' matching the design's structure.
 #' @param beta One of the optional inputs for fixed effects.
 #' A vector of model coefficients where factor variable coefficients correspond
-#' to dummy variables created using "contr.treatment".
+#' to dummy variables created using treatment contrast ([stats::contr.treatment]).
 #' @param means One of the optional inputs for fixed effects.
 #' A vector of marginal or conditioned means (if factors have interactions).
 #' Regression coefficients are required for numerical variables.
@@ -22,22 +23,18 @@
 #' @param vcomp A vector of variance-covariance components for random effects, if present.
 #' The values must follow a strict order. See "Details".
 #' @param sigma2 error variance.
-#' @param correlation Specifies correlation structures using [nlme::corClasses] functions.
+#' @param correlation Specifies residual (R-side) correlation structures using [nlme::corClasses] functions.
 #' See "Details" for more information.
 #' @param template Default is `FALSE`.
-#' If `TRUE`, a template for `beta`, `means`, and `vcomp` is generated to indicate the required input order.
-#' @param REML Specifies whether to use REML or ML estimates for variance-covariance parameters.
-#' Default is `TRUE`.
-#' @param ... Additional arguments passed to internal functions.
+#' If `TRUE` or when only the formula and data are provided, a template for `beta`,
+#' `means`, and `vcomp` is generated to indicate the required input order.
+#' @param REML Specifies whether to use REML or ML information matrix. Default is `TRUE`.
 #' @details
 #' - **data**: A long-format data frame is required, as typically used in R for fitting linear models.
 #'   This data frame can be created manually or with the help of design creation packages
-#'   such as \link[agricolae]{agricolae}, \link[crossdes]{crossdes}, \link[AlgDesign]{AlgDesign},
-#'   or \link[FrF2]{FrF2}.
-#'   It should include all independent variables specified in the model (e.g., treatments, blocks, subjects),
-#'   which are generally determined during the experimental design phase.
-#'   While the data frame may contain realizations of the response variable, these are not mandatory
-#'   and will be ignored if present.
+#'   such as \pkg{agricolae}, \pkg{AlgDesign}, \pkg{crossdes}, or \pkg{FrF2}.
+#'   It should include all independent variables specified in the model (e.g., treatments, blocks, subjects).
+#'   All the irrelevant variables not specified in the model are ignored.
 #'
 #' - **template**: Templates are automatically generated when only the formula and data are supplied,
 #'   or explicitly if `template = TRUE`. Templates serve as guides for specifying inputs:
@@ -62,11 +59,17 @@
 #'   - **Template for `vcomp`**: Represents a variance-covariance matrix, where integers indicate
 #'     the order of variance components in the input vector.
 #'
-#' - **correlation**: Various correlation structures can be specified following the instructions from [nlme::corClasses].
+#' - **correlation**: Various residual correlation structures can be specified following the instructions from [nlme::corClasses].
 #'
 #'   Note: In [nlme::corAR1()] and [nlme::corARMA()] when `p=1` and `q=0`, the time variable must be an integer.
-#'   However, in `pwr4exp`, this restriction has been released, factors are also supported.
-#' @return A list object with all essential components for power calculation.
+#'   However, in `pwr4exp`, this restriction has been released, factor is also supported.
+#' @return A list object containing all essential components for power calculation.
+#' This includes:
+#' - Structural components (deStruct): including design matrices for fixed and random effects,
+#' variance-covariance matrices for random effects and residuals, etc.
+#' - Internally calculated higher-level parameters (deParam), including variance-covariance
+#' matrix of beta coefficients (vcov_beta), variance-covariance matrix of variance parameters (vcov_varpar),
+#' gradient matrices (Jac_list), etc.
 #' @export
 #' @examples
 #' # Using templates for specifying "means"
@@ -149,7 +152,6 @@
 #' ## Templates
 #' temp <- mkdesign(formula = ~ trt * hour, data = df2)
 #' temp$fixeff$means  # Fixed effects means template
-#' temp$vcov          # Variance-covariance template
 #'
 #' ## Create a design object
 #' # Assume repeated measures within a subject follow an AR1 process with a correlation of 0.6
@@ -179,62 +181,47 @@
 #' mkdesign(formula = ~ trt + hour + I(hour^2) + trt:hour + trt:I(hour^2), data = df2)$fixeff$means
 mkdesign <- function(formula, data,
                      beta = NULL, means = NULL, vcomp = NULL,
-                     sigma2 = NULL, correlation = NULL, template = FALSE, REML = TRUE, ...) {
-
-  # FIXME: more robust way?
-  rownames(data) <- 1:nrow(data)
-
-  if (is.null(beta) & is.null(means) & is.null(sigma2))
+                     sigma2 = NULL, correlation = NULL, template = FALSE, REML = TRUE) {
+  rownames(data) <- 1:nrow(data) # if rownames are not 1:n, problem occurs in mkRTrms()
+  mc <- match.call()
+  if (all(names(mc[-1]) %in% c("formula", "data")))
     template <- TRUE
-  mc <- mf <- match.call()
   if (length(formula) > 2) {
     formula <- update(formula, NULL ~ .)
     warning(sprintf("Only rhs formula is required\nformula coerced to: %s.", deparse(formula)),  call. = F)
   }
-  # FIXME: potential error: if "y" is the name of one of predictors.
-  formula <- update(formula, pqdjugv ~ .) # an arbitrary pseudo-response
-  data[["pqdjugv"]] <- numeric(nrow(data))
-  mf$formula <- formula
-  mf$data <- data
-  mf[[1]] <- quote(designStr)
-  m <- match(c("formula", "data", "REML", "subset", "weights", "na.action", "offset", "contrast", "control"),
-             names(mf), 0L)
-  mf <- mf[c(1L, m)]
-  desStr <- eval(mf, parent.frame(1L))
-  desStr$fixed.frame <- model.frame(lme4::nobars(formula), desStr$frame)
 
-  L <- means2beta_contrasts(desStr)
+  corcall <- mc$correlation
+  deStruct <- mkStruct(formula, data, corcall)
+  fixedfr <- deStruct$fxTrms$fixedfr
+  L <- means2beta_contrasts(fixedfr)
 
   if (template) {
-    beta <- numeric(ncol(desStr$X))
+    beta <- numeric(ncol(deStruct$fxTrms$X))
     fixeff <- means2beta(L, beta = beta)
     fixeff <- lapply(fixeff, function(x) setNames(seq_along(x), names(x)))
-    varcov = desStr$reTrms$G_temp
+    varcov = deStruct$reTrms$G_temp
     return(list(fixeff = fixeff, varcov = varcov))
   }
 
-  fixeff <- means2beta(L, means, beta)
-  desStr$beta <- fixeff$beta
-  desStr$means <- fixeff$means
-
-  if (!is.null(desStr$reTrms)) {
-    desStr$reTrms$G@x <- vcomp[desStr$reTrms$Gind]
+  if (!is.null(deStruct$reTrms)) {
+    deStruct$reTrms$G@x <- vcomp[deStruct$reTrms$Gind]
   }
 
-  # FIXME: add flexibility for "bad" data
-  corcall <- mc$correlation
-  desStr$rTrms <- corStr(data, sigma2, corcall)
+  deStruct$rTrms$R <- sigma2 * deStruct$rTrms$R
+  fixeff <- means2beta(L, means, beta)
+  deStruct$fxTrms$fixeff <- fixeff
 
   varpar <- c(vcomp, eval(corcall$value), sigma2)
-  desStr$vcov_beta <- vcovbeta_vp(varpar, desStr)
+  vcov_beta <- vcovbeta_vp(varpar, deStruct$fxTrms, deStruct$reTrms, deStruct$rTrms)
+  info_mat <- informat(varpar = varpar, deStruct$fxTrms, deStruct$reTrms, deStruct$rTrms, REML)
+  vcov_varpar <- solve(info_mat)
+  Jac <- numDeriv::jacobian(vcovbeta_vp, x = varpar, fxTrms = deStruct$fxTrms, reTrms = deStruct$reTrms, rTrms = deStruct$rTrms)
+  # gradient matrices of vcov(beta) w.r.t. variance parameters
+  Jac_list <- lapply(1:ncol(Jac), function(i)
+    array(Jac[, i], dim=rep(ncol(deStruct$fxTrms$X), 2)))
 
-  # REML or ML information matrix? default REML
-  info_mat <- informat(varpar = varpar, desStr = desStr)
-  desStr$vcov_varpar <- solve(info_mat)
-
-  Jac <- numDeriv::jacobian(vcovbeta_vp, x = varpar, desStr = desStr)
-  # gradient matrices of vcov(beta) w.r.t. variance paramters
-  desStr$Jac_list <- lapply(1:ncol(Jac), function(i)
-    array(Jac[, i], dim=rep(ncol(desStr$X), 2)))
-  return(desStr)
+  deParam <- list(beta = fixeff$beta, vcov_beta = vcov_beta, vcov_varpar = vcov_varpar, Jac_list = Jac_list)
+  object <- list(deStruct = deStruct, deParam = deParam)
+  return(object)
 }

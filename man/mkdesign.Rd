@@ -13,20 +13,19 @@ mkdesign(
   sigma2 = NULL,
   correlation = NULL,
   template = FALSE,
-  REML = TRUE,
-  ...
+  REML = TRUE
 )
 }
 \arguments{
 \item{formula}{A right-hand-side \link{formula} specifying the model for testing treatment effects,
-with terms on the right of \link{~} , following \code{\link[lme4:lmer]{lme4::lmer()}} syntax for random effects.}
+with terms on the right of \link{~} , following \link[lme4:lmer]{lme4::lmer} syntax for random effects.}
 
 \item{data}{A data frame with all independent variables specified in the model,
 matching the design's structure.}
 
 \item{beta}{One of the optional inputs for fixed effects.
 A vector of model coefficients where factor variable coefficients correspond
-to dummy variables created using "contr.treatment".}
+to dummy variables created using treatment contrast (\link[stats:contrast]{stats::contr.treatment}).}
 
 \item{means}{One of the optional inputs for fixed effects.
 A vector of marginal or conditioned means (if factors have interactions).
@@ -40,37 +39,41 @@ The values must follow a strict order. See "Details".}
 
 \item{sigma2}{error variance.}
 
-\item{correlation}{Specifies correlation structures using \link[nlme:corClasses]{nlme::corClasses} functions.
+\item{correlation}{Specifies residual (R-side) correlation structures using \link[nlme:corClasses]{nlme::corClasses} functions.
 See "Details" for more information.}
 
 \item{template}{Default is \code{FALSE}.
-If \code{TRUE}, a template for \code{beta}, \code{means}, and \code{vcomp} is generated to indicate the required input order.}
+If \code{TRUE} or when only the formula and data are provided, a template for \code{beta},
+\code{means}, and \code{vcomp} is generated to indicate the required input order.}
 
-\item{REML}{Specifies whether to use REML or ML estimates for variance-covariance parameters.
-Default is \code{TRUE}.}
-
-\item{...}{Additional arguments passed to internal functions.}
+\item{REML}{Specifies whether to use REML or ML information matrix. Default is \code{TRUE}.}
 }
 \value{
-A list object with all essential components for power calculation.
+A list object containing all essential components for power calculation.
+This includes:
+\itemize{
+\item Structural components (deStruct): including design matrices for fixed and random effects,
+variance-covariance matrices for random effects and residuals, etc.
+\item Internally calculated higher-level parameters (deParam), including variance-covariance
+matrix of beta coefficients (vcov_beta), variance-covariance matrix of variance parameters (vcov_varpar),
+gradient matrices (Jac_list), etc.
+}
 }
 \description{
-Generates a design object for power analysis by specifying a model formula and data frame.
+Generate a design object for power analysis by specifying a model formula and data frame.
 This object is not a true experimental design as created by design generation procedures,
 where randomization and unit allocation are performed.
 Instead, it serves as an object containing all necessary information for power analysis,
-including design matrices, assumed values of model effects, and other necessary components.
+including design matrices, assumed values of model effects, and other internally
+calculated parameters.
 }
 \details{
 \itemize{
 \item \strong{data}: A long-format data frame is required, as typically used in R for fitting linear models.
 This data frame can be created manually or with the help of design creation packages
-such as \link[agricolae]{agricolae}, \link[crossdes]{crossdes}, \link[AlgDesign]{AlgDesign},
-or \link[FrF2]{FrF2}.
-It should include all independent variables specified in the model (e.g., treatments, blocks, subjects),
-which are generally determined during the experimental design phase.
-While the data frame may contain realizations of the response variable, these are not mandatory
-and will be ignored if present.
+such as \pkg{agricolae}, \pkg{AlgDesign}, \pkg{crossdes}, or \pkg{FrF2}.
+It should include all independent variables specified in the model (e.g., treatments, blocks, subjects).
+All the irrelevant variables not specified in the model are ignored.
 \item \strong{template}: Templates are automatically generated when only the formula and data are supplied,
 or explicitly if \code{template = TRUE}. Templates serve as guides for specifying inputs:
 \itemize{
@@ -93,10 +96,10 @@ See the "Examples" for illustrative scenarios.
 \item \strong{Template for \code{vcomp}}: Represents a variance-covariance matrix, where integers indicate
 the order of variance components in the input vector.
 }
-\item \strong{correlation}: Various correlation structures can be specified following the instructions from \link[nlme:corClasses]{nlme::corClasses}.
+\item \strong{correlation}: Various residual correlation structures can be specified following the instructions from \link[nlme:corClasses]{nlme::corClasses}.
 
 Note: In \code{\link[nlme:corAR1]{nlme::corAR1()}} and \code{\link[nlme:corARMA]{nlme::corARMA()}} when \code{p=1} and \code{q=0}, the time variable must be an integer.
-However, in \code{pwr4exp}, this restriction has been released, factors are also supported.
+However, in \code{pwr4exp}, this restriction has been released, factor is also supported.
 }
 }
 \examples{
@@ -180,7 +183,6 @@ df2 <- data.frame(
 ## Templates
 temp <- mkdesign(formula = ~ trt * hour, data = df2)
 temp$fixeff$means  # Fixed effects means template
-temp$vcov          # Variance-covariance template
 
 ## Create a design object
 # Assume repeated measures within a subject follow an AR1 process with a correlation of 0.6

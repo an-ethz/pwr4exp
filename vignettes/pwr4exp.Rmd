@@ -33,7 +33,7 @@ simplifying the setup and execution of power analyses. The development
 version can be downloaded from GitHub:
 
 ```{r eval=FALSE}
-devtools::install_github("an-ethz/pwr4exp")
+# devtools::install_github("an-ethz/pwr4exp")
 ```
 
 ```{r setup}
