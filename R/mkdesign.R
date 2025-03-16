@@ -1,3 +1,14 @@
+###############################################################################
+# This file is part of the pwr4exp package.
+#
+# pwr4exp is licensed under the GNU General Public License (GPL);
+# see the LICENSE file for details.
+#
+# pwr4exp is provided in the hope that it will be useful, but WITHOUT ANY WARRANTY,
+# including the implied warranties of MERCHANTABILITY and FITNESS FOR A PARTICULAR PURPOSE.
+# For more information, please refer to the GNU General Public License.
+###############################################################################
+
 #' Create a Design Object for Power Calculation
 #'
 #' Generate a design object for power analysis by specifying a model formula and data frame.

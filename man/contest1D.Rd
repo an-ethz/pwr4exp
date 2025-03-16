@@ -32,4 +32,8 @@ A data frame with columns for effect size, degrees of freedom, significance leve
 \description{
 Computes power of t-test for one-dimensional contrast matrices
 }
-\keyword{interval}
+\keyword{functions}
+\keyword{internal}
+\keyword{internal,}
+\keyword{lmerTest}
+\keyword{modified}

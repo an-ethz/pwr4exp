@@ -1,3 +1,22 @@
+###############################################################################
+# This file is part of the pwr4exp package.
+#
+# pwr4exp is licensed under the GNU General Public License (GPL); see the LICENSE file for details.
+#
+# pwr4exp is provided in the hope that it will be useful, but WITHOUT ANY WARRANTY,
+# including the implied warranties of MERCHANTABILITY and FITNESS FOR A PARTICULAR PURPOSE.
+# For more information, please refer to the GNU General Public License.
+#
+# This file contains functions that have been copied or modified from internal functions
+# of the lme4 and lmerTest packages. The original implementations are licensed under GPL (>= 2),
+# and their use here complies with the terms of the GNU GPL.
+#
+# Attribution is provided in the roxygen2 documentation via:
+#   @keywords lme4 internal functions
+#   @keywords lmerTest internal functions
+###############################################################################
+
+
 ################################################################################
 ##########                Create structural matrices                 ###########
 ################################################################################
@@ -210,6 +229,16 @@ mkBlist <- function(x, frloc, drop.unused.levels = TRUE, reorder.vars = FALSE) {
         )
       )
     )
+  }
+  `%i%` <- function(f1, f2, fix.order = TRUE) {
+    if (!is.factor(f1) || !is.factor(f2)) stop("both inputs must be factors")
+    f12 <- paste(f1, f2, sep = ":")
+    ## explicitly specifying levels is faster in any case ...
+    u <- which(!duplicated(f12))
+    if (!fix.order) return(factor(f12, levels = f12[u]))
+    ## deal with order of factor levels
+    levs_rank <- length(levels(f2))*as.numeric(f1[u])+as.numeric(f2[u])
+    return(factor(f12, levels = (f12[u])[order(levs_rank)]))
   }
   frloc <- factorize(x, frloc)
   ff0 <- replaceTerm(x[[3]], quote(`:`), quote(`%i%`))

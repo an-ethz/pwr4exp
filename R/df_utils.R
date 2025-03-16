@@ -1,3 +1,14 @@
+###############################################################################
+# This file is part of the pwr4exp package.
+#
+# pwr4exp is licensed under the GNU General Public License (GPL);
+# see the LICENSE file for details.
+#
+# pwr4exp is provided in the hope that it will be useful, but WITHOUT ANY WARRANTY,
+# including the implied warranties of MERCHANTABILITY and FITNESS FOR A PARTICULAR PURPOSE.
+# For more information, please refer to the GNU General Public License.
+###############################################################################
+
 #' Create a data frame of completely randomized design
 #'
 #' @param treatments An integer vector where each element represents the number of levels

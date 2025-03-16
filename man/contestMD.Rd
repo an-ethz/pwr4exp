@@ -21,4 +21,8 @@ A data frame
 \description{
 Computes power of F-test for multi-dimensional contrast matrices
 }
+\keyword{functions}
 \keyword{internal}
+\keyword{internal,}
+\keyword{lmerTest}
+\keyword{modified}

@@ -1,3 +1,14 @@
+###############################################################################
+# This file is part of the pwr4exp package.
+#
+# pwr4exp is licensed under the GNU General Public License (GPL);
+# see the LICENSE file for details.
+#
+# pwr4exp is provided in the hope that it will be useful, but WITHOUT ANY WARRANTY,
+# including the implied warranties of MERCHANTABILITY and FITNESS FOR A PARTICULAR PURPOSE.
+# For more information, please refer to the GNU General Public License.
+###############################################################################
+
 #' Power of omnibus tests
 #'
 #' Calculates the statistical power for testing the overall effects of treatment
@@ -276,7 +287,7 @@ pwr.summary <- function(object, sig.level = 0.05) {
 #' @param alternative one- or two-sided test
 #' @param strict whether or not use strict interpretation in two-sided case
 #' @return A data frame with columns for effect size, degrees of freedom, significance level, power, and test type.
-#' @keywords interval
+#' @keywords internal, modified lmerTest internal functions
 contest1D <- function(object,
                       L,
                       method=c("Satterthwaite"),
@@ -326,7 +337,7 @@ contest1D <- function(object,
 #' @param sig.level significance level
 #' @param eps numeric tolerance
 #' @return A data frame
-#' @keywords internal
+#' @keywords internal, modified lmerTest internal functions
 contestMD <- function(object, L,
                       sig.level = 0.05,
                       eps=sqrt(.Machine$double.eps)) {
