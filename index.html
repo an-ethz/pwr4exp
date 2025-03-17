@@ -11,8 +11,8 @@
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Power Analysis for Research Experiments">
-<meta name="description" content="Provides tools for calculating statistical power and determining sample size for a variety of experimental designs used in agricultural and biological research, including completely randomized, block, and split-plot designs. Supports customized designs and allows specification of main effects, interactions, and contrasts for accurate power analysis.">
-<meta property="og:description" content="Provides tools for calculating statistical power and determining sample size for a variety of experimental designs used in agricultural and biological research, including completely randomized, block, and split-plot designs. Supports customized designs and allows specification of main effects, interactions, and contrasts for accurate power analysis.">
+<meta name="description" content="Provides tools for calculating statistical power for experiments analyzed using linear mixed models. It supports standard designs, including randomized block, split-plot, and Latin Square designs, while offering flexibility to accommodate a variety of other complex study designs.">
+<meta property="og:description" content="Provides tools for calculating statistical power for experiments analyzed using linear mixed models. It supports standard designs, including randomized block, split-plot, and Latin Square designs, while offering flexibility to accommodate a variety of other complex study designs.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -50,7 +50,9 @@
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header"><h1 id="pwr4exp">pwr4exp<a class="anchor" aria-label="anchor" href="#pwr4exp"></a>
 </h1></div>
-<p><code>pwr4exp</code> supports statistical power calculations for a variety of experimental designs where data analysis is conducted using linear mixed models. It provides approximate F-tests for general linear hypotheses and t-tests for specific contrasts in linear mixed models, employing the Satterthwaite method to approximate degrees of freedom. Various correlation structures (R-side) defined in the <code>nlme</code> package can be used to model the relationship between residuals.</p>
+<p><code>pwr4exp</code> supports statistical power calculations for diverse experimental designs analyzed using linear mixed models.</p>
+<p>It provides approximate <strong>F-tests</strong> for omnibus hypothesis tests and <strong>t-tests</strong> for specific contrasts, employing the Satterthwaite method for approximating degrees of freedom.</p>
+<p>Various correlation structures (R-side) defined in the <code>nlme</code> package can be used to model residuals.</p>
 <!-- badges: start -->
 <!-- badges: end -->
 <div class="section level2">
@@ -76,7 +78,7 @@
 <a class="anchor" aria-label="anchor" href="#step-1-define-the-design"></a>
 </h3>
 <div class="section level4">
-<h4 id="mkdesign">mkdesign<a class="anchor" aria-label="anchor" href="#mkdesign"></a>
+<h4 id="the-mkdesign-function">The <code>mkdesign</code> function<a class="anchor" aria-label="anchor" href="#the-mkdesign-function"></a>
 </h4>
 <p><code>mkdesign</code> is the most flexible function for defining an experimental design based on its data structure, statistical model, treatment effects, and variance-covariance components.</p>
 <p>For example, the following code defines a completely randomized design with repeated measures:</p>
@@ -161,14 +163,16 @@
 </h3>
 <p>Once the design has been correctly defined, the design object can be passed to power calculation functions, including:</p>
 <div class="section level4">
-<h4 id="pwranova">pwr.anova<a class="anchor" aria-label="anchor" href="#pwranova"></a>
+<h4 id="pwranova">
+<code>pwr.anova</code><a class="anchor" aria-label="anchor" href="#pwranova"></a>
 </h4>
 <p>Computes the power of F-tests for omnibus hypotheses.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/pwr.anova.html">pwr.anova</a></span><span class="op">(</span><span class="va">crd.rep</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
-<h4 id="pwrcontrast">pwr.contrast<a class="anchor" aria-label="anchor" href="#pwrcontrast"></a>
+<h4 id="pwrcontrast">
+<code>pwr.contrast</code><a class="anchor" aria-label="anchor" href="#pwrcontrast"></a>
 </h4>
 <p>Computes the power of t-tests for specific contrasts.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
@@ -186,7 +190,7 @@
 <li>Examples of power analysis for customized designs.</li>
 <li>Fundamental concepts of statistical power in linear mixed models.</li>
 </ul>
-<p>The package documentation is actively being updated. For any questions or suggestions, please feel free to open an <a href="https://github.com/an-ethz/pwr4exp/issues" class="external-link">issue</a> on our GitHub repository or contact the package maintainer.</p>
+<p>For questions or suggestions, please open an <a href="https://github.com/an-ethz/pwr4exp/issues" class="external-link">issue</a> on our GitHub repository or contact the package maintainer.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">
