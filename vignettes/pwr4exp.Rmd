@@ -2,9 +2,10 @@
 title: "pwr4exp: Power Analysis for Experimental Designs"
 author: "R Package Version `r packageVersion('pwr4exp')`"
 date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette:
-  toc: true
-  toc_depth: 2
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 2
 vignette: >
   %\VignetteIndexEntry{pwr4exp: Power Analysis for Experimental Designs}
   %\VignetteEncoding{UTF-8}
