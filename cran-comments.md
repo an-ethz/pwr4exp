@@ -1,2 +1,6 @@
-# Resubmission
-This is a resubmission in response to the CRAN feedback. I have updated the description field in compliance with suggestions.
+# R CMD check results
+
+0 errors | 0 warnings | 1 note
+
+* checking for future file timestamps ... NOTE
+  unable to verify current time
