@@ -7,12 +7,10 @@ Authors@R: c(
     person("Mutian", "Niu", , "mutian.niu@usys.ethz.ch", role = c("aut", "cph"),
            comment = c(ORCID = "0000-0003-4484-4611"))
   )
-Description: Provides tools for calculating statistical power and
-    determining sample size for a variety of experimental designs used in
-    agricultural and biological research, including completely randomized,
-    block, and split-plot designs. Supports customized designs and allows
-    specification of main effects, interactions, and contrasts for
-    accurate power analysis.
+Description: Provides tools for calculating statistical power for experiments 
+    analyzed using linear mixed models. It supports standard designs, including 
+    randomized block, split-plot, and Latin Square designs, while offering flexibility 
+    to accommodate a variety of other complex study designs.
 License: GPL (>= 2)
 URL: https://github.com/an-ethz/pwr4exp,
     https://an-ethz.github.io/pwr4exp/

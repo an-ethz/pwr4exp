@@ -1,6 +1,10 @@
 # pwr4exp
 
-`pwr4exp` supports statistical power calculations for a variety of experimental designs where data analysis is conducted using linear mixed models. It provides approximate F-tests for general linear hypotheses and t-tests for specific contrasts in linear mixed models, employing the Satterthwaite method to approximate degrees of freedom. Various correlation structures (R-side) defined in the `nlme` package can be used to model the relationship between residuals.
+`pwr4exp` supports statistical power calculations for diverse experimental designs analyzed using linear mixed models.
+
+It provides approximate **F-tests** for omnibus hypothesis tests and **t-tests** for specific contrasts, employing the Satterthwaite method for approximating degrees of freedom.
+
+Various correlation structures (R-side) defined in the `nlme` package can be used to model residuals.
 
 <!-- badges: start -->
 
@@ -28,7 +32,7 @@ Performing a power analysis in `pwr4exp` involves two main steps:
 
 ### Step 1. **Define the design**
 
-#### mkdesign
+#### The `mkdesign` function
 
 `mkdesign` is the most flexible function for defining an experimental design based on its data structure, statistical model, treatment effects, and variance-covariance components.
 
@@ -116,7 +120,7 @@ spd <- designSPD(
 
 Once the design has been correctly defined, the design object can be passed to power calculation functions, including:
 
-#### pwr.anova
+#### `pwr.anova`
 
 Computes the power of F-tests for omnibus hypotheses.
 
@@ -124,7 +128,7 @@ Computes the power of F-tests for omnibus hypotheses.
 pwr.anova(crd.rep)
 ```
 
-#### pwr.contrast
+#### `pwr.contrast`
 
 Computes the power of t-tests for specific contrasts.
 
@@ -141,4 +145,4 @@ To learn more about power analysis with `pwr4exp`, refer to the [vignette](https
 -   Examples of power analysis for customized designs.
 -   Fundamental concepts of statistical power in linear mixed models.
 
-The package documentation is actively being updated. For any questions or suggestions, please feel free to open an [issue](https://github.com/an-ethz/pwr4exp/issues) on our GitHub repository or contact the package maintainer.
+For questions or suggestions, please open an [issue](https://github.com/an-ethz/pwr4exp/issues) on our GitHub repository or contact the package maintainer.

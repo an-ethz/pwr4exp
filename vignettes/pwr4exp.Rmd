@@ -857,12 +857,12 @@ Performing a power analysis with unrealistic parameter magnitudes can lead to in
 
 # References
 
-Fai, A. H., & Cornelius, P. L. (1996). Approximate F-tests of multiple degree of freedom hypotheses in generalized least squares analyses of unbalanced split-plot experiments. *Journal of Statistical Computation and Simulation, 54*(4), 363–378. <https://doi.org/10.1080/00949659608811740>
+Fai, A. H., & Cornelius, P. L. (1996). Approximate F-tests of multiple degree of freedom hypotheses in generalized least squares analyses of unbalanced split-plot experiments. *Journal of Statistical Computation and Simulation, 54*(4), 363–378.
 
-Giesbrecht, F. G., & Burns, J. C. (1985). Two-stage analysis based on a mixed model: Large-sample asymptotic theory and small-sample simulation results. *Biometrics, 41*(2), 477–486. <https://doi.org/10.2307/2530872>
+Giesbrecht, F. G., & Burns, J. C. (1985). Two-stage analysis based on a mixed model: Large-sample asymptotic theory and small-sample simulation results. *Biometrics, 41*(2), 477–486.
 
-Satterthwaite, F. E. (1946). An approximate distribution of estimates of variance components. *Biometrics Bulletin, 2*(6), 110–114. <https://doi.org/10.2307/3002019>
+Satterthwaite, F. E. (1946). An approximate distribution of estimates of variance components. *Biometrics Bulletin, 2*(6), 110–114.
 
-Stroup, W. W. (2002). Power analysis based on spatial effects mixed models: A tool for comparing design and analysis strategies in the presence of spatial variability. *Journal of Agricultural, Biological, and Environmental Statistics, 7*(4), 491–511. <https://doi.org/10.1198/108571102780>
+Stroup, W. W. (2002). Power analysis based on spatial effects mixed models: A tool for comparing design and analysis strategies in the presence of spatial variability. *Journal of Agricultural, Biological, and Environmental Statistics, 7*(4), 491–511.
 
-Stroup, W. W. (2012). *Generalized linear mixed models: Modern concepts, methods, and applications* (1st ed.). CRC Press. <https://doi.org/10.1201/b13151>
+Stroup, W. W. (2012). *Generalized linear mixed models: Modern concepts, methods, and applications* (1st ed.). CRC Press.
