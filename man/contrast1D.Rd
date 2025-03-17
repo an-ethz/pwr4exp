@@ -34,6 +34,5 @@ Computes power of t-test for one-dimensional contrast matrices
 }
 \keyword{functions}
 \keyword{internal}
-\keyword{internal,}
 \keyword{lmerTest}
 \keyword{modified}

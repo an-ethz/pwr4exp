@@ -287,7 +287,7 @@ pwr.summary <- function(object, sig.level = 0.05) {
 #' @param alternative one- or two-sided test
 #' @param strict whether or not use strict interpretation in two-sided case
 #' @return A data frame with columns for effect size, degrees of freedom, significance level, power, and test type.
-#' @keywords internal, modified lmerTest internal functions
+#' @keywords modified lmerTest internal functions
 contrast1D <- function(object,
                       L,
                       method=c("Satterthwaite"),
@@ -337,7 +337,7 @@ contrast1D <- function(object,
 #' @param sig.level significance level
 #' @param eps numeric tolerance
 #' @return A data frame
-#' @keywords internal, modified lmerTest internal functions
+#' @keywords modified lmerTest internal functions
 contrastMD <- function(object, L,
                       sig.level = 0.05,
                       eps=sqrt(.Machine$double.eps)) {
