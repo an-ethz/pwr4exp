@@ -52,7 +52,10 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>pwr4exp: Power Analysis for Experimental Designs</h1>
+                        <h4 data-toc-skip class="author">R Package
+Version 0.1.0.9000</h4>
             
+            <h4 data-toc-skip class="date">2025-03-17</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/an-ethz/pwr4exp/blob/main/vignettes/pwr4exp.Rmd" class="external-link"><code>vignettes/pwr4exp.Rmd</code></a></small>
       <div class="d-none name"><code>pwr4exp.Rmd</code></div>
@@ -63,190 +66,325 @@
 <div class="section level2">
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
-<p><code>pwr4exp</code> provides tools for statistical power calculation
-in experimental designs analyzed within the linear mixed model
-framework, including both fixed-effects and mixed-effects models.
-Currently, the package does not support generalized linear models; thus,
-only normal response variables are supported. Degrees of freedom are
-approximated using the Satterthwaite method.</p>
-<p>This vignette is based on the development version of the package,
-which incorporates various correlation structures in repeated measures
-and spatial data. It also includes options for generating input
-templates, simplifying the setup and execution of power analyses. The
-development version can be downloaded from GitHub:</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># devtools::install_github("an-ethz/pwr4exp")</span></span></code></pre></div>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/an-ethz/pwr4exp" class="external-link">pwr4exp</a></span><span class="op">)</span></span></code></pre></div>
-<div class="section level3">
-<h3 id="package-overview">Package overview<a class="anchor" aria-label="anchor" href="#package-overview"></a>
-</h3>
-<p>Performing a power analysis in <code>pwr4exp</code> involves two main
-steps:</p>
+<p><strong>pwr4exp</strong> is an R package for performing statistical
+power analysis for experiments analyzed using linear mixed models (LMM).
+It supports power calculations for omnibus F-tests (ANOVA-like tests)
+and specific contrasts (t-tests) for Gaussian response variables,
+employing the Satterthwaite approximation for degrees of freedom.</p>
+<p><strong>Key features:</strong></p>
+<ul>
+<li>
+<strong>Consistency:</strong> Specify the model formula to ensure
+consistency between power analysis and data analysis.</li>
+<li>
+<strong>Flexibility:</strong> Support a variety of experimental
+designs through either the general-purpose function
+(<code>mkdesign</code>) or specialized functions (e.g.,
+<code>designCRD</code>, <code>designRCBD</code>, <code>designLSD</code>,
+<code>designCOD</code>, <code>designSPD</code>) for standard
+designs.</li>
+<li>
+<strong>Correlation structures:</strong> Allow specification of
+various residual variance-covariance structures, which is essential for
+analyzing repeated measures, spatial, or other correlated data.</li>
+</ul>
+<p>The workflow involves two main steps:</p>
 <ol style="list-style-type: decimal">
-<li><p><a href="#design">Create a design object</a>: A design object, on
-which the power analysis will be conducted, needs to be created first.
-This is done using the function <a href="#mkdesign"><strong><code>mkdesign</code></strong></a> for any
-designs, or the functions <a href="#designCRD"><strong><code>designCRD</code></strong></a>, <a href="#designRCBD"><strong><code>designRCBD</code></strong></a>, <a href="#designLSD"><strong><code>designLSD</code></strong></a>, <a href="#designCOD"><strong><code>designCOD</code></strong></a>, and <a href="#designSPD"><strong><code>designSPD</code></strong></a> for the
-specific designs.</p></li>
-<li><p><a href="#power">Calculate power</a>: The statistical power of
-the F-test for model terms and the t-test for specific contrasts can be
-evaluated using the functions <a href="#pwr.anova"><strong><code>pwr.anova</code></strong></a> <a href="#pwr.contrast"><strong><code>pwr.contrast</code></strong></a></p></li>
+<li><p><a href="#design">Creating a design object</a>: Defining the
+experimental structure and specifying parameters (fixed effects,
+(co-)variances).</p></li>
+<li><p><a href="#power">Calculating power</a>: Computing the power of
+F-tests or t-tests for the effects of interest.</p></li>
 </ol>
-<p>The sections following the introduction are dedicated to these two
-steps. Additional theory and concepts are listed at the end.</p>
-</div>
 </div>
 <div class="section level2">
-<h2 id="design">Create a design object<a class="anchor" aria-label="anchor" href="#design"></a>
+<h2 id="design">Creating a design object<a class="anchor" aria-label="anchor" href="#design"></a>
 </h2>
-<div class="section level3">
-<h3 id="mkdesign">mk_design<a class="anchor" aria-label="anchor" href="#mkdesign"></a>
-</h3>
-<p>The function <code>mkdesign</code> is designed to create any design
-by specifying the design’s data structure, the intended model, and the
-necessary parameters.</p>
-<p><strong>Inputs</strong></p>
+<p>A design object in <strong>pwr4exp</strong> is a <code>list</code>
+containing design matrices, fixed effects, variance-covariance
+components, and other higher-level parameters created by the
+design-generating functions. It is not an experimental design in the
+traditional sense, where randomization and unit allocation are
+performed, but rather a container for all the information necessary to
+conduct power analysis.</p>
+<p>Two approaches are provided to define a design:</p>
 <ul>
 <li>
-<code>formula</code>: The right-hand-side model formula (uses
-<code>lme4::lmer()</code> syntax for random effects).</li>
+<a href="#mkdesign"><strong>General approach with
+<code>mkdesign</code>:</strong></a> A design object can be created by
+providing a model formula and a data frame that outlines the
+experimental layout.</li>
 <li>
-<code>data</code>: A long-format data frame with one row per
-observation and columns for all independent variables specified in the
-formula (e.g., treatments, blocks, subjects). The data should reflect
-the design structure but exclude the response variable. Unused variables
-in the <code>formula</code> are ignored.</li>
-<li>
-<code>beta</code> or <code>means</code>: Fixed-effects expectations.
-Specify either <code>beta</code> (a vector of regression coefficients)
-or <code>means</code> (expected mean values for fixed effects). Only one
-of these must be provided.</li>
-<li>
-<code>vcomp</code>: Expected variance-covariance components for the
-random effects.</li>
-<li>
-<code>sigma2</code>: Expected error variance (residual
-variance).</li>
-<li>
-<code>correlation</code>: Correlation structure for repeated
-measures or spatial data.</li>
-<li>
-<code>template</code>: Logical; when <code>TRUE</code>, generates
-templates for <code>beta</code>, <code>means</code>, and
-<code>vcomp</code> instead of the full design object.</li>
+<a href="#standard_design"><strong>Standard designs with Specific
+Functions:</strong></a> Functions such as <code>designCRD</code>,
+<code>designRCBD</code>, <code>designLSD</code>, <code>designCOD</code>,
+or <code>designSPD</code> generate design objects for common
+experimental setups. These functions allow specification of design
+characteristics (e.g., number of treatments, blocks, or replicates) and
+automatically handle the creation of the data frame.</li>
 </ul>
-<p><strong>Output</strong></p>
+<div class="section level3">
+<h3 id="mkdesign">The <code>mkdesign</code> function<a class="anchor" aria-label="anchor" href="#mkdesign"></a>
+</h3>
+<p>The function <code>mkdesign</code> is versatile for designs as long
+as the data frame is provided.</p>
+<p><strong>Usage</strong></p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/mkdesign.html">mkdesign</a></span><span class="op">(</span></span>
+<span>  <span class="va">formula</span>, <span class="va">data</span>,</span>
+<span>  beta <span class="op">=</span> <span class="cn">NULL</span>, means <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  vcomp <span class="op">=</span> <span class="cn">NULL</span>, sigma2 <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  correlation <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  template <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  REML <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><strong>Arguments</strong></p>
 <ul>
-<li>Returns a list of essential components required for power
-calculation functions.</li>
+<li><p><strong><code>formula</code>:</strong> A right-hand-side model
+formula that defines fixed and random effects. (Use
+<code>lme4::lmer</code> syntax for specifying random effects.)</p></li>
+<li><p><strong><code>data</code>:</strong> A data frame containing all
+independent variables required by the model, consistent with the
+design’s structure.</p></li>
+<li><p><strong><code>means</code></strong> or <strong>beta:</strong>
+Expected fixed effects. Either a vector of model coefficients
+(<code>beta</code>) or expected means (<code>means</code>) must be
+provided. <a href="#fixeff_template">Templates</a> for parameter
+ordering can be generated by setting
+<code>template = TRUE</code>.</p></li>
+<li><p><strong><code>vcomp</code>:</strong> Variance components for any
+random effects present in the model, provided as a numeric vector. A <a href="#vcomp_template">template</a> for input ordering can be generated
+by setting <code>template = TRUE</code>.</p></li>
+<li><p><strong><code>sigma2</code>:</strong> The residual
+variance.</p></li>
+<li><p><strong><code>correlation</code>:</strong> (Optional) A
+correlation structure (<code><a href="https://rdrr.io/pkg/nlme/man/corClasses.html" class="external-link">nlme::corClasses</a></code>) for repeated
+measures.</p></li>
+<li><p><a href="#template"><strong><code>template</code>:</strong></a>
+When set to <code>TRUE</code> or when only the <code>formula</code> and
+<code>data</code> arguments are provided, templates for
+<code>beta</code>, <code>means</code>, and <code>vcomp</code> are
+generated to indicate the required input order.</p></li>
+<li><p><strong><code>REML</code>:</strong> (logical) Whether to use the
+REML or ML information matrix. The default is <code>TRUE</code>
+(REML).</p></li>
 </ul>
 </div>
 <div class="section level3">
-<h3 id="templates">Templates<a class="anchor" aria-label="anchor" href="#templates"></a>
+<h3 id="standard_design">Specific design functions<a class="anchor" aria-label="anchor" href="#standard_design"></a>
 </h3>
-<p>Templates for <code>beta</code>, <code>means</code>, and
-<code>vcomp</code> can be generated when <code>template = TRUE</code> or
-when only the formula and data are provided. These templates serve as
-guides, outlining the elements and the order of parameter values in
-<code>beta</code>, <code>means</code>, and <code>vcomp</code>, based on
-the model and data structure.</p>
-<p>Below, we create an example data frame to illustrate these templates,
-which may not represent a realistic design. The data frame includes:</p>
+<p>While <code>mkdesign</code> provides full flexibility,
+<strong>pwr4exp</strong> also offers specific functions for common
+experimental designs. These functions allow users to define a design
+based on treatment structure and replications without manually creating
+a data frame.</p>
+<blockquote>
+<p><strong>Completely randomized design (CRD)</strong></p>
+</blockquote>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/create_designs.html">designCRD</a></span><span class="op">(</span><span class="va">treatments</span>, <span class="va">label</span>, <span class="va">replicates</span>, <span class="va">formula</span>, <span class="va">beta</span>, <span class="va">means</span>, <span class="va">sigma2</span>, template <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<blockquote>
+<p><strong>Randomized complete block design (RCBD)</strong></p>
+</blockquote>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/create_designs.html">designRCBD</a></span><span class="op">(</span><span class="va">treatments</span>, <span class="va">label</span>, <span class="va">blocks</span>, <span class="va">formula</span>, <span class="va">beta</span>, <span class="va">means</span>, <span class="va">vcomp</span>, <span class="va">sigma2</span>, template <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<blockquote>
+<p><strong>Latin square design (LSD)</strong></p>
+</blockquote>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/create_designs.html">designLSD</a></span><span class="op">(</span><span class="va">treatments</span>, <span class="va">label</span>, <span class="va">squares</span>, <span class="va">reuse</span>, <span class="va">formula</span>, <span class="va">beta</span>, <span class="va">means</span>, <span class="va">vcomp</span>, <span class="va">sigma2</span>, template <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<blockquote>
+<p><strong>Crossover design</strong></p>
+</blockquote>
+<p>This is a special case of LSD where time periods and individuals act
+as blocks. Period blocks are reused when replicating squares.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/create_designs.html">designCOD</a></span><span class="op">(</span><span class="va">treatments</span>, <span class="va">label</span>, <span class="va">squares</span>, <span class="va">formula</span>, <span class="va">beta</span>, <span class="va">means</span>, <span class="va">vcomp</span>, <span class="va">sigma2</span>, template <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<blockquote>
+<p><strong>Split-plot design (SPD)</strong></p>
+</blockquote>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/create_designs.html">designSPD</a></span><span class="op">(</span><span class="va">trt.main</span>, <span class="va">trt.sub</span>, <span class="va">label</span>, <span class="va">replicates</span>, <span class="va">formula</span>, <span class="va">beta</span>, <span class="va">means</span>, <span class="va">vcomp</span>, <span class="va">sigma2</span>, template <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<p>The inputs for these functions are similar to <code>mkdesign</code>,
+except that <code>data</code> is replaced by predefined design
+characteristics such as treatment levels and replications.</p>
+<p><strong>Key inputs</strong></p>
+<blockquote>
+<ul>
+<li><p><strong><code>treatments</code></strong>: A numeric vector
+specifying the number of levels for treatment factors. Multiple factors
+are arranged factorially. For example, <code>treatments = c(3, 2)</code>
+specifies two treatment factors one with 3 levels and another with 2
+levels, forming a factorial treatment design.</p></li>
+<li><p><strong><code>trt.main</code></strong> and
+<strong><code>trt.sub</code></strong>: Define main-plot and subplot
+treatments for SPD, following the same rule for
+<code>treatment</code>.</p></li>
+<li><p><strong><code>label</code></strong>: (optional) A list assigning
+labels to factor levels. If not specified, default names are assigned.
+For one treatment factor, the default is
+<code>list(trt = c("1", "2", ...))</code>. For two factors, the default
+is <code>list(facA = c("1", "2", ...), facB = c("1", "2", ...))</code>,
+where “facA” and “facB” represent the two factors, and “1”, “2”, etc.,
+represent the levels of each factor.</p></li>
+<li><p><strong><code>replicates</code></strong>: Number of experimental
+units per treatment in CRD or number of main plots (i.e., the number of
+experimental units per main-plot treatment) in SPD.</p></li>
+<li><p><strong><code>blocks</code></strong>: Number of blocks in
+RCBD.</p></li>
+<li><p><strong><code>squares</code></strong>: Number of squares in LSD
+or COD.</p></li>
+<li><p><strong><code>reuse</code></strong>: Specifies how squares are
+replicated in LSD. One of:</p></li>
+</ul>
+<blockquote>
+<ul>
+<li>
+<code>"row"</code>: reuse row blocks</li>
+<li>
+<code>"col"</code>: reuse column blocks</li>
+<li>
+<code>"both"</code>: reuse both row and column blocks</li>
+</ul>
+</blockquote>
+<ul>
+<li>
+<a href="#template"><strong><code>template</code></strong></a>: When
+set to <code>TRUE</code>, templates for <code>beta</code>,
+<code>means</code>, and <code>vcomp</code> are generated to indicate the
+required input order.</li>
+</ul>
+</blockquote>
+<p>Each of these design-generating functions has a default
+<code>formula</code> based on the treatment structure (e.g., one factor
+or factorial factors). If <code>formula</code> is not specified, a
+default formula with main effects and all interactions (if applicable)
+is used internally. In RCBD, LSD, COD, and SPD designs, all block
+factors are fitted as random effects. The <code>formula</code> component
+in the output design object (a <code>list</code>) can be inspected.</p>
+</div>
+<div class="section level3">
+<h3 id="template">Parameter templates<a class="anchor" aria-label="anchor" href="#template"></a>
+</h3>
+<p>Templates help ensure the correct ordering of fixed effects
+(<code>beta</code> or <code>means</code>) and random effects
+(<code>vcomp</code>).</p>
+<p>Below, an exemplary data frame is created to illustrate these
+templates. Note that this example <strong>does NOT</strong> represent a
+realistic design. The data frame includes:</p>
+<blockquote>
 <ul>
 <li>Four categorical variables (<code>fA</code>, <code>fB</code>,
-<code>fC</code>, <code>fD</code>), and</li>
+<code>fC</code>, <code>fD</code>),</li>
 <li>Two numerical variables (<code>x</code>, <code>z</code>).</li>
 </ul>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+</blockquote>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span> <span class="va">df1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/expand.grid.html" class="external-link">expand.grid</a></span><span class="op">(</span></span>
 <span>   fA <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">)</span>, <span class="co"># factor A with 2 levels</span></span>
 <span>   fB <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">)</span>, <span class="co"># factor B with 2 levels</span></span>
 <span>   fC <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">)</span>, <span class="co"># factor C with 3 levels</span></span>
 <span>   fD <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">)</span>, <span class="co"># factor D with 3 levels</span></span>
-<span>   subject <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span>  <span class="co"># 10 subjects for each combination of factors</span></span>
+<span>   subject <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span><span class="op">)</span>  <span class="co"># 10 subjects</span></span>
 <span> <span class="op">)</span></span>
 <span> <span class="va">df1</span><span class="op">$</span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">df1</span><span class="op">)</span><span class="op">)</span>  <span class="co"># Numerical variable x</span></span>
 <span> <span class="va">df1</span><span class="op">$</span><span class="va">z</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">df1</span><span class="op">)</span><span class="op">)</span>  <span class="co"># Numerical variable z</span></span></code></pre></div>
 <div class="section level4">
-<h4 id="beta-template">
-<code>beta</code> template:<a class="anchor" aria-label="anchor" href="#beta-template"></a>
+<h4 id="fixeff_template">
+<code>beta</code> Template<a class="anchor" aria-label="anchor" href="#fixeff_template"></a>
 </h4>
-<p>The template for <code>beta</code> specifies the order of model
-coefficients as they would appear in a fitted model. It is especially
-useful when directly providing expected model coefficients as measures
-of effect size.</p>
-<p>For example, the expected values of the model coefficients for
-<code>~ fA*fB + x</code> should be provided in the following
-sequence:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<blockquote>
+<p>The <code>beta</code> template displays the order of model
+coefficients in the fitted model.</p>
+</blockquote>
+<p>This is particularly useful when specifying expected model
+coefficients directly as effect size measures and when the model
+includes complex interactions. For example, the expected values of the
+model coefficients for <code>~ fA*fB + x</code> should be provided in
+the following sequence:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/mkdesign.html">mkdesign</a></span><span class="op">(</span> <span class="op">~</span> <span class="va">fA</span> <span class="op">*</span> <span class="va">fB</span> <span class="op">+</span> <span class="va">x</span>, <span class="va">df1</span><span class="op">)</span><span class="op">$</span><span class="va">fixeff</span><span class="op">$</span><span class="va">beta</span></span>
 <span><span class="co">#&gt; (Intercept)         fA2         fB2           x     fA2:fB2 </span></span>
 <span><span class="co">#&gt;           1           2           3           4           5</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="means-template">
-<code>means</code> template:<a class="anchor" aria-label="anchor" href="#means-template"></a>
+<code>means</code> Template<a class="anchor" aria-label="anchor" href="#means-template"></a>
 </h4>
-<p>In many situations, it is more direct and convenient to provide means
-for categorical variables. The template for <code>means</code>
-represents marginal means for categorical variables, regression
-coefficients for numerical variables, and conditional means or
-regression coefficients for interactions.</p>
-<p><strong>Categorical variables without interactions</strong></p>
-<p>Marginal means for each level of the categorical variable(s) are
-required. For example, the expectations for each level of
-<code>fA</code> and <code>fB</code> follow this sequence:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/mkdesign.html">mkdesign</a></span><span class="op">(</span><span class="op">~</span> <span class="va">fA</span> <span class="op">+</span> <span class="va">fB</span>, <span class="va">df1</span>, template <span class="op">=</span> <span class="cn">T</span><span class="op">)</span><span class="op">$</span><span class="va">fixeff</span><span class="op">$</span><span class="va">means</span></span>
+<p>For treatment factors, it may be more more convenient to provide
+<code>means</code> instead of <code>beta</code>. The <code>means</code>
+template represents either marginal or cell means for factors, depending
+on the presence of interactions. For numerical variables included in the
+model, regression coefficients remain necessary alongside alongside the
+means for factors.</p>
+<p><strong>Factors without interactions</strong></p>
+<blockquote>
+<p>If no interactions are present, <strong>marginal means</strong> for
+each factor level are required.</p>
+</blockquote>
+<p>For example, for the model <code>~ fA + fB</code>, means should be
+reported in the order specified by the template:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/mkdesign.html">mkdesign</a></span><span class="op">(</span><span class="op">~</span> <span class="va">fA</span> <span class="op">+</span> <span class="va">fB</span>, <span class="va">df1</span>, template <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">$</span><span class="va">fixeff</span><span class="op">$</span><span class="va">means</span></span>
 <span><span class="co">#&gt; fA1 fA2 fB1 fB2 </span></span>
 <span><span class="co">#&gt;   1   2   3   4</span></span></code></pre></div>
-<p><strong>Interactions among categorical variables</strong></p>
-<p>Conditional (cell) means are required for all combinations of levels
-of the interacting categorical variables. For instance, cell means for
-all 12 combinations of the levels of <code>fA</code>, <code>fB</code>,
-and <code>fC</code>, are required in the following order:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<p><strong>Interactions among factors</strong></p>
+<blockquote>
+<p>When factors interact, <strong>conditional (cell) means</strong> must
+be provided for all possible combinations of their levels.</p>
+</blockquote>
+<p>For example, for a model with three interacting factors
+(<code>fA</code>, <code>fB</code>, <code>fC</code>), cell means are
+required for all 12 level combinations in the following order:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/mkdesign.html">mkdesign</a></span><span class="op">(</span><span class="op">~</span> <span class="va">fA</span> <span class="op">*</span> <span class="va">fB</span> <span class="op">*</span> <span class="va">fC</span>, <span class="va">df1</span><span class="op">)</span><span class="op">$</span><span class="va">fixeff</span><span class="op">$</span><span class="va">means</span></span>
 <span><span class="co">#&gt; fA1:fB1:fC1 fA2:fB1:fC1 fA1:fB2:fC1 fA2:fB2:fC1 fA1:fB1:fC2 fA2:fB1:fC2 </span></span>
 <span><span class="co">#&gt;           1           2           3           4           5           6 </span></span>
 <span><span class="co">#&gt; fA1:fB2:fC2 fA2:fB2:fC2 fA1:fB1:fC3 fA2:fB1:fC3 fA1:fB2:fC3 fA2:fB2:fC3 </span></span>
 <span><span class="co">#&gt;           7           8           9          10          11          12</span></span></code></pre></div>
 <p><strong>Numerical variables</strong></p>
-<p>Regression coefficients are required for numerical variables. If the
-model includes only numerical variables, the <code>(intercept)</code>
-must also be included. In such cases, <code>means</code> are identical
-to <code>beta</code>.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<blockquote>
+<p>For numerical variables, regression coefficients are required. If the
+model only includes numerical variables, the intercept must also be
+included. In this case, the values in means are identical to beta:</p>
+</blockquote>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/mkdesign.html">mkdesign</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x</span> <span class="op">+</span> <span class="va">z</span>, <span class="va">df1</span><span class="op">)</span><span class="op">$</span><span class="va">fixeff</span><span class="op">$</span><span class="va">means</span></span>
 <span><span class="co">#&gt; (Intercept)           x           z </span></span>
 <span><span class="co">#&gt;           1           2           3</span></span></code></pre></div>
-<p>If there are interactions between numerical variables, regression
-coefficients for both main effects and interaction terms are required.
-Such as:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<blockquote>
+<p>When numerical variables interact, regression coefficients for both
+main effects and interaction terms must be included.</p>
+</blockquote>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/mkdesign.html">mkdesign</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x</span> <span class="op">*</span> <span class="va">z</span>, <span class="va">df1</span><span class="op">)</span><span class="op">$</span><span class="va">fixeff</span><span class="op">$</span><span class="va">means</span></span>
 <span><span class="co">#&gt; (Intercept)           x           z         x:z </span></span>
 <span><span class="co">#&gt;           1           2           3           4</span></span></code></pre></div>
-<p><strong>Categorical-by-numerical interactions</strong></p>
-<p>Marginal means for the categorical variable and regression
-coefficients for the numerical variable at each level of the categorical
-variable are required. For example, the means for levels of
-<code>fA</code> and regression coefficients for <code>x</code> at each
-level of <code>fA</code> are required for the model
-<code>~ fA * x</code>:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<p><strong>Factor-by-numerical interactions</strong></p>
+<blockquote>
+<p>For interactions between factor and numerical variables, both
+<strong>Marginal means</strong> for the factor, and <strong>Regression
+coefficients</strong> for the numerical variable at each level of the
+factor must be provided.</p>
+</blockquote>
+<p>For instance, in the model <code>~ fA * x</code>, the means for
+levels of <code>fA</code> and the regression coefficients for
+<code>x</code> at each level of <code>fA</code> must be provided:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/mkdesign.html">mkdesign</a></span><span class="op">(</span><span class="op">~</span> <span class="va">fA</span> <span class="op">*</span> <span class="va">x</span>, <span class="va">df1</span><span class="op">)</span><span class="op">$</span><span class="va">fixeff</span><span class="op">$</span><span class="va">means</span></span>
 <span><span class="co">#&gt;   fA1   fA2 fA1:x fA2:x </span></span>
 <span><span class="co">#&gt;     1     2     3     4</span></span></code></pre></div>
 <p><strong>Combining Multiple Situations</strong></p>
-<p>The rules for categorical and numerical variables described above
-also apply in mixed situations. For example, consider a model combining:
-- Interactions among three categorical variables (<code>fA</code>,
-<code>fB</code>, <code>fC</code>) - A categorical-by-numerical
-interaction (<code>fD * x</code>)<br>
-- Main effects for another numerical variable (<code>z</code>)</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<blockquote>
+<p>The rules outlined for factor and numerical variables apply when
+multiple types of variables and interactions appear in the same
+model.</p>
+</blockquote>
+<p>For example, consider a model including interactions among three
+factors (<code>fA</code>, <code>fB</code>, <code>fC</code>),
+factor-by-numerical interaction (<code>fD * x</code>), and main effects
+for another numerical variable (<code>z</code>).</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/mkdesign.html">mkdesign</a></span><span class="op">(</span><span class="op">~</span> <span class="va">fA</span> <span class="op">*</span> <span class="va">fB</span> <span class="op">*</span> <span class="va">fC</span> <span class="op">+</span> <span class="va">fD</span> <span class="op">*</span> <span class="va">x</span> <span class="op">+</span> <span class="va">z</span>, <span class="va">df1</span><span class="op">)</span><span class="op">$</span><span class="va">fixeff</span><span class="op">$</span><span class="va">means</span></span>
 <span><span class="co">#&gt;         fD1         fD2         fD3           z       fD1:x       fD2:x </span></span>
 <span><span class="co">#&gt;           1           2           3           4           5           6 </span></span>
@@ -256,171 +394,171 @@ interaction (<code>fD * x</code>)<br>
 <span><span class="co">#&gt;          13          14          15          16          17          18 </span></span>
 <span><span class="co">#&gt; fA2:fB2:fC3 </span></span>
 <span><span class="co">#&gt;          19</span></span></code></pre></div>
-<p>The required elements and their order in <code>means</code> are: -
-Means for each level of <code>fD</code> (positions 1-3) - Regression
-coefficients for <code>z</code> (position 4) - Regression coefficients
-for <code>x</code> at each level of <code>fD</code> (positions 5-7) -
-Cell means for all combinations of levels of <code>fA</code>,
-<code>fB</code>, and <code>fC</code> (positions 8-19)</p>
+<p>The required elements and their order in means are:</p>
+<p>1. Means for each level of <code>fD</code> (positions 1–3)</p>
+<p>2. Regression coefficient for <code>z</code> (position 4)</p>
+<p>3. Regression coefficients for <code>x</code> at each level of
+<code>fD</code> (positions 5–7)</p>
+<p>4. Cell means for all combinations of levels of <code>fA</code>,
+<code>fB</code>, and <code>fC</code> (positions 8–19)</p>
 </div>
 <div class="section level4">
-<h4 id="vcomp-template">
-<code>vcomp</code> template:<a class="anchor" aria-label="anchor" href="#vcomp-template"></a>
+<h4 id="vcomp_template">
+<code>vcomp</code> Template<a class="anchor" aria-label="anchor" href="#vcomp_template"></a>
 </h4>
-<p>The template for <code>vcomp</code> represents a variance-covariance
-matrix, where integers indicate the order of variance components in the
-input vector.</p>
-<p>For a single random effect, a template is unnecessary, as it
+<blockquote>
+<p>The <code>vcomp</code> template represents variance-covariance
+matrices, where integer values indicate the order of variance components
+in the input vector.</p>
+</blockquote>
+<p>For a single random effect, a template is unnecessary since it
 corresponds to a single variance value. For multiple random effects, the
-template outlines the sequence of variance and covariance components to
-be provided. It helps users specify and align variance components for
-random effects in the model.</p>
-<p>For example, a model contains both random intercept and random slop
-for <code>fA</code> by <code>subject</code>:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+template specifies the sequence of variance and covariance components,
+ensuring proper alignment when specifying variance components in the
+model.</p>
+<p>For example, consider a model that includes both a random intercept
+and a random slope for <code>fA</code> by <code>subject</code>:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/mkdesign.html">mkdesign</a></span><span class="op">(</span><span class="op">~</span> <span class="va">fA</span> <span class="op">*</span> <span class="va">fB</span> <span class="op">*</span> <span class="va">fC</span> <span class="op">*</span> <span class="va">fD</span> <span class="op">+</span> <span class="op">(</span><span class="fl">1</span> <span class="op">+</span> <span class="va">fA</span> <span class="op">|</span> <span class="va">subject</span><span class="op">)</span>, <span class="va">df1</span><span class="op">)</span><span class="op">$</span><span class="va">varcov</span></span>
 <span><span class="co">#&gt; $subject</span></span>
 <span><span class="co">#&gt;             (Intercept) fA2</span></span>
 <span><span class="co">#&gt; (Intercept)           1   2</span></span>
 <span><span class="co">#&gt; fA2                   2   3</span></span></code></pre></div>
-<p>The template specifies the following required inputs: 1. Variance of
-the random intercept (1st component) 2. Covariance between the random
-intercept and fA2 (2nd component) 3. Variance of fA2 (3rd component)</p>
-<p><strong>Note</strong>: This example may not be statistically correct
-for the given data. It is provided solely to illustrate the structure of
-variance-covariance templates.</p>
+<p>The template specifies the following required inputs:</p>
+<ol style="list-style-type: decimal">
+<li><p>Variance of the random intercept</p></li>
+<li><p>Covariance between the random intercept and slop</p></li>
+<li><p>Variance of the random slop (<code>fA2</code>)</p></li>
+</ol>
 </div>
 </div>
 <div class="section level3">
 <h3 id="correlation-structures">Correlation structures<a class="anchor" aria-label="anchor" href="#correlation-structures"></a>
 </h3>
-<p>Various correlation structures can be specified following the
-instructions from <a href="%22https://rdrr.io/cran/nlme/man/corClasses.html%22" class="external-link"><code>nlme::corClasses</code></a>,
-including - <a href="%22https://rdrr.io/cran/nlme/man/corAR1.html%22" class="external-link"><code>corAR1</code></a>
-- <a href="%22https://rdrr.io/cran/nlme/man/corARMA.html%22" class="external-link"><code>corARMA</code></a>
-- <a href="%22https://rdrr.io/cran/nlme/man/corCAR1.html%22" class="external-link"><code>corCAR1</code></a>
-- <a href="%22https://rdrr.io/cran/nlme/man/corCompSymm.html%22" class="external-link"><code>corCompSymm</code></a>
-- <a href="%22https://rdrr.io/cran/nlme/man/corExp.html%22" class="external-link"><code>corExp</code></a>
-- <a href="%22https://rdrr.io/cran/nlme/man/corGaus.html%22" class="external-link"><code>corGaus</code></a>
-- <a href="%22https://rdrr.io/cran/nlme/man/corLin.html%22" class="external-link"><code>corLin</code></a>
-- <a href="%22https://rdrr.io/cran/nlme/man/corSymm.html%22" class="external-link"><code>corSymm</code></a>
-- <a href="%22https://rdrr.io/cran/nlme/man/corRatio.html%22" class="external-link"><code>corRatio</code></a>
-- <a href="%22https://rdrr.io/cran/nlme/man/corSpher.html%22" class="external-link"><code>corSpher</code></a></p>
+<p>Although specifying complex variance-covariance structures, such as
+unstructured <code><a href="https://rdrr.io/pkg/nlme/man/corSymm.html" class="external-link">nlme::corSymm</a></code>, may seem impractical for power
+analysis, various correlation structures from the <strong>nlme</strong>
+package can be applies.</p>
+<p>The available correlation structures, as outlined in <a href="https://www.rdocumentation.org/packages/nlme/versions/3.1-167/topics/corClasses" class="external-link"><code>nlme::corClasses</code></a>,
+including</p>
+<ul>
+<li><p><a href="https://www.rdocumentation.org/packages/nlme/versions/3.1-163/topics/corAR1" class="external-link"><code>corAR1</code></a>
+– First-order autoregressive</p></li>
+<li><p><a href="https://www.rdocumentation.org/packages/nlme/versions/3.1-163/topics/corARMA" class="external-link"><code>corARMA</code></a>
+– Autoregressive moving average</p></li>
+<li><p><a href="https://www.rdocumentation.org/packages/nlme/versions/3.1-163/topics/corCAR1" class="external-link"><code>corCAR1</code></a>
+– Continuous-time autoregressive</p></li>
+<li><p><a href="https://www.rdocumentation.org/packages/nlme/versions/3.1-163/topics/corCompSymm" class="external-link"><code>corCompSymm</code></a>
+– Compound symmetry</p></li>
+<li><p><a href="https://www.rdocumentation.org/packages/nlme/versions/3.1-163/topics/corExp" class="external-link"><code>corExp</code></a>
+– Exponential spatial correlation</p></li>
+<li><p><a href="https://www.rdocumentation.org/packages/nlme/versions/3.1-163/topics/corGaus" class="external-link"><code>corGaus</code></a>
+– Gaussian spatial correlation</p></li>
+<li><p><a href="https://www.rdocumentation.org/packages/nlme/versions/3.1-163/topics/corLin" class="external-link"><code>corLin</code></a>
+– Linear spatial correlation</p></li>
+<li><p><a href="https://www.rdocumentation.org/packages/nlme/versions/3.1-163/topics/corSymm" class="external-link"><code>corSymm</code></a>
+– Unstructured correlation</p></li>
+<li><p><a href="https://www.rdocumentation.org/packages/nlme/versions/3.1-163/topics/corRatio" class="external-link"><code>corRatio</code></a>
+– Ratio-based spatial correlation</p></li>
+<li><p><a href="https://www.rdocumentation.org/packages/nlme/versions/3.1-163/topics/corSpher" class="external-link"><code>corSpher</code></a>
+– Spherical spatial correlation</p></li>
+</ul>
 <p>Note: In <code><a href="https://rdrr.io/pkg/nlme/man/corAR1.html" class="external-link">nlme::corAR1()</a></code> and <code><a href="https://rdrr.io/pkg/nlme/man/corARMA.html" class="external-link">nlme::corARMA()</a></code>
 when <code>p=1</code> and <code>q=0</code>, the time variable must be an
 integer. However, in <code>pwr4exp</code>, this restriction has been
 released, factors are also supported.</p>
 </div>
-<div class="section level3">
-<h3 id="specific-design-functions">Specific design functions<a class="anchor" aria-label="anchor" href="#specific-design-functions"></a>
-</h3>
-<p>While <code>mkdesign</code> is highly flexible for creating any
-design, as long as the design’s data structure is provided,
-<code>pwr4exp</code> also includes specific functions for some common
-standard designs. These specialized functions define a design by its
-characteristics, such as treatment structure and replications,
-simplifying the process of manually creating a data frame.</p>
-<div class="section level4">
-<h4 id="completely-randomized-design">Completely randomized design<a class="anchor" aria-label="anchor" href="#completely-randomized-design"></a>
-</h4>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/create_designs.html">designCRD</a></span><span class="op">(</span><span class="va">treatments</span>, <span class="va">label</span>, <span class="va">replicates</span>, <span class="va">formula</span>, <span class="va">beta</span>, <span class="va">means</span>, <span class="va">sigma2</span>, template <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="randomized-complete-block-design">Randomized complete block design<a class="anchor" aria-label="anchor" href="#randomized-complete-block-design"></a>
-</h4>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/create_designs.html">designRCBD</a></span><span class="op">(</span><span class="va">treatments</span>, <span class="va">label</span>, <span class="va">blocks</span>, <span class="va">formula</span>, <span class="va">beta</span>, <span class="va">means</span>, <span class="va">vcomp</span>, <span class="va">sigma2</span>, template <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="latin-square-design">Latin square design<a class="anchor" aria-label="anchor" href="#latin-square-design"></a>
-</h4>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/create_designs.html">designLSD</a></span><span class="op">(</span><span class="va">treatments</span>, <span class="va">label</span>, <span class="va">squares</span>, <span class="va">reuse</span>, <span class="va">formula</span>, <span class="va">beta</span>, <span class="va">means</span>, <span class="va">vcomp</span>, <span class="va">sigma2</span>, template <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="crossover-design">Crossover design<a class="anchor" aria-label="anchor" href="#crossover-design"></a>
-</h4>
-<p>This is a special case of LSD where time periods and individuals act
-as blocks. Period blocks are reused when replicating squares.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/create_designs.html">designCOD</a></span><span class="op">(</span><span class="va">treatments</span>, <span class="va">label</span>, <span class="va">squares</span>, <span class="va">formula</span>, <span class="va">beta</span>, <span class="va">means</span>, <span class="va">vcomp</span>, <span class="va">sigma2</span>, template <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="split-plot-design">Split-plot design<a class="anchor" aria-label="anchor" href="#split-plot-design"></a>
-</h4>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/create_designs.html">designSPD</a></span><span class="op">(</span><span class="va">trt.main</span>, <span class="va">trt.sub</span>, <span class="va">label</span>, <span class="va">replicates</span>, <span class="va">formula</span>, <span class="va">beta</span>, <span class="va">means</span>, <span class="va">vcomp</span>, <span class="va">sigma2</span>, template <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<p>The inputs for these functions are the same as those for
-<code>mkdesign</code>, except that <code>data</code> is replaced by
-specifying the treatment profile and the number of replications.</p>
-<p><strong>Specific inputs</strong></p>
-<ul>
-<li><p><code>treatments</code>: a integer-valued vector specifying the
-number of levels of treatment factors. A maximum of two factors is
-allowed, and arranged in a factorial design. For example,
-<code>treatments = c(3, 2)</code> specifies one treatment factor with 3
-levels and another with 2 levels, forming a factorial treatment
-design.</p></li>
-<li><p><code>trt.main</code> and <code>trt.sub</code>: define the
-treatments on main plot and subplot, respectively, following the same
-rules of <code>treatment</code>.</p></li>
-<li><p><code>label</code>: an optional list, whose entries are labels to
-used for factor levels and whose names are treatment factors. If
-<code>label</code> is not specified, default names and labels are
-assigned to the factors and levels. For one treatment factor, the
-default is <code>list(trt = c("1", "2", ...))</code>. For two factors,
-the default is
-<code>list(facA = c("1", "2", ...), facB = c("1", "2", ...))</code>,
-where “facA” and “facB” represent the two factors, and “1”, “2”, etc.,
-represent the levels of each factor.</p></li>
-<li><p><code>replicates</code>: the number of experimental units per
-treatment in a CRD or the number of main plots (i.e., the number of
-experimental units per treatment at the main plot level) in a
-SPD.</p></li>
-<li><p><code>blocks</code>: the number of blocks in a RCBD.</p></li>
-<li><p><code>squares</code>: the number of squares in a replicated LSD
-or COD.</p></li>
-<li><p><code>reuse</code>: specifies how to replicate squares when there
-are multiple squares. One of: <code>row</code> for reusing row blocks,
-<code>col</code> for reusing column blocks, or <code>both</code> for
-reusing both row and column blocks to replicate a single
-square.</p></li>
-</ul>
-<p>Each of these specific design-generating functions has a default
-<code>formula</code> based on the treatment structure (e.g., one factor
-or factorial factors). If <code>formula</code> is not specified, a
-default formula with main effects and all interactions (if applicable)
-is used internally. In RCBD, LSD, COD, and SPD designs, all block
-factors are fitted as random effects. The <code>formula</code> component
-in the output list can be inspected.</p>
-</div>
-</div>
 </div>
 <div class="section level2">
-<h2 id="power-calculation">Power calculation<a class="anchor" aria-label="anchor" href="#power-calculation"></a>
+<h2 id="power">Power calculation<a class="anchor" aria-label="anchor" href="#power"></a>
 </h2>
-<p>Once the design object has been created, calculating power is
-straightforward. Statistical power of F-test for for omnibus tests can
-be calculated using the <code>pwr.anova</code> function.</p>
-<p><strong>Inputs</strong> - <code>object</code>: the design object
-created in the previous step - <code>sig.level</code>: significance
-level, default 0.05 - <code>type</code>: the type of ANOVA table,
-default Type III</p>
-<p>Statistical power of t-test for specific contrast can be evaluated
-using the <code>pwr.contrast</code> function.</p>
-<p><strong>Inputs</strong> - <code>object</code>: the design object -
-<code>which</code>: the factor of interest - <code>by</code>: the
-variable to condition on - <code>contrast</code>: contrast method,
-include “pairwise”, “poly”, and “trt.vs.ctrl”, or any manually defined
-contrast vector - <code>sig.level</code>: significance level, default
-0.05 - <code>p.adj</code>: whether the sig.level should be adjusted
-using the Bonferroni method, default FALSE - <code>alternative</code>:
-“two.sided” or “one.sided”. - <code>strict</code>: If <code>TRUE</code>,
-default, the power will include the probability of rejection in the
-opposite direction of the true effect, in the two-sided case. Otherwise,
-the power will be half the significance level if the true difference is
-zero.</p>
+<p>Once a design object has been created, calculating statistical power
+is straightforward.</p>
+<div class="section level3">
+<h3 id="power-calculation-for-omnibus-f-tests">Power Calculation for Omnibus F-Tests<a class="anchor" aria-label="anchor" href="#power-calculation-for-omnibus-f-tests"></a>
+</h3>
+<p>The statistical power for <strong>F-tests</strong> (ANOVA-like tests)
+can be computed using the <code>pwr.anova</code> function.</p>
+<p><strong>Usage</strong></p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.anova.html">pwr.anova</a></span><span class="op">(</span><span class="va">object</span>, sig.level <span class="op">=</span> <span class="fl">0.05</span>, type <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><p><strong><code>object</code></strong>: the design object created
+in the previous step.</p></li>
+<li><p><strong><code>sig.level</code></strong>: significance level,
+default <code>0.05</code>.</p></li>
+<li><p><strong><code>type</code></strong>: the type of ANOVA table
+(default: <code>3</code>).</p></li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="power-calculation-for-specific-contrasts">Power Calculation for Specific Contrasts<a class="anchor" aria-label="anchor" href="#power-calculation-for-specific-contrasts"></a>
+</h3>
+<p>To evaluate statistical power for <strong>t-tests</strong> on
+specific contrasts, use the <code>pwr.contrast</code> function.</p>
+<p><strong>Usage</strong></p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">which</span>, by <span class="op">=</span> <span class="cn">NULL</span>, </span>
+<span>  contrast <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pairwise"</span>, <span class="st">"poly"</span>, <span class="st">"trt.vs.ctrl"</span><span class="op">)</span>,</span>
+<span>  sig.level <span class="op">=</span> <span class="fl">0.05</span>, p.adj <span class="op">=</span> <span class="cn">FALSE</span>, </span>
+<span>  alternative <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"two.sided"</span>, <span class="st">"one.sided"</span><span class="op">)</span>, strict <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><strong>Arguments</strong></p>
+<ul>
+<li><p><strong><code>object</code></strong>: The design object.</p></li>
+<li><p><strong><code>which</code></strong>: The factor of interest.
+Multiple factors can be combined using <code>:</code> or <code>*</code>
+(e.g., <code>"facA*facB"</code> treats combined factor levels as a
+single factor).</p></li>
+<li><p><strong><code>by</code></strong>: The variable to condition
+on.</p></li>
+<li>
+<p><strong><code>contrast</code></strong>: Contrast method, on
+of</p>
+<ul>
+<li><p><code>"pairwise"</code> - pairwise comparisons</p></li>
+<li><p><code>"poly"</code> - polynomial contrasts</p></li>
+<li><p><code>"trt.vs.ctrl"</code> - treatment vs. control
+comparison</p></li>
+<li><p>Alternatively, a <strong>numeric vector</strong> for a single
+custom contrast, or a <strong>named list</strong> of contrast vectors.
+If a list is provided, each vector must match the number of factor
+levels in each <code>by</code> group. In multi-factor scenarios, factor
+levels are combined and treated as a single factor.</p></li>
+</ul>
+</li>
+<li><p><strong><code>sig.level</code></strong>: significance level
+(default: <code>0.05</code>).</p></li>
+<li><p><strong><code>p.adj</code></strong>: whether the
+<code>sig.level</code> should be adjusted using the Bonferroni method
+(default: FALSE).</p></li>
+<li><p><strong><code>alternative</code></strong>:
+<code>"two.sided"</code> (default) or <code>"one.sided"</code>.</p></li>
+<li><p><strong><code>strict</code></strong>: Controls how power is
+calculated in two-sided tests (default: <code>TRUE</code>). If
+<code>TRUE</code>, includes the probability of rejection in the opposite
+direction of the true effect. If <code>FALSE</code>, power equals half
+the significance level when the true difference is zero.</p></li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="power-calculation-for-model-coefficients">Power Calculation for Model Coefficients<a class="anchor" aria-label="anchor" href="#power-calculation-for-model-coefficients"></a>
+</h3>
+<p>The <code>pwr.summary</code> function computes the statistical power
+for testing model coefficients (t-tests).</p>
+<p><strong>Usage</strong></p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.summary.html">pwr.summary</a></span><span class="op">(</span><span class="va">object</span>, sig.level <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Arguments</strong></p>
+<ul>
+<li>
+<strong><code>object</code></strong>: A design object</li>
+<li>
+<strong><code>sig.level</code></strong>: The significance level
+(default: 0.05)</li>
+</ul>
+</div>
 </div>
 <div class="section level2">
 <h2 id="practical-examples">Practical Examples<a class="anchor" aria-label="anchor" href="#practical-examples"></a>
@@ -428,47 +566,41 @@ zero.</p>
 <div class="section level3">
 <h3 id="example-1--completely-randomized-design">Example 1. Completely Randomized Design<a class="anchor" aria-label="anchor" href="#example-1--completely-randomized-design"></a>
 </h3>
-<p>In this example, we will create a CRD with one treatment factor. The
-design parameters are as follows:</p>
+<p>In this example, we create a CRD with one treatment factor.</p>
+<p><strong>Design parameters</strong></p>
 <ol style="list-style-type: decimal">
-<li>Treatments: 1 treatment factor with 4 levels.</li>
-<li>Replicates: 8 experimental units per treatment.</li>
-<li>Mean and effect size: The expected means for four levels are 35, 30,
-37, 38</li>
-<li>Error variance: 15</li>
+<li>
+<strong>Treatments</strong>: 1 treatment factor with 4 levels.</li>
+<li>
+<strong>Replicates</strong>: 8 experimental units per
+treatment.</li>
+<li>
+<strong>Mean and effect size</strong>: Expected means for four
+levels: 35, 30, 37, 38</li>
+<li>
+<strong>Error variance</strong>: 15</li>
 </ol>
-<p><strong>Create the CRD</strong></p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<p><strong>Step 1: Creating the CRD</strong></p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">crd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_designs.html">designCRD</a></span><span class="op">(</span></span>
 <span>  treatments <span class="op">=</span> <span class="fl">4</span>,</span>
 <span>  replicates <span class="op">=</span> <span class="fl">8</span>,</span>
 <span>  means <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">35</span>, <span class="fl">30</span>, <span class="fl">37</span>, <span class="fl">38</span><span class="op">)</span>,</span>
 <span>  sigma2 <span class="op">=</span> <span class="fl">15</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><strong>Power for omnibus test</strong></p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<p><strong>Step 2: Power for omnibus test</strong></p>
+<p>To compute the power for the <strong>overall F-test
+(ANOVA)</strong>:</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.anova.html">pwr.anova</a></span><span class="op">(</span><span class="va">crd</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Power of type III F-test</span></span>
 <span><span class="co">#&gt;     NumDF DenDF sig.level   power</span></span>
 <span><span class="co">#&gt; trt     3    28      0.05 0.95467</span></span></code></pre></div>
-<p><strong>Power for specific contrasts</strong></p>
-<p>The power for detecting differences between treatments and the
-control:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span><span class="va">crd</span>, which <span class="op">=</span>  <span class="st">"trt"</span>, contrast <span class="op">=</span> <span class="st">"trt.vs.ctrl"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;             effect df sig.level     power alternative</span></span>
-<span><span class="co">#&gt; trt2 - trt1     -5 28      0.05 0.7028739   two.sided</span></span>
-<span><span class="co">#&gt; trt3 - trt1      2 28      0.05 0.1694975   two.sided</span></span>
-<span><span class="co">#&gt; trt4 - trt1      3 28      0.05 0.3216803   two.sided</span></span></code></pre></div>
-<p>The power for detecting polynomial contrasts across the treatment
-levels:</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span><span class="va">crd</span>, which <span class="op">=</span>  <span class="st">"trt"</span>, contrast <span class="op">=</span> <span class="st">"poly"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;           effect df sig.level     power alternative</span></span>
-<span><span class="co">#&gt; linear        16 28      0.05 0.7130735   two.sided</span></span>
-<span><span class="co">#&gt; quadratic      6 28      0.05 0.5617849   two.sided</span></span>
-<span><span class="co">#&gt; cubic        -18 28      0.05 0.8098383   two.sided</span></span></code></pre></div>
-<p>The power for detecting pairwise comparison.</p>
+<p><strong>Step 3: Power for specific contrasts</strong></p>
+<blockquote>
+<p><strong>a) Pairwise Comparisons</strong></p>
+</blockquote>
+<p>To compute power for pairwise differences:</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span><span class="va">crd</span>, which <span class="op">=</span>  <span class="st">"trt"</span>, contrast <span class="op">=</span> <span class="st">"pairwise"</span><span class="op">)</span></span>
 <span><span class="co">#&gt;             effect df sig.level      power alternative</span></span>
@@ -478,26 +610,49 @@ levels:</p>
 <span><span class="co">#&gt; trt2 - trt3     -7 28      0.05 0.93677955   two.sided</span></span>
 <span><span class="co">#&gt; trt2 - trt4     -8 28      0.05 0.97860686   two.sided</span></span>
 <span><span class="co">#&gt; trt3 - trt4     -1 28      0.05 0.07896844   two.sided</span></span></code></pre></div>
-<p>In data analysis, the <strong>P-value</strong> or
-<strong>significance level</strong> often needs to be adjusted for
-multiple comparisons (MCP). Most commonly used methods for MCP in
-experimental data are post-hoc, meaning they cannot be directly applied
-during the power analysis stage. However, one can tune the significance
-level to mimic these situations—for instance, by using a lower
-significance level to account for MCP.</p>
+<blockquote>
+<p><strong>b) Polynomial Contrasts</strong></p>
+</blockquote>
+<p>To test for trends across treatment levels:</p>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span><span class="va">crd</span>, which <span class="op">=</span>  <span class="st">"trt"</span>, contrast <span class="op">=</span> <span class="st">"pairwise"</span>, sig.level <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span></span>
-<span><span class="co">#&gt;             effect df sig.level     power alternative</span></span>
-<span><span class="co">#&gt; trt1 - trt2      5 28      0.01 0.4418907   two.sided</span></span>
-<span><span class="co">#&gt; trt1 - trt3     -2 28      0.01 0.0546995   two.sided</span></span>
-<span><span class="co">#&gt; trt1 - trt4     -3 28      0.01 0.1320866   two.sided</span></span>
-<span><span class="co">#&gt; trt2 - trt3     -7 28      0.01 0.7946290   two.sided</span></span>
-<span><span class="co">#&gt; trt2 - trt4     -8 28      0.01 0.9042775   two.sided</span></span>
-<span><span class="co">#&gt; trt3 - trt4     -1 28      0.01 0.0194487   two.sided</span></span></code></pre></div>
-<p>The <code>pwr.contrast</code> function also includes an option to
-adjust the significance level using the <strong>Bonferroni
-method</strong>, though this approach may be overly conservative.</p>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span><span class="va">crd</span>, which <span class="op">=</span>  <span class="st">"trt"</span>, contrast <span class="op">=</span> <span class="st">"poly"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;           effect df sig.level     power alternative</span></span>
+<span><span class="co">#&gt; linear        16 28      0.05 0.7130735   two.sided</span></span>
+<span><span class="co">#&gt; quadratic      6 28      0.05 0.5617849   two.sided</span></span>
+<span><span class="co">#&gt; cubic        -18 28      0.05 0.8098383   two.sided</span></span></code></pre></div>
+<blockquote>
+<p><strong>c) Treatment vs. Control Comparison</strong></p>
+</blockquote>
+<p>The power for detecting differences between treatments and the
+control:</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span><span class="va">crd</span>, which <span class="op">=</span>  <span class="st">"trt"</span>, contrast <span class="op">=</span> <span class="st">"trt.vs.ctrl"</span><span class="op">)</span></span>
+<span><span class="co">#&gt;             effect df sig.level     power alternative</span></span>
+<span><span class="co">#&gt; trt2 - trt1     -5 28      0.05 0.7028739   two.sided</span></span>
+<span><span class="co">#&gt; trt3 - trt1      2 28      0.05 0.1694975   two.sided</span></span>
+<span><span class="co">#&gt; trt4 - trt1      3 28      0.05 0.3216803   two.sided</span></span></code></pre></div>
+<blockquote>
+<p><strong>d) Custom Contrast: All Treatments vs. Control</strong></p>
+</blockquote>
+<p>In addition to pre-defined contrast method, custom contrast vectors
+can be specified. For example, to compare the average of all treatments
+against the control, use the contrast vector
+<code>c(-1, 1/3, 1/3, 1/3)</code>. The power for this test can be
+computed as:</p>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span><span class="va">crd</span>, which <span class="op">=</span>  <span class="st">"trt"</span>, contrast <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>trts.vs.ctrl <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">/</span><span class="fl">3</span>, <span class="fl">1</span><span class="op">/</span><span class="fl">3</span>, <span class="fl">1</span><span class="op">/</span><span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;                    effect df sig.level power alternative</span></span>
+<span><span class="co">#&gt; trts.vs.ctrl 2.442491e-15 28      0.05  0.05   two.sided</span></span></code></pre></div>
+<p><strong>Adjusting for Multiple Comparisons</strong></p>
+<p>In real-world analysis, <strong>P-values</strong> often need
+<strong>adjustment for multiple comparisons (MCP)</strong>. While most
+<strong>post-hoc</strong> methods cannot be applied <strong>directly in
+power analysis</strong>, we can <strong>lower the significance
+level</strong> to approximate MCP adjustments.</p>
+<blockquote>
+<p><strong>Using a More Conservative Significance Level</strong></p>
+</blockquote>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span><span class="va">crd</span>, which <span class="op">=</span>  <span class="st">"trt"</span>, contrast <span class="op">=</span> <span class="st">"pairwise"</span>, sig.level <span class="op">=</span> <span class="fl">0.01</span><span class="op">)</span></span>
 <span><span class="co">#&gt;             effect df sig.level     power alternative</span></span>
 <span><span class="co">#&gt; trt1 - trt2      5 28      0.01 0.4418907   two.sided</span></span>
@@ -506,16 +661,37 @@ method</strong>, though this approach may be overly conservative.</p>
 <span><span class="co">#&gt; trt2 - trt3     -7 28      0.01 0.7946290   two.sided</span></span>
 <span><span class="co">#&gt; trt2 - trt4     -8 28      0.01 0.9042775   two.sided</span></span>
 <span><span class="co">#&gt; trt3 - trt4     -1 28      0.01 0.0194487   two.sided</span></span></code></pre></div>
+<blockquote>
+<p><strong>Using the Bonferroni Correction</strong></p>
+<p>The <code>pwr.contrast</code> function includes an option for
+<strong>Bonferroni correction</strong>, though it may be overly
+conservative:</p>
+</blockquote>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span><span class="va">crd</span>, which <span class="op">=</span>  <span class="st">"trt"</span>, contrast <span class="op">=</span> <span class="st">"pairwise"</span>, sig.level <span class="op">=</span> <span class="fl">0.05</span>, p.adj <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co">#&gt;             effect df   sig.level      power alternative</span></span>
+<span><span class="co">#&gt; trt1 - trt2      5 28 0.008333333 0.41456682   two.sided</span></span>
+<span><span class="co">#&gt; trt1 - trt3     -2 28 0.008333333 0.04782486   two.sided</span></span>
+<span><span class="co">#&gt; trt1 - trt4     -3 28 0.008333333 0.11835238   two.sided</span></span>
+<span><span class="co">#&gt; trt2 - trt3     -7 28 0.008333333 0.77333066   two.sided</span></span>
+<span><span class="co">#&gt; trt2 - trt4     -8 28 0.008333333 0.89102508   two.sided</span></span>
+<span><span class="co">#&gt; trt3 - trt4     -1 28 0.008333333 0.01655798   two.sided</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="example-2--randomized-complete-block-design">Example 2. Randomized complete block design<a class="anchor" aria-label="anchor" href="#example-2--randomized-complete-block-design"></a>
 </h3>
-<p>In this example, we will create an RCBD with two treatment factors.
-The design parameters are as follows:</p>
+<p>In this example, we create a <strong>Randomized Complete Block Design
+(RCBD)</strong> with <strong>two treatment factors</strong> in a
+<strong>2×2 factorial design</strong>.</p>
+<p><strong>Design Parameters</strong></p>
 <ol style="list-style-type: decimal">
-<li>Treatments: A 2x2 factorial design.</li>
-<li>Replicates: 8 blocks.</li>
-<li>Means:
+<li>
+<strong>Treatments</strong>: A 2x2 factorial design (factors:
+<code>A</code> and <code>B</code>).</li>
+<li>
+<strong>Replicates</strong>: 8 blocks.</li>
+<li>
+<strong>Expected Means</strong>:
 <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="center" style="text-align: center"></mtd><mtd columnalign="center" style="text-align: center"><mi>B</mi><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mi>B</mi><mn>2</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>A</mi><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>35</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>38</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>A</mi><mn>2</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>40</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>41</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"></mtd></mtr></mtable><annotation encoding="application/x-tex">
     \begin{array}{c|c|c}
  &amp; B1 &amp; B2 \\
@@ -523,28 +699,33 @@ The design parameters are as follows:</p>
     A1 &amp; 35 &amp; 38 \\
     A2 &amp; 40  &amp; 41 \\
     \end{array}
-    </annotation></semantics></math> The corresponding <code>beta</code>
-values are as follows:</li>
+    </annotation></semantics></math> Corresponding <code>beta</code>
+values are as follows (Optional):</li>
 </ol>
 <ul>
-<li>The intercept (<code>A1B1</code>): 35.</li>
-<li>The effect of <code>A2</code> alone: 5 units</li>
-<li>The effect of <code>B2</code> alone: 3 units</li>
-<li>The interaction between <code>A2</code> and <code>B2</code>: -2
-units, meaning the combined effect of <code>A2</code> and
-<code>B2</code> is 2 units below the additive effects.</li>
+<li><em>Intercept (<code>A1B1</code>): 35</em></li>
+<li><em>Effect of <code>A2</code> alone: 5 units</em></li>
+<li><em>Effect of <code>B2</code> alone: 3 units</em></li>
+<li><em>Interaction (<code>A2:B2</code>): -2 units (i.e., the combined
+effect of <code>A2</code> and <code>B2</code> is 2 units below the
+additive effects).</em></li>
 </ul>
 <ol start="4" style="list-style-type: decimal">
-<li>Variance among blocks: 11.</li>
-<li>Error variance: 4. The total variance of the response variable (15)
-is decomposed into variance between blocks (11) and variance within
-blocks (4).</li>
+<li>
+<strong>Variance among blocks</strong>: 11.</li>
+<li>
+<strong>Error variance</strong>: 4.</li>
+<li>The total variance of the response variable (15) is decomposed into
+variance between blocks (11) and variance within blocks (4).</li>
 </ol>
-<p><strong>Create the RCBD</strong></p>
+<p><strong>Step 1: Creating the RCBD</strong></p>
 <ul>
-<li>templates:</li>
+<li>
+<strong>Generate the templates</strong> to determine the correct
+parameter order. Provide <code>beta</code> or <code>means</code>, and
+<code>vcomp</code> according to the order below.</li>
 </ul>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/create_designs.html">designRCBD</a></span><span class="op">(</span>treatments <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>, blocks <span class="op">=</span> <span class="fl">8</span>, template <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; $fixeff</span></span>
 <span><span class="co">#&gt; $fixeff$beta</span></span>
@@ -560,9 +741,10 @@ blocks (4).</li>
 <span><span class="co">#&gt; $varcov$block</span></span>
 <span><span class="co">#&gt;             (Intercept)</span></span>
 <span><span class="co">#&gt; (Intercept)           1</span></span></code></pre></div>
-<p>Provide design paramters, <code>beta</code> or <code>means</code>,
-and <code>vcomp</code> according to the order above.</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<ul>
+<li><strong>Create the design object</strong></li>
+</ul>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rcbd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_designs.html">designRCBD</a></span><span class="op">(</span></span>
 <span>  treatments <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>,</span>
 <span>  blocks <span class="op">=</span> <span class="fl">8</span>,</span>
@@ -571,18 +753,55 @@ and <code>vcomp</code> according to the order above.</p>
 <span>  vcomp <span class="op">=</span> <span class="fl">11</span>,</span>
 <span>  sigma2 <span class="op">=</span> <span class="fl">4</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><strong>Evaluate statistical power</strong></p>
-<p>The power for main and interaction effects.</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<p>The default factor names and formula can be inspected in the design
+object:</p>
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">rcbd</span><span class="op">$</span><span class="va">deStruct</span><span class="op">$</span><span class="va">fxTrms</span><span class="op">$</span><span class="va">fixedfr</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   facA facB</span></span>
+<span><span class="co">#&gt; 1    1    1</span></span>
+<span><span class="co">#&gt; 2    2    1</span></span>
+<span><span class="co">#&gt; 3    1    2</span></span>
+<span><span class="co">#&gt; 4    2    2</span></span>
+<span><span class="va">rcbd</span><span class="op">$</span><span class="va">deStruct</span><span class="op">$</span><span class="va">formula</span></span>
+<span><span class="co">#&gt; ~facA * facB + (1 | block)</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x559940504db0&gt;</span></span></code></pre></div>
+<p>Treatment factors and factor levels can be renamed and relabeled, and
+the model formula can be changed. For example, if interactions are
+removed, marginal means for both factors must be provided instead of
+cell means.</p>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/create_designs.html">designRCBD</a></span><span class="op">(</span>treatments <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>, </span>
+<span>           label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>factorA <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A1"</span>, <span class="st">"A2"</span><span class="op">)</span>, factorB <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"B1"</span>, <span class="st">"B2"</span><span class="op">)</span><span class="op">)</span>, </span>
+<span>           blocks <span class="op">=</span> <span class="fl">8</span>, </span>
+<span>           formula <span class="op">=</span> <span class="op">~</span> <span class="va">factorA</span> <span class="op">+</span> <span class="va">factorB</span> <span class="op">+</span> <span class="op">(</span><span class="fl">1</span><span class="op">|</span><span class="va">block</span><span class="op">)</span>, </span>
+<span>           template <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; $fixeff</span></span>
+<span><span class="co">#&gt; $fixeff$beta</span></span>
+<span><span class="co">#&gt; (Intercept)   factorAA2   factorBB2 </span></span>
+<span><span class="co">#&gt;           1           2           3 </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $fixeff$means</span></span>
+<span><span class="co">#&gt; factorAA1 factorAA2 factorBB1 factorBB2 </span></span>
+<span><span class="co">#&gt;         1         2         3         4 </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $varcov</span></span>
+<span><span class="co">#&gt; $varcov$block</span></span>
+<span><span class="co">#&gt;             (Intercept)</span></span>
+<span><span class="co">#&gt; (Intercept)           1</span></span></code></pre></div>
+<p><strong>Step 2: Evaluate statistical power</strong></p>
+<p>To test overall effects of <code>facA</code> and
+<code>facB</code></p>
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.anova.html">pwr.anova</a></span><span class="op">(</span><span class="va">rcbd</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Power of type III F-test</span></span>
 <span><span class="co">#&gt;           NumDF DenDF sig.level   power</span></span>
 <span><span class="co">#&gt; facA          1    21      0.05 0.99969</span></span>
 <span><span class="co">#&gt; facB          1    21      0.05 0.76950</span></span>
 <span><span class="co">#&gt; facA:facB     1    21      0.05 0.27138</span></span></code></pre></div>
-<p>The power for testing difference between levels of factor A
-conditioned on factor B:</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<p>To test differences between levels of <code>facA</code>, conditioned
+on <code>facB</code>:</p>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span><span class="va">rcbd</span>, which <span class="op">=</span> <span class="st">"facA"</span>, by <span class="op">=</span> <span class="st">"facB"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; $`facB = 1`</span></span>
 <span><span class="co">#&gt;               effect df sig.level     power alternative</span></span>
@@ -595,19 +814,29 @@ conditioned on factor B:</p>
 <div class="section level3">
 <h3 id="example-3--latin-square-design">Example 3. Latin square design<a class="anchor" aria-label="anchor" href="#example-3--latin-square-design"></a>
 </h3>
-<p>In this example, we extend the design from <em>Example 2</em> by
-introducing another blocking factor, thus creating an LSD. The treatment
-structure and effect sizes remain the same as in <em>Example 2</em>. The
-design controls for two sources of variability (row and column blocks)
-while evaluating the treatment effects. In the LSD, the total variance
-(15) is further decomposed into three components:</p>
+<p>In this example, we extend <em>Example 2</em> by introducing
+<strong>another blocking factor</strong>, transforming the design into
+an LSD.</p>
 <ul>
-<li>Variance between row blocks (11),</li>
-<li>Variance between column blocks (2), and</li>
-<li>Residual error variance (2).</li>
+<li><p>The <strong>treatment structure and effect sizes remain the
+same</strong> as in <em>Example 2</em>.</p></li>
+<li><p>The LSD controls for <strong>two sources of variability</strong>
+(row and column blocks) while evaluating treatment effects.</p></li>
+<li>
+<p>The <strong>total variance (15)</strong> is further decomposed
+into:</p>
+<ul>
+<li><p><strong>Variance between row blocks</strong>:
+<code>11</code></p></li>
+<li><p><strong>Variance between column blocks</strong>:
+<code>2</code></p></li>
+<li><p><strong>Residual error variance</strong>: <code>2</code></p></li>
 </ul>
-<p><strong>Input templates</strong></p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+</li>
+</ul>
+<p><strong>Step 1: Creating the LSD</strong></p>
+<p>Generate the templates to determine the correct order of inputs.</p>
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/create_designs.html">designLSD</a></span><span class="op">(</span></span>
 <span>  treatments <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>,</span>
 <span>  squares <span class="op">=</span> <span class="fl">4</span>,</span>
@@ -632,11 +861,18 @@ while evaluating the treatment effects. In the LSD, the total variance
 <span><span class="co">#&gt; $varcov$col</span></span>
 <span><span class="co">#&gt;             (Intercept)</span></span>
 <span><span class="co">#&gt; (Intercept)           2</span></span></code></pre></div>
-<p>Either <code>beta</code> or <code>means</code> can be provided as in
-<em>Example 2</em>. Variance of row blocking factors and column block
-factors are requried sequentially.</p>
+<p>Either <code>beta</code> or <code>means</code> can be provided, as in
+<em>Example 2</em>. Note that although the variance component template
+sets the order for <code>row</code> and <code>col</code> variances in
+<code>vcomp</code>, these values don’t impact power as long as
+<code>sigma2</code> is fixed because treatment effects are tested
+against residual error. However, in designs where the error terms for
+treatment factors include variance components beyond residual error
+(like the next example), variance components can affect power for main
+plot factors. It’s also recommended to use variance components as a
+guide to make an informed estimate of <code>sigma2</code>.</p>
 <p><strong>Create the LSD</strong></p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">lsd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_designs.html">designLSD</a></span><span class="op">(</span></span>
 <span>  treatments <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>,</span>
 <span>  label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>temp <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"T1"</span>, <span class="st">"T2"</span><span class="op">)</span>, dosage <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"D1"</span>, <span class="st">"D2"</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -647,43 +883,60 @@ factors are requried sequentially.</p>
 <span>  sigma2 <span class="op">=</span> <span class="fl">2</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Once the design has been created, <code>pwr.anova</code> and
-<code>pwr.contrast</code> can be used to evaludate statistical power as
+<code>pwr.contrast</code> can be used to evaluate statistical power as
 demonstrated above.</p>
 </div>
 <div class="section level3">
 <h3 id="example-4-split-plot-design">Example 4: Split-plot Design<a class="anchor" aria-label="anchor" href="#example-4-split-plot-design"></a>
 </h3>
-<p>In this example, we will create a SPD with two treatment factors, one
-at each level. The design parameters are as follows:</p>
+<p>In this example, we create an SPD with two treatment factors, one at
+the main plot level and another at the subplot level. The design
+parameters are as follows:</p>
 <ol style="list-style-type: decimal">
-<li>Treatments: One main plot factor having 2 levels, and another factor
-with 3 levels at the sub-plot level.</li>
 <li>
-<strong>Replicates</strong>: There are 5 plots per main plot
-treatment, resulting in a total of 10 plots. This is a standard SPD,
-where the plot (block at the subplot level) size is assumed to equal the
-number of treatments. Thus, the design follows an RCBD structure at the
-subplot level.</li>
-<li>The corresponding cell means are:
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="center" style="text-align: center"></mtd><mtd columnalign="center" style="text-align: center"><mi>t</mi><mi>r</mi><mi>t</mi><mi>.</mi><mi>s</mi><mi>u</mi><mi>b</mi><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mi>t</mi><mi>r</mi><mi>t</mi><mi>.</mi><mi>s</mi><mi>u</mi><mi>b</mi><mn>2</mn></mtd><mtd columnalign="center" style="text-align: center"><mi>t</mi><mi>r</mi><mi>t</mi><mi>.</mi><mi>s</mi><mi>u</mi><mi>b</mi><mn>3</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>t</mi><mi>r</mi><mi>t</mi><mi>.</mi><mi>m</mi><mi>a</mi><mi>i</mi><mi>n</mi><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>20</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>22</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>24</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>t</mi><mi>r</mi><mi>t</mi><mi>.</mi><mi>m</mi><mi>a</mi><mi>i</mi><mi>n</mi><mn>2</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>22</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>24</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>28</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"></mtd></mtr></mtable><annotation encoding="application/x-tex">
-\begin{array}{c|c|c}
-  &amp; trt.sub1 &amp; trt.sub2 &amp; trt.sub3 \\
-\hline
-trt.main1 &amp; 20 &amp; 22 &amp; 24\\
-trt.main2 &amp; 22 &amp; 24 &amp; 28 \\
-\end{array}
-</annotation></semantics></math>
+<p><strong>Treatments:</strong></p>
+<ul>
+<li><p><strong>Main plot factor</strong> with <strong>2
+levels</strong></p></li>
+<li><p><strong>Subplot factor</strong> with <strong>3
+levels</strong></p></li>
+</ul>
 </li>
-<li>The total variance (15) is assumed to decompose into 4 for
-whole-plot error and 11 for subplot error.</li>
+<li>
+<p><strong>Replicates</strong>:</p>
+<ul>
+<li><p>Each main plot treatment has <strong>5 plots</strong>, for a
+total of <strong>10 plots</strong>.</p></li>
+<li><p>This is a standard SPD, where the plots are the blocks at the
+subplot level and the subplot design follows an RCBD structure.</p></li>
+</ul>
+</li>
+<li><p><strong>Expected cell means</strong> are:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mtable><mtr><mtd columnalign="center" style="text-align: center"></mtd><mtd columnalign="center" style="text-align: center"><mi>t</mi><mi>r</mi><mi>t</mi><mi>.</mi><mi>s</mi><mi>u</mi><mi>b</mi><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mi>t</mi><mi>r</mi><mi>t</mi><mi>.</mi><mi>s</mi><mi>u</mi><mi>b</mi><mn>2</mn></mtd><mtd columnalign="center" style="text-align: center"><mi>t</mi><mi>r</mi><mi>t</mi><mi>.</mi><mi>s</mi><mi>u</mi><mi>b</mi><mn>3</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>t</mi><mi>r</mi><mi>t</mi><mi>.</mi><mi>m</mi><mi>a</mi><mi>i</mi><mi>n</mi><mn>1</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>20</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>22</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>24</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>t</mi><mi>r</mi><mi>t</mi><mi>.</mi><mi>m</mi><mi>a</mi><mi>i</mi><mi>n</mi><mn>2</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>22</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>24</mn></mtd><mtd columnalign="center" style="text-align: center"><mn>28</mn></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"></mtd></mtr></mtable><annotation encoding="application/x-tex">
+    \begin{array}{c|c|c}
+      &amp; trt.sub1 &amp; trt.sub2 &amp; trt.sub3 \\
+    \hline
+    trt.main1 &amp; 20 &amp; 22 &amp; 24\\
+    trt.main2 &amp; 22 &amp; 24 &amp; 28 \\
+    \end{array}
+    </annotation></semantics></math></p></li>
+<li>
+<p><strong>Variance Components</strong>:</p>
+<ul>
+<li><p><strong>Main-plot error</strong>: <code>4</code></p></li>
+<li><p><strong>Subplot (residual) error</strong>:
+<code>11</code></p></li>
+<li><p><strong>Total variance</strong>: <code>15</code></p></li>
+</ul>
+</li>
 </ol>
-<p><strong>Inputs templates</strong></p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<p><strong>Generate input templates</strong></p>
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/create_designs.html">designSPD</a></span><span class="op">(</span></span>
 <span>  trt.main <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  trt.sub <span class="op">=</span> <span class="fl">3</span>, </span>
 <span>  replicates <span class="op">=</span> <span class="fl">10</span>, </span>
-<span>  template <span class="op">=</span> <span class="cn">T</span></span>
+<span>  template <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; $fixeff</span></span>
 <span><span class="co">#&gt; $fixeff$beta</span></span>
@@ -704,7 +957,7 @@ whole-plot error and 11 for subplot error.</li>
 <span><span class="co">#&gt;             (Intercept)</span></span>
 <span><span class="co">#&gt; (Intercept)           1</span></span></code></pre></div>
 <p><strong>Create the SPD</strong></p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_designs.html">designSPD</a></span><span class="op">(</span></span>
 <span>  trt.main <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  trt.sub <span class="op">=</span> <span class="fl">3</span>, </span>
@@ -713,19 +966,25 @@ whole-plot error and 11 for subplot error.</li>
 <span>  vcomp <span class="op">=</span> <span class="fl">4</span>,</span>
 <span>  sigma2 <span class="op">=</span> <span class="fl">11</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p>One can verify that different values of <strong>main-plot error
+(<code>vcomp</code>)</strong> affect the power of the <strong>main plot
+factor</strong>, unlike in <em>Example 3</em>, where variance components
+did not influence power.</p>
 </div>
 <div class="section level3">
 <h3 id="example-5-repeated-measures">Example 5: Repeated measures<a class="anchor" aria-label="anchor" href="#example-5-repeated-measures"></a>
 </h3>
-<p>This example illustrates a repeated measures design with three
-treatments (<code>CON</code>, <code>TRT1</code>, <code>TRT2</code>)
-measured hourly over 8 hours. Within-subject correlations are modeled
-using an AR(1) structure with
+<p>This example illustrates a <strong>repeated measures design,</strong>
+where <strong>three treatments</strong> (<code>CON</code>,
+<code>TRT1</code>, <code>TRT2</code>) are measured <strong>hourly over 8
+hours</strong>. <strong>Within-subject correlations</strong> are modeled
+using an <strong>AR(1) structure</strong> with
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>0.6</mn></mrow><annotation encoding="application/x-tex">\rho = 0.6</annotation></semantics></math>
 and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>σ</mi><mn>2</mn></msup><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">\sigma^2 = 2</annotation></semantics></math>.</p>
-<p><strong>Design Details</strong> 1. <strong>Subjects</strong>: 6 per
-treatment group (total: 18 subjects).<br>
+<p><strong>Design Details</strong></p>
+<p>1. <strong>Subjects</strong>: 6 per treatment group (total: 18
+subjects).<br>
 2. <strong>Treatments</strong>: <code>CON</code>, <code>TRT1</code>, and
 <code>TRT2</code>.<br>
 3. <strong>Time Points</strong>: 8 hourly measurements.</p>
@@ -739,8 +998,9 @@ treatment group (total: 18 subjects).<br>
 \text{TRT2} &amp; 3.50 &amp; 4.54 &amp; 5.80 &amp; 5.84 &amp; 5.49 &amp; 4.71 &amp; 4.08 &amp; 3.78 \\
 \end{array}
 </annotation></semantics></math></p>
-<p><strong>Create a data frame for this design</strong></p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<p><strong>Step 1: Creating the design</strong></p>
+<p><strong>Create a data frame for the design</strong></p>
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">n_subject</span> <span class="op">=</span> <span class="fl">6</span> <span class="co"># Subjects per treatment</span></span>
 <span><span class="va">n_trt</span> <span class="op">=</span> <span class="fl">3</span> <span class="co"># Number of treatments</span></span>
 <span><span class="va">n_hour</span> <span class="op">=</span> <span class="fl">8</span> <span class="co"># Number of repeated measures (time points)</span></span>
@@ -754,7 +1014,7 @@ treatment group (total: 18 subjects).<br>
 <p><strong>Input templates</strong></p>
 <p>Either values of <code>beta</code> or <code>means</code> are required
 in the following order:</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/mkdesign.html">mkdesign</a></span><span class="op">(</span>formula <span class="op">=</span> <span class="op">~</span> <span class="va">trt</span><span class="op">*</span><span class="va">hour</span>, data <span class="op">=</span> <span class="va">df.rep</span><span class="op">)</span></span>
 <span><span class="co">#&gt; $fixeff</span></span>
 <span><span class="co">#&gt; $fixeff$beta</span></span>
@@ -784,8 +1044,8 @@ in the following order:</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $varcov</span></span>
 <span><span class="co">#&gt; NULL</span></span></code></pre></div>
-<p><strong>Create a design</strong></p>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<p><strong>Create the design</strong></p>
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">design.rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mkdesign.html">mkdesign</a></span><span class="op">(</span></span>
 <span>formula <span class="op">=</span> <span class="op">~</span> <span class="va">trt</span><span class="op">*</span><span class="va">hour</span>,</span>
 <span>data <span class="op">=</span> <span class="va">df.rep</span>,</span>
@@ -800,19 +1060,19 @@ in the following order:</p>
 <span>sigma2 <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>correlation <span class="op">=</span> <span class="fu">corAR1</span><span class="op">(</span>value <span class="op">=</span> <span class="fl">0.6</span>, form <span class="op">=</span> <span class="op">~</span> <span class="va">hour</span><span class="op">|</span><span class="va">subject</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><strong>Power calculation</strong></p>
+<p><strong>Step 2: Power calculation</strong></p>
 <p>Statistical power for main effects of treatment and time, and their
 interaction:</p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.anova.html">pwr.anova</a></span><span class="op">(</span><span class="va">design.rep</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Power of type III F-test</span></span>
 <span><span class="co">#&gt;          NumDF  DenDF sig.level   power</span></span>
 <span><span class="co">#&gt; trt          2 21.563      0.05 1.00000</span></span>
 <span><span class="co">#&gt; hour         7 86.055      0.05 0.74687</span></span>
 <span><span class="co">#&gt; trt:hour    14 86.055      0.05 0.38500</span></span></code></pre></div>
-<p>Statistical power for treatment difference at each hour:</p>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span><span class="va">design.rep</span>, which <span class="op">=</span> <span class="st">"trt"</span>, by <span class="op">=</span> <span class="st">"hour"</span>, contrast <span class="op">=</span> <span class="st">"trt.vs.ctrl"</span>, p.adj <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<p>Statistical power for treatment differences at each time point:</p>
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/pwr.contrast.html">pwr.contrast</a></span><span class="op">(</span><span class="va">design.rep</span>, which <span class="op">=</span> <span class="st">"trt"</span>, by <span class="op">=</span> <span class="st">"hour"</span>, contrast <span class="op">=</span> <span class="st">"trt.vs.ctrl"</span>, p.adj <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span></span>
 <span><span class="co">#&gt; $`hour = 1`</span></span>
 <span><span class="co">#&gt;                  effect       df sig.level     power alternative</span></span>
 <span><span class="co">#&gt; trtTRT1 - trtCON    1.5 64.41176     0.025 0.3299823   two.sided</span></span>
@@ -821,44 +1081,18 @@ interaction:</p>
 <span><span class="co">#&gt; $`hour = 2`</span></span>
 <span><span class="co">#&gt;                  effect       df sig.level     power alternative</span></span>
 <span><span class="co">#&gt; trtTRT1 - trtCON   2.50 64.41176     0.025 0.7765112   two.sided</span></span>
-<span><span class="co">#&gt; trtTRT2 - trtCON   3.54 64.41176     0.025 0.9777118   two.sided</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $`hour = 3`</span></span>
-<span><span class="co">#&gt;                  effect       df sig.level     power alternative</span></span>
-<span><span class="co">#&gt; trtTRT1 - trtCON   2.98 64.41176     0.025 0.9093209   two.sided</span></span>
-<span><span class="co">#&gt; trtTRT2 - trtCON   4.80 64.41176     0.025 0.9997845   two.sided</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $`hour = 4`</span></span>
-<span><span class="co">#&gt;                  effect       df sig.level     power alternative</span></span>
-<span><span class="co">#&gt; trtTRT1 - trtCON   3.03 64.41176     0.025 0.9187320   two.sided</span></span>
-<span><span class="co">#&gt; trtTRT2 - trtCON   4.40 64.41176     0.025 0.9988191   two.sided</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $`hour = 5`</span></span>
-<span><span class="co">#&gt;                  effect       df sig.level     power alternative</span></span>
-<span><span class="co">#&gt; trtTRT1 - trtCON   2.68 64.41176     0.025 0.8355960   two.sided</span></span>
-<span><span class="co">#&gt; trtTRT2 - trtCON   4.49 64.41176     0.025 0.9991794   two.sided</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $`hour = 6`</span></span>
-<span><span class="co">#&gt;                  effect       df sig.level     power alternative</span></span>
-<span><span class="co">#&gt; trtTRT1 - trtCON   2.35 64.41176     0.025 0.7191810   two.sided</span></span>
-<span><span class="co">#&gt; trtTRT2 - trtCON   3.71 64.41176     0.025 0.9865382   two.sided</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $`hour = 7`</span></span>
-<span><span class="co">#&gt;                  effect       df sig.level     power alternative</span></span>
-<span><span class="co">#&gt; trtTRT1 - trtCON   2.02 64.41176     0.025 0.5730989   two.sided</span></span>
-<span><span class="co">#&gt; trtTRT2 - trtCON   3.08 64.41176     0.025 0.9273867   two.sided</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $`hour = 8`</span></span>
-<span><span class="co">#&gt;                  effect       df sig.level     power alternative</span></span>
-<span><span class="co">#&gt; trtTRT1 - trtCON   1.94 64.41176     0.025 0.5351535   two.sided</span></span>
-<span><span class="co">#&gt; trtTRT2 - trtCON   2.78 64.41176     0.025 0.8635795   two.sided</span></span></code></pre></div>
+<span><span class="co">#&gt; trtTRT2 - trtCON   3.54 64.41176     0.025 0.9777118   two.sided</span></span></code></pre></div>
+<p>As shown in <em>Example 5</em>, any design can be created using the
+<code>mkdesign</code> function as long as the appropriate data frame is
+provided. However, the package currently does not support non-normal
+response variables.</p>
 </div>
 </div>
 <div class="section level2">
 <h2 id="fundamental-concepts">Fundamental concepts<a class="anchor" aria-label="anchor" href="#fundamental-concepts"></a>
 </h2>
-<p><code>pwr4exp</code> is developed based on linear mixed model (LMM)
-theory. The general form of an LMM can be expressed as:</p>
+<p><code>pwr4exp</code> is developed based on LMM theory. The general
+form of an LMM can be expressed as:</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mi>X</mi><mi>β</mi><mo>+</mo><mi>Z</mi><mi>u</mi><mo>+</mo><mi>ε</mi></mrow><annotation encoding="application/x-tex">
 y = X\beta + Zu + \varepsilon
 </annotation></semantics></math></p>
@@ -971,8 +1205,8 @@ with
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mn>2</mn></msub><annotation encoding="application/x-tex">v_2</annotation></semantics></math>
 df.</p>
 <p>In balanced designs, where data is analyzed using a variance
-components model—commonly applied in experimental animal
-research—<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mn>2</mn></msub><annotation encoding="application/x-tex">v_2</annotation></semantics></math>​
+components model, commonly applied in experimental animal research,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>v</mi><mn>2</mn></msub><annotation encoding="application/x-tex">v_2</annotation></semantics></math>​
 can be precisely determined through degrees of freedom decomposition, as
 applied in analysis of variance (ANOVA).</p>
 <p>However, for more general cases,
@@ -984,7 +1218,7 @@ t-tests can be calculated as outlined by Giesbrecht and Burns
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>v</mi><mn>2</mn></msub><mo>=</mo><mfrac><mrow><mn>2</mn><msup><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>k</mi><mi>T</mi></msup><mover><mi>C</mi><mo accent="true">̂</mo></mover><mi>k</mi><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup></mrow><mrow><msup><mi>g</mi><mi>T</mi></msup><mi>A</mi><mi>g</mi></mrow></mfrac></mrow><annotation encoding="application/x-tex">
 v_2 = \frac{2(k^T \hat{C} k)^2}{g^T A g}
 </annotation></semantics></math></p>
-<p>where: -
+<p>where:
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math>
 is the gradient of
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>k</mi><mi>T</mi></msup><mi>C</mi><mrow><mo stretchy="true" form="prefix">(</mo><mover><mi>θ</mi><mo accent="true">̂</mo></mover><mo stretchy="true" form="postfix">)</mo></mrow><mi>k</mi></mrow><annotation encoding="application/x-tex">k^T C(\hat{\theta}) k</annotation></semantics></math>
@@ -994,7 +1228,7 @@ the variance-covariance parameters in
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>V</mi><annotation encoding="application/x-tex">V</annotation></semantics></math>,
 evaluated at
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>θ</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\hat{\theta}</annotation></semantics></math>.
-- Matrix
+Matrix
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
 is the asymptotic variance-covariance matrix of
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>θ</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\hat{\theta}</annotation></semantics></math>,
@@ -1010,7 +1244,7 @@ is decomposed to yield
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>K</mi><mi>C</mi><msup><mover><mi>K</mi><mo accent="true">̂</mo></mover><mi>T</mi></msup><mo>=</mo><msup><mi>P</mi><mi>T</mi></msup><mi>D</mi><mi>P</mi></mrow><annotation encoding="application/x-tex">KC\hat{K}^T = P^T D P</annotation></semantics></math>,
 where
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>
-is an orthogonal matrix of eigenvectors, and
+is an orthogonal matrix of eigen vectors, and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>
 is a diagonal matrix of eigenvalues. Define
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><mi>m</mi></msub><mi>C</mi><msubsup><mi>k</mi><mi>m</mi><mi>T</mi></msubsup></mrow><annotation encoding="application/x-tex">k_m Ck_m^T</annotation></semantics></math>,
@@ -1024,13 +1258,12 @@ and let:</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>v</mi><mi>m</mi></msub><mo>=</mo><mfrac><mrow><mn>2</mn><msup><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>D</mi><mi>m</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup></mrow><mrow><msubsup><mi>g</mi><mi>m</mi><mi>T</mi></msubsup><mi>A</mi><msub><mi>g</mi><mi>m</mi></msub></mrow></mfrac></mrow><annotation encoding="application/x-tex">
 v_m = \frac{2(D_m)^2}{g_m^T A g_m}
 </annotation></semantics></math></p>
-<p>where: -
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>D</mi><mi>m</mi></msub><annotation encoding="application/x-tex">D_m</annotation></semantics></math>
-is the
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>-th
+<p>where:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>D</mi><mi>m</mi></msub><annotation encoding="application/x-tex">D_m</annotation></semantics></math>is
+the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>th
 diagonal element of
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>.
--
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>,
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>g</mi><mi>m</mi></msub><annotation encoding="application/x-tex">g_m</annotation></semantics></math>
 is the gradient of
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><mi>m</mi></msub><mi>C</mi><msubsup><mi>k</mi><mi>m</mi><mi>T</mi></msubsup></mrow><annotation encoding="application/x-tex">k_m C k_m^T</annotation></semantics></math>
@@ -1156,12 +1389,21 @@ size.</p>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<p>Satterthwaite, F. E. 1946. An approximate distribution of estimates
-of variance components. Biometrics Bull. 2:110–114. Hrong-Tai Fai, A.,
-&amp; Cornelius, P. L. (1996). Approximate F-tests of multiple degree of
-freedom hypotheses in generalized least squares analyses of unbalanced
-split-plot experiments. Journal of statistical computation and
-simulation, 54(4), 363-378.</p>
+<p>Fai, A. H., &amp; Cornelius, P. L. (1996). Approximate F-tests of
+multiple degree of freedom hypotheses in generalized least squares
+analyses of unbalanced split-plot experiments. <em>Journal of
+Statistical Computation and Simulation, 54</em>(4), 363–378. <a href="https://doi.org/10.1080/00949659608811740" class="external-link uri">https://doi.org/10.1080/00949659608811740</a></p>
+<p>Giesbrecht, F. G., &amp; Burns, J. C. (1985). Two-stage analysis
+based on a mixed model: Large-sample asymptotic theory and small-sample
+simulation results. <em>Biometrics, 41</em>(2), 477–486. <a href="https://doi.org/10.2307/2530872" class="external-link uri">https://doi.org/10.2307/2530872</a></p>
+<p>Satterthwaite, F. E. (1946). An approximate distribution of estimates
+of variance components. <em>Biometrics Bulletin, 2</em>(6), 110–114. <a href="https://doi.org/10.2307/3002019" class="external-link uri">https://doi.org/10.2307/3002019</a></p>
+<p>Stroup, W. W. (2002). Power analysis based on spatial effects mixed
+models: A tool for comparing design and analysis strategies in the
+presence of spatial variability. <em>Journal of Agricultural,
+Biological, and Environmental Statistics, 7</em>(4), 491–511. <a href="https://doi.org/10.1198/108571102780" class="external-link uri">https://doi.org/10.1198/108571102780</a></p>
+<p>Stroup, W. W. (2012). <em>Generalized linear mixed models: Modern
+concepts, methods, and applications</em> (1st ed.). CRC Press. <a href="https://doi.org/10.1201/b13151" class="external-link uri">https://doi.org/10.1201/b13151</a></p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
