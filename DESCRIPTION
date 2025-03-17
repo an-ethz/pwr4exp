@@ -1,6 +1,6 @@
 Package: pwr4exp
 Title: Power Analysis for Research Experiments
-Version: 1.0.0
+Version: 1.0.0.9000
 Authors@R: c(
     person("Kai", "Wang", , "kai.wang@usys.ethz.ch", role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0002-6672-1121")),
