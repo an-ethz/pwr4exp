@@ -106,13 +106,13 @@ df.rcbd <- function(treatments, label, blocks){
 #' @param squares the number of replicated squares
 #' @param reuse A character string specifying how to replicate squares when
 #' there are multiple squares. Options are: "row" for reusing row blocks, "col"
-#' for reusing column blocks, or "both" for reusing both row and column blocks
+#' for reusing column blocks, or "none" for reusing neither row nor column blocks
 #' to replicate a single square.
 #' @return a data.frame representing the data structure of the design
 df.lsd <- function(treatments,
                    label,
                    squares = 1,
-                   reuse = c("row", "col", "both")) {
+                   reuse = c("row", "col", "none")) {
   if (missing(label)) {
     label <- lapply(treatments, seq_len)
   } else {
@@ -165,7 +165,7 @@ df.lsd <- function(treatments,
         each = prod(treatments)^2
       )
   }
-  if (reuse == "both") {
+  if (reuse == "none") {
     df$col <- df$col +
       rep(
         seq(from = 0, by = prod(treatments), length.out = squares),

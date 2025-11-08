@@ -42,7 +42,7 @@ designLSD(
   treatments,
   label,
   squares = 1,
-  reuse = c("row", "col", "both"),
+  reuse = c("row", "col", "none"),
   formula,
   beta = NULL,
   means = NULL,
@@ -135,7 +135,7 @@ replicated squares.}
 
 \item{reuse}{A character string specifying how to replicate squares when
 there are multiple squares. Options are: "row" for reusing row blocks, "col"
-for reusing column blocks, or "both" for reusing both row and column blocks
+for reusing column blocks, or "none" for reusing neither row nor column blocks
 to replicate a single square.}
 
 \item{trt.main}{An integer-valued vector specifying the treatment structure at
