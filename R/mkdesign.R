@@ -193,7 +193,7 @@
 mkdesign <- function(formula, data,
                      beta = NULL, means = NULL, vcomp = NULL,
                      sigma2 = NULL, correlation = NULL, template = FALSE, REML = TRUE) {
-  rownames(data) <- 1:nrow(data) # if rownames are not 1:n, problem occurs in mkRTrms()
+  rownames(data) <- 1:nrow(data) # re-index rownames
   mc <- match.call()
   if (all(names(mc[-1]) %in% c("formula", "data")))
     template <- TRUE
@@ -202,8 +202,7 @@ mkdesign <- function(formula, data,
     warning(sprintf("Only rhs formula is required\nformula coerced to: %s.", deparse(formula)),  call. = F)
   }
 
-  corcall <- mc$correlation
-  deStruct <- mkStruct(formula, data, corcall)
+  deStruct <- mkStruct(formula, data, correlation)
   fixedfr <- deStruct$fxTrms$fixedfr
   L <- means2beta_contrasts(fixedfr)
 
@@ -223,7 +222,13 @@ mkdesign <- function(formula, data,
   fixeff <- means2beta(L, means, beta)
   deStruct$fxTrms$fixeff <- fixeff
 
-  varpar <- c(vcomp, eval(corcall$value), sigma2)
+  corr <- coef(deStruct$rTrms$corStruct, unconstrained = FALSE)
+  varpar <- c(vcomp, corr, sigma2)
+
+  attr(varpar, "vcomp") <- length(vcomp)
+  attr(varpar, "corr") <- length(corr)
+  attr(varpar, "sigma2") <- length(sigma2)
+
   vcov_beta <- vcovbeta_vp(varpar, deStruct$fxTrms, deStruct$reTrms, deStruct$rTrms)
   info_mat <- informat(varpar = varpar, deStruct$fxTrms, deStruct$reTrms, deStruct$rTrms, REML)
   vcov_varpar <- solve(info_mat)

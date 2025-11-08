@@ -4,7 +4,7 @@
 \alias{mkRTrms}
 \title{Residual Variance-Covariance Matrices}
 \usage{
-mkRTrms(data, corcall = NULL)
+mkRTrms(data, correlation = NULL)
 }
 \arguments{
 \item{data}{a data frame with grouping factors and covariates.}

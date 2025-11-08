@@ -4,7 +4,7 @@
 \alias{mkStruct}
 \title{Building Design Matrices and Covariance Structures for Linear Mixed Models}
 \usage{
-mkStruct(formula, data, corcall)
+mkStruct(formula, data, correlation)
 }
 \arguments{
 \item{formula}{a model formula.}
