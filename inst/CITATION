@@ -8,6 +8,9 @@ bibentry(
   ),
   journal = "Journal of Dairy Science",
   year = "2025",
+  volume = "108",
+  number = "9",
+  pages = "8981-9003",
   doi = "10.3168/jds.2024-25793",
-  publisher = "Elsevier"
+  header = "To cite pwr4exp in publifications use:"
 )
