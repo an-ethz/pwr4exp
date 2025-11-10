@@ -19,5 +19,4 @@ Re-exports \link[nlme:corCompSymm]{nlme::corCompSymm} from the \pkg{nlme} packag
 \seealso{
 \link{corClasses}
 See \link[nlme:corCompSymm]{nlme::corCompSymm} for original documentation.
-See \link[nlme:corCompSymm]{nlme::corCompSymm} for original documentation.
 }
