@@ -2,68 +2,36 @@
 % Please edit documentation in R/corClasses.R
 \name{corClasses}
 \alias{corClasses}
-\alias{corAR1}
-\alias{corARMA}
-\alias{corCAR1}
-\alias{corCompSymm}
-\alias{corExp}
-\alias{corGaus}
-\alias{corLin}
-\alias{corRatio}
-\alias{corSpher}
-\alias{corSymm}
 \title{Correlation Structure Classes}
-\usage{
-corAR1(value = 0, form = ~1, fixed = FALSE)
-
-corARMA(value = double(p + q), form = ~1, p = 0, q = 0, fixed = FALSE)
-
-corCAR1(value = 0.2, form = ~1, fixed = FALSE)
-
-corCompSymm(value = 0, form = ~1, fixed = FALSE)
-
-corExp(
-  value = numeric(0),
-  form = ~1,
-  nugget = FALSE,
-  metric = c("euclidean", "maximum", "manhattan"),
-  fixed = FALSE
-)
-
-corGaus(
-  value = numeric(0),
-  form = ~1,
-  nugget = FALSE,
-  metric = c("euclidean", "maximum", "manhattan"),
-  fixed = FALSE
-)
-
-corLin(
-  value = numeric(0),
-  form = ~1,
-  nugget = FALSE,
-  metric = c("euclidean", "maximum", "manhattan"),
-  fixed = FALSE
-)
-
-corRatio(
-  value = numeric(0),
-  form = ~1,
-  nugget = FALSE,
-  metric = c("euclidean", "maximum", "manhattan"),
-  fixed = FALSE
-)
-
-corSpher(
-  value = numeric(0),
-  form = ~1,
-  nugget = FALSE,
-  metric = c("euclidean", "maximum", "manhattan"),
-  fixed = FALSE
-)
-
-corSymm(value = numeric(0), form = ~1, fixed = FALSE)
-}
 \description{
-These functions re-export \code{\link[nlme]{corClasses}} constructors from the \pkg{nlme} package.
+Standard classes of correlation structures (\code{corStruct}) available from the \pkg{nlme} package
+and re-exported by \pkg{pwr4exp} for convenience when specifying correlation structures in \code{\link{mkdesign}}.
+
+All arguments are identical to the corresponding \pkg{nlme} functions. For more details on the original implementations,
+see \link[nlme:corClasses]{nlme::corClasses}.
+
+Note: In the original \link[nlme:corAR1]{nlme::corAR1}, \link[nlme:corARMA]{nlme::corARMA}, and \link[nlme:corSymm]{nlme::corSymm} functions,
+the covariate \code{t} in the correlation formula \code{~ t} or \code{~ t | g} must be an integer class. In \pkg{pwr4exp},
+the covariate can also be a factor class, which is then converted to an integer internally for sorting purposes.
+The class of the covariate variable in the model formula, if present, will not be converted. For example, a time covariate
+can be fitted as a factor in the model formula, whereas it is converted to an integer in the correlation formula temporarily for matrix sorting.
+}
+\details{
+Available standard classes:
+\describe{
+\item{\code{\link{corAR1}}}{autoregressive process of order 1.}
+\item{\code{\link{corARMA}}}{autoregressive moving average process, with arbitrary orders
+for the autoregressive and moving average components.}
+\item{\code{\link{corCAR1}}}{continuous AR(1)}
+\item{\code{\link{corCompSymm}}}{compound symmetry structure corresponding to a constant correlation.}
+\item{\code{\link{corExp}}}{exponential spatial correlation.}
+\item{\code{\link{corGaus}}}{Gaussian spatial correlation.}
+\item{\code{\link{corLin}}}{linear spatial correlation.}
+\item{\code{\link{corRatio}}}{Rational quadratics spatial correlation.}
+\item{\code{\link{corSpher}}}{spherical spatial correlation.}
+\item{\code{\link{corSymm}}}{general correlation matrix, with no additional structure.}
+}
+}
+\references{
+Pinheiro, J.C., and Bates, D.M. (2000) "Mixed-Effects Models in S and S-PLUS", Springer.
 }
