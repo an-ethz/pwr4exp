@@ -154,9 +154,12 @@ See the "Examples" for illustrative scenarios.</p></li>
 <li><p><strong>Template for <code>vcomp</code></strong>: Represents a variance-covariance matrix, where integers indicate
 the order of variance components in the input vector.</p></li>
 </ul></li>
-<li><p><strong>correlation</strong>: Various residual correlation structures can be specified following the instructions from <a href="https://rdrr.io/pkg/nlme/man/corClasses.html" class="external-link">nlme::corClasses</a>.</p>
-<p>Note: In <code><a href="https://rdrr.io/pkg/nlme/man/corAR1.html" class="external-link">nlme::corAR1()</a></code> and <code><a href="https://rdrr.io/pkg/nlme/man/corARMA.html" class="external-link">nlme::corARMA()</a></code> when <code>p=1</code> and <code>q=0</code>, the time variable must be an integer.
-However, in <code>pwr4exp</code>, this restriction has been released, factor is also supported.</p></li>
+<li><p><strong>correlation</strong>: Various residual correlation structures can be specified following the instructions from <a href="corClasses.html">corClasses</a> constructors.</p>
+<p>Note: In the original <code><a href="https://rdrr.io/pkg/nlme/man/corAR1.html" class="external-link">corAR1</a></code>, <code><a href="https://rdrr.io/pkg/nlme/man/corARMA.html" class="external-link">corARMA</a></code>, and <code><a href="https://rdrr.io/pkg/nlme/man/corSymm.html" class="external-link">corSymm</a></code> functions,
+the covariate <code>t</code> in the correlation formula <code>~ t</code> or <code>~ t | g</code> must be an integer class. In <span class="pkg">pwr4exp</span>,
+the covariate can also be a factor class, which is then converted to an integer internally for sorting purposes.
+The class of the covariate variable in the model formula, if present, will not be converted. For example, a time covariate
+can be fitted as a factor in the model formula, whereas it is converted to an integer in the correlation formula temporarily for matrix sorting.</p></li>
 </ul></div>
 
     <div class="section level2">
@@ -310,7 +313,7 @@ However, in <code>pwr4exp</code>, this restriction has been released, factor is 
 <span class="r-in"><span>            <span class="fl">1</span>, <span class="fl">3.02</span>, <span class="fl">4.08</span>,</span></span>
 <span class="r-in"><span>            <span class="fl">1</span>, <span class="fl">2.94</span>, <span class="fl">3.78</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>  sigma2 <span class="op">=</span> <span class="fl">2</span>,</span></span>
-<span class="r-in"><span>  correlation <span class="op">=</span> <span class="fu">corAR1</span><span class="op">(</span>value <span class="op">=</span> <span class="fl">0.6</span>, form <span class="op">=</span> <span class="op">~</span> <span class="va">hour</span> <span class="op">|</span> <span class="va">subject</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  correlation <span class="op">=</span> <span class="fu"><a href="corAR1.html">corAR1</a></span><span class="op">(</span>value <span class="op">=</span> <span class="fl">0.6</span>, form <span class="op">=</span> <span class="op">~</span> <span class="va">hour</span> <span class="op">|</span> <span class="va">subject</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="pwr.anova.html">pwr.anova</a></span><span class="op">(</span><span class="va">design</span><span class="op">)</span>  <span class="co"># Perform power analysis</span></span></span>
@@ -346,7 +349,7 @@ However, in <code>pwr4exp</code>, this restriction has been released, factor is 
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>

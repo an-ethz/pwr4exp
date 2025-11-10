@@ -1,0 +1,293 @@
+# Creation of Standard Experimental Designs
+
+These functions facilitate the creation of standard experimental designs
+commonly used in agricultural studies for power analysis. Unlike
+[mkdesign](https://an-ethz.github.io/pwr4exp/reference/mkdesign.md)
+which requires a pre-existing data frame, these functions allow users to
+directly specify key design characteristics to generate experimental
+layouts. Quantitative parameters describing fixed and random effects
+remain consistent with those in
+[mkdesign](https://an-ethz.github.io/pwr4exp/reference/mkdesign.md).
+
+## Usage
+
+``` r
+designCRD(
+  treatments,
+  label,
+  replicates,
+  formula,
+  beta = NULL,
+  means = NULL,
+  sigma2,
+  template = FALSE,
+  REML = TRUE
+)
+
+designRCBD(
+  treatments,
+  label,
+  blocks,
+  formula,
+  beta = NULL,
+  means = NULL,
+  vcomp,
+  sigma2,
+  template = FALSE,
+  REML = TRUE
+)
+
+designLSD(
+  treatments,
+  label,
+  squares = 1,
+  reuse = c("row", "col", "none"),
+  formula,
+  beta = NULL,
+  means = NULL,
+  vcomp,
+  sigma2,
+  template = FALSE,
+  REML = TRUE
+)
+
+designCOD(
+  treatments,
+  label,
+  squares = 1,
+  formula,
+  beta = NULL,
+  means = NULL,
+  vcomp,
+  sigma2,
+  template = FALSE,
+  REML = TRUE
+)
+
+designSPD(
+  trt.main,
+  trt.sub,
+  label,
+  replicates,
+  formula,
+  beta = NULL,
+  means = NULL,
+  vcomp,
+  sigma2,
+  template = FALSE,
+  REML = TRUE
+)
+```
+
+## Arguments
+
+- treatments:
+
+  An integer vector where each element represents the number of levels
+  of the corresponding treatment factor. A single integer (e.g.,
+  `treatments = n`) specifies one treatment factor with `n` levels. When
+  multiple factors are provided, they are arranged in a factorial
+  treatment factor design. For example, `treatments = c(2, 3)` creates a
+  2x3 factorial design with the first factor having 2 levels and the
+  second factor having 3 levels.
+
+- label:
+
+  Optional. A list of character vectors, each corresponding to a
+  treatment factor. The name of each vector specifies the factor's name,
+  and its elements provide the labels for that factor's levels. If no
+  labels are provided, default labels will be used. For a single
+  treatment factor, the default is `list(trt = c("1", "2", ...))`, and
+  for two treatment factors, the default is
+  `list(facA = c("1", "2", ...), facB = c("1", "2", ...))`. For
+  split-plot designs, the defaults are similar but include the ".main"
+  and ".sub" suffixes for main plot and subplot factors. For example:
+  `list(trt.main = c("1", "2", ...), trt.sub = c("1", "2", ...))` and
+  `list(facA.main = c("1", "2", ...), facB.main = c("1", "2", ...), facA.sub = c("1", "2", ...), facB.sub = c("1", "2", ...))`.
+  Label sets should be arranged so that the main plot factors come
+  first, followed by the subplot factors.
+
+- replicates:
+
+  The number of experimental units per treatment in a completely
+  randomized design or the number of experimental units (main plots) per
+  treatment of main plot factors.
+
+- formula:
+
+  A right-hand-side [formula](https://rdrr.io/r/stats/formula.html)
+  specifying the model for testing treatment effects, with terms on the
+  right of [~](https://rdrr.io/r/base/tilde.html) , following lme4::lmer
+  syntax for random effects. If not specified, a default formula with
+  main effects and all interactions is used internally.
+
+- beta:
+
+  One of the optional inputs for fixed effects. A vector of model
+  coefficients where factor variable coefficients correspond to dummy
+  variables created using treatment contrast (stats::contr.treatment).
+
+- means:
+
+  One of the optional inputs for fixed effects. A vector of marginal or
+  conditioned means (if factors have interactions). Regression
+  coefficients are required for numerical variables. Either `beta` or
+  `means` must be provided, and their values must strictly follow a
+  specific order. A template can be created to indicate the required
+  input values and their order. See
+  [mkdesign](https://an-ethz.github.io/pwr4exp/reference/mkdesign.md)
+  for more information.
+
+- sigma2:
+
+  error variance.
+
+- template:
+
+  Default is `FALSE`. If `TRUE`, a template for `beta`, `means`, and
+  `vcomp` is generated to indicate the required input order.
+
+- REML:
+
+  Specifies whether to use REML or ML information matrix. Default is
+  `TRUE` (REML).
+
+- blocks:
+
+  The number of blocks.
+
+- vcomp:
+
+  A vector of variance-covariance components for random effects, if
+  present. The values must follow a strict order. See
+  [mkdesign](https://an-ethz.github.io/pwr4exp/reference/mkdesign.md).
+
+- squares:
+
+  The number of replicated squares. By default, 1, i.e., no replicated
+  squares.
+
+- reuse:
+
+  A character string specifying how to replicate squares when there are
+  multiple squares. Options are: "row" for reusing row blocks, "col" for
+  reusing column blocks, or "none" for reusing neither row nor column
+  blocks to replicate a single square.
+
+- trt.main:
+
+  An integer-valued vector specifying the treatment structure at main
+  plot level for a split plot design, similar to `treatments`.
+
+- trt.sub:
+
+  An integer-valued vector specifying the treatment structure at sub
+  plot level for a split plot design, similar to `treatments`.
+
+## Value
+
+A list object containing all essential components for power calculation.
+This includes:
+
+- Structural components (deStruct): including the data frame, design
+  matrices for fixed and random effects, variance-covariance matrices
+  for random effects and residuals, etc.
+
+- Internally calculated higher-level parameters (deParam), including
+  variance-covariance matrix of beta coefficients (vcov_beta),
+  variance-covariance matrix of variance parameters (vcov_varpar),
+  gradient matrices (Jac_list), etc.
+
+## Details
+
+Each function creates a standard design as described below:
+
+- `designCRD`:
+
+  Completely Randomized Design. By default, the model formula is `~ trt`
+  for one factor and `~ facA*facB` for two factors, unless explicitly
+  specified. If the `label` argument is provided, the formula is
+  automatically updated with the specified treatment factor names.
+
+- `designRCBD`:
+
+  Randomized Complete Block Design. Experimental units are grouped into
+  blocks, with each treatment appearing **exactly** once per block
+  (i.e., no replicates per treatment within a block). The default model
+  formula is `~ trt + (1|block)` for one factor and
+  `~ facA*facB + (1|block)` for two factors. If `label` is provided, the
+  fixed effect parts of the formula are automatically updated with the
+  specified names. The block factor is named "block" and not changeable.
+
+- `designLSD`:
+
+  Latin Square Design. The default formula is
+  `~ trt + (1|row) + (1|col)` for one factor and
+  `~ facA*facB + (1|row) + (1|col)` for two factors. If `label` is
+  provided, the fixed effect parts of the formula are automatically
+  updated with the specified names. The names of row ("row") and column
+  ("col") block factors are not changeable.
+
+- `designCOD`:
+
+  Crossover Design, which is a special case of LSD with time periods and
+  individuals as blocks. Period blocks are reused when replicating
+  squares. The default formula is `~ trt + (1|subject) + (1|period)` for
+  one factor and `~ facA*facB + (1|subject) + (1|period)` for two
+  factors. If `label` is provided, the fixed effect parts of the formula
+  are automatically updated with the specified names. Note that
+  "subject" and "period" are the names for the two blocking factors and
+  cannot be changed.
+
+- `designSPD`:
+
+  Split Plot Design. The default formula includes the main effects of
+  all treatment factors at both the main and sub-plot levels, their
+  interactions, and the random effects of main plots:
+  `~ . + (1|mainplot)`. If `label` is provided, the fixed effect parts
+  of the formula are automatically updated with the specified names. The
+  experimental unit at the main plot level (i.e., the block factor at
+  the subplot level) is always named as "mainplot".
+
+## See also
+
+[mkdesign](https://an-ethz.github.io/pwr4exp/reference/mkdesign.md),
+[pwr.anova](https://an-ethz.github.io/pwr4exp/reference/pwr.anova.md),
+[pwr.contrast](https://an-ethz.github.io/pwr4exp/reference/pwr.contrast.md)
+
+## Examples
+
+``` r
+# Evaluate the power of a CRD with one treatment factor
+## Create a design object
+crd <- designCRD(
+  treatments = 4, # 4 levels of one treatment factor
+  replicates = 12, # 12 units per level, 48 units totally
+  means = c(30, 28, 33, 35), # means of the 4 levels
+  sigma2 = 10 # error variance
+)
+
+## power of omnibus test
+pwr.anova(crd)
+#> Power of type III F-test
+#>     NumDF DenDF sig.level power
+#> trt     3    44      0.05 0.999
+
+## power of contrast
+pwr.contrast(crd, which = "trt", contrast = "pairwise") # pairwise comparisons
+#>             effect df sig.level     power alternative
+#> trt1 - trt2      2 44      0.05 0.3285822   two.sided
+#> trt1 - trt3     -3 44      0.05 0.6228308   two.sided
+#> trt1 - trt4     -5 44      0.05 0.9661638   two.sided
+#> trt2 - trt3     -5 44      0.05 0.9661638   two.sided
+#> trt2 - trt4     -7 44      0.05 0.9995822   two.sided
+#> trt3 - trt4     -2 44      0.05 0.3285822   two.sided
+pwr.contrast(crd, which = "trt", contrast = "poly") # polynomial contrasts
+#>           effect df sig.level     power alternative
+#> linear        20 44      0.05 0.9976700   two.sided
+#> quadratic      4 44      0.05 0.5726028   two.sided
+#> cubic        -10 44      0.05 0.6685119   two.sided
+
+# More examples are available in `vignette("pwr4exp")`
+# and on https://an-ethz.github.io/pwr4exp/
+```

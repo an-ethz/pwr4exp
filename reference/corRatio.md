@@ -1,0 +1,40 @@
+# Rational Quadratics Correlation Structure
+
+Re-exports [nlme::corRatio](https://rdrr.io/pkg/nlme/man/corRatio.html)
+from the nlme package.
+
+## Usage
+
+``` r
+corRatio(value, form, nugget, metric, fixed)
+```
+
+## Arguments
+
+- value:
+
+  numeric value(s) for the parameter(s)
+
+- form:
+
+  a one-sided formula of the form `~ S1 + ... + Sp`, or
+  `~ S1 + ... + Sp | g` spatial covariates S1 through Sp and,
+  optionally, a grouping factor g.
+
+- nugget:
+
+  logical; if `TRUE` a nugget effect is added
+
+- metric:
+
+  character string specifying the distance metric
+
+- fixed:
+
+  unused
+
+## See also
+
+[corClasses](https://an-ethz.github.io/pwr4exp/reference/corClasses.md)
+See [nlme::corRatio](https://rdrr.io/pkg/nlme/man/corRatio.html) for
+original documentation.

@@ -55,7 +55,7 @@
                         <h4 data-toc-skip class="author">R Package
 Version 1.0.0.9000</h4>
             
-            <h4 data-toc-skip class="date">2025-11-06</h4>
+            <h4 data-toc-skip class="date">2025-11-10</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/an-ethz/pwr4exp/blob/main/vignettes/pwr4exp.Rmd" class="external-link"><code>vignettes/pwr4exp.Rmd</code></a></small>
       <div class="d-none name"><code>pwr4exp.Rmd</code></div>
@@ -244,7 +244,7 @@ replicated in LSD. One of:</p></li>
 <li>
 <code>"col"</code>: reuse column blocks</li>
 <li>
-<code>"both"</code>: reuse both row and column blocks</li>
+<code>"none"</code>: reuse neither row nor column blocks</li>
 </ul>
 </blockquote>
 <ul>
@@ -764,7 +764,7 @@ object:</p>
 <span><span class="co">#&gt; 4    2    2</span></span>
 <span><span class="va">rcbd</span><span class="op">$</span><span class="va">deStruct</span><span class="op">$</span><span class="va">formula</span></span>
 <span><span class="co">#&gt; ~facA * facB + (1 | block)</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x55f32e0af3c8&gt;</span></span></code></pre></div>
+<span><span class="co">#&gt; &lt;environment: 0x5651bb846080&gt;</span></span></code></pre></div>
 <p>Treatment factors and factor levels can be renamed and relabeled, and
 the model formula can be changed. For example, if interactions are
 removed, marginal means for both factors must be provided instead of
@@ -840,7 +840,7 @@ into:</p>
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/create_designs.html">designLSD</a></span><span class="op">(</span></span>
 <span>  treatments <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>,</span>
 <span>  squares <span class="op">=</span> <span class="fl">4</span>,</span>
-<span>  reuse <span class="op">=</span> <span class="st">"both"</span>,</span>
+<span>  reuse <span class="op">=</span> <span class="st">"none"</span>,</span>
 <span>  template <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; $fixeff</span></span>
@@ -877,7 +877,7 @@ guide to make an informed estimate of <code>sigma2</code>.</p>
 <span>  treatments <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>,</span>
 <span>  label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>temp <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"T1"</span>, <span class="st">"T2"</span><span class="op">)</span>, dosage <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"D1"</span>, <span class="st">"D2"</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  squares <span class="op">=</span> <span class="fl">4</span>,</span>
-<span>  reuse <span class="op">=</span> <span class="st">"both"</span>,</span>
+<span>  reuse <span class="op">=</span> <span class="st">"none"</span>,</span>
 <span>  means <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">35</span>, <span class="fl">40</span>, <span class="fl">38</span>, <span class="fl">41</span><span class="op">)</span>,</span>
 <span>  vcomp <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">11</span>, <span class="fl">2</span><span class="op">)</span>,</span>
 <span>  sigma2 <span class="op">=</span> <span class="fl">2</span></span>
@@ -1058,7 +1058,7 @@ in the following order:</p>
 <span>           <span class="fl">1</span>, <span class="fl">3.02</span>, <span class="fl">4.08</span>,</span>
 <span>           <span class="fl">1</span>, <span class="fl">2.94</span>, <span class="fl">3.78</span><span class="op">)</span>,</span>
 <span>sigma2 <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>correlation <span class="op">=</span> <span class="fu">corAR1</span><span class="op">(</span>value <span class="op">=</span> <span class="fl">0.6</span>, form <span class="op">=</span> <span class="op">~</span> <span class="va">hour</span><span class="op">|</span><span class="va">subject</span><span class="op">)</span></span>
+<span>correlation <span class="op">=</span> <span class="fu"><a href="../reference/corAR1.html">corAR1</a></span><span class="op">(</span>value <span class="op">=</span> <span class="fl">0.6</span>, form <span class="op">=</span> <span class="op">~</span> <span class="va">hour</span><span class="op">|</span><span class="va">subject</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><strong>Step 2: Power calculation</strong></p>
 <p>Statistical power for main effects of treatment and time, and their
@@ -1416,7 +1416,7 @@ concepts, methods, and applications</em> (1st ed.). CRC Press.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>
