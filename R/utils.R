@@ -826,44 +826,44 @@ vcove_vp <- function(corr = NULL, sigma2, rTrms) {
   correlation <- switch(cor_class,
                         "corAR1" = nlme::corAR1(value = corr, form = cor_formula),
                         "corARMA" = {
-                          p <- attr(rTrms$correlation, "p")
-                          q <- attr(rTrms$correlation, "q")
+                          p <- attr(corStruct, "p")
+                          q <- attr(corStruct, "q")
                           nlme::corARMA(value = corr, form = cor_formula, p = p, q = q)
                         },
                         "corCAR1" = nlme::corCAR1(value = corr, form = cor_formula),
                         "corCompSymm" = nlme::corCompSymm(value = corr, form = cor_formula),
                         "corSymm" = nlme::corSymm(value = corr, form = cor_formula),
                         "corExp" = {
-                          metric <- attr(rTrms$correlation, "metric")
-                          nugget <- attr(rTrms$correlation, "nugget")
+                          metric <- attr(corStruct, "metric")
+                          nugget <- attr(corStruct, "nugget")
                           nlme::corExp(value = corr, form = cor_formula,
                                        metric = if (is.null(metric)) "euclidean" else metric,
                                        nugget = if (is.null(nugget)) FALSE else nugget)
                         },
                         "corGaus" = {
-                          metric <- attr(rTrms$correlation, "metric")
-                          nugget <- attr(rTrms$correlation, "nugget")
+                          metric <- attr(corStruct, "metric")
+                          nugget <- attr(corStruct, "nugget")
                           nlme::corGaus(value = corr, form = cor_formula,
                                         metric = if (is.null(metric)) "euclidean" else metric,
                                         nugget = if (is.null(nugget)) FALSE else nugget)
                         },
                         "corLin" = {
-                          metric <- attr(rTrms$correlation, "metric")
-                          nugget <- attr(rTrms$correlation, "nugget")
+                          metric <- attr(corStruct, "metric")
+                          nugget <- attr(corStruct, "nugget")
                           nlme::corLin(value = corr, form = cor_formula,
                                        metric = if (is.null(metric)) "euclidean" else metric,
                                        nugget = if (is.null(nugget)) FALSE else nugget)
                         },
                         "corRatio" = {
-                          metric <- attr(rTrms$correlation, "metric")
-                          nugget <- attr(rTrms$correlation, "nugget")
+                          metric <- attr(corStruct, "metric")
+                          nugget <- attr(corStruct, "nugget")
                           nlme::corRatio(value = corr, form = cor_formula,
                                          metric = if (is.null(metric)) "euclidean" else metric,
                                          nugget = if (is.null(nugget)) FALSE else nugget)
                         },
                         "corSpher" = {
-                          metric <- attr(rTrms$correlation, "metric")
-                          nugget <- attr(rTrms$correlation, "nugget")
+                          metric <- attr(corStruct, "metric")
+                          nugget <- attr(corStruct, "nugget")
                           nlme::corSpher(value = corr, form = cor_formula,
                                          metric = if (is.null(metric)) "euclidean" else metric,
                                          nugget = if (is.null(nugget)) FALSE else nugget)
