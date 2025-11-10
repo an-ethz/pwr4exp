@@ -121,7 +121,6 @@ corCAR1 <- nlme::corCAR1
 #' @importFrom nlme corCompSymm
 #' @seealso [corClasses]
 #' See [nlme::corCompSymm] for original documentation.
-#' See [nlme::corCompSymm] for original documentation.
 corCompSymm <- nlme::corCompSymm
 
 #' @name corExp
