@@ -105,7 +105,7 @@ corARMA <- nlme::corARMA
 #' @param fixed unused
 #' @export
 #' @importFrom nlme corCAR1
-#' @seealso [corClasses].
+#' @seealso [corClasses]
 #' See [nlme::corCAR1] for original documentation.
 corCAR1 <- nlme::corCAR1
 
