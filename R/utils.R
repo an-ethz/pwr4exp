@@ -345,7 +345,7 @@ mkRTrms <- function(data,
     }
   }
 
-  if (any(class(correlation) %in% c("corExp", "corGaus", "corLin", "corRatio,", "corSpher"))) {
+  if (any(class(correlation) %in% c("corExp", "corGaus", "corLin", "corRatio", "corSpher"))) {
     srt.var <- strsplit(gsub("\\s", "", srt.var), "\\+")[[1]]
     corframe <- lapply(corframe, function(df){
       fr_d <- subset(df, select = colnames(df) %in% srt.var)
