@@ -47,7 +47,7 @@
 #' replicated squares.
 #' @param reuse A character string specifying how to replicate squares when
 #' there are multiple squares. Options are: "row" for reusing row blocks, "col"
-#' for reusing column blocks, or "both" for reusing both row and column blocks
+#' for reusing column blocks, or "none" for reusing neither row nor column blocks
 #' to replicate a single square.
 #' @param formula A right-hand-side [formula] specifying the model for testing treatment effects,
 #' with terms on the right of [~] , following [lme4::lmer] syntax for random effects.
@@ -200,7 +200,7 @@ designRCBD <- function(treatments, label, blocks, formula, beta = NULL, means = 
 designLSD <- function(treatments,
                       label,
                       squares = 1,
-                      reuse = c("row", "col", "both"),
+                      reuse = c("row", "col", "none"),
                       formula,
                       beta = NULL,
                       means= NULL,
@@ -234,7 +234,7 @@ designLSD <- function(treatments,
   #   if (reuse == "col") {
   #     formula <- stats::update(formula, . ~ . - (1|row) + (1|square/row))
   #   }
-  #   if (reuse == "both") {
+  #   if (reuse == "none") {
   #     formula <- stats::update(formula, . ~ . - (1|row) - (1|col) + (1|square) + (1|square:row) + (1|square:col))
   #   }
   # }

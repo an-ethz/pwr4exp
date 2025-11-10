@@ -1,14 +1,16 @@
 bibentry(
   bibtype  = "Article",
-  title    = "Enhancing quality of dairy cattle research through adequate power analysis",
+  title    = "Invited review: Enhancing quality of dairy cattle research through adequate power analysis",
   author = c(
   person(given = "Kai", family = "Wang"),
   person(given = "Usman", family = "Arshad"),
   person(given = "Mutian", family = "Niu")
   ),
-  journal = "agriRxiv",
-  year = "2024",
-  doi = "10.31220/agriRxiv.2024.00278",
-  publisher = "CABI",
-  note = "Preprint"
+  journal = "Journal of Dairy Science",
+  year = "2025",
+  volume = "108",
+  number = "9",
+  pages = "8981-9003",
+  doi = "10.3168/jds.2024-25793",
+  header = "To cite pwr4exp in publications use:"
 )

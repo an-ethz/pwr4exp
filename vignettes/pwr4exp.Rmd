@@ -137,7 +137,7 @@ The inputs for these functions are similar to `mkdesign`, except that `data` is 
 >
 > > -   `"row"`: reuse row blocks
 > > -   `"col"`: reuse column blocks
-> > -   `"both"`: reuse both row and column blocks
+> > -   `"none"`: reuse neither row nor column blocks
 >
 > -   [**`template`**](#template): When set to `TRUE`, templates for `beta`, `means`, and `vcomp` are generated to indicate the required input order.
 
@@ -553,7 +553,7 @@ Generate the templates to determine the correct order of inputs.
 designLSD(
   treatments = c(2, 2),
   squares = 4,
-  reuse = "both",
+  reuse = "none",
   template = TRUE
 )
 ```
@@ -567,7 +567,7 @@ lsd <- designLSD(
   treatments = c(2, 2),
   label = list(temp = c("T1", "T2"), dosage = c("D1", "D2")),
   squares = 4,
-  reuse = "both",
+  reuse = "none",
   means = c(35, 40, 38, 41),
   vcomp = c(11, 2),
   sigma2 = 2

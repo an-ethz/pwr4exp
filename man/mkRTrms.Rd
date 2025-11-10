@@ -4,18 +4,18 @@
 \alias{mkRTrms}
 \title{Residual Variance-Covariance Matrices}
 \usage{
-mkRTrms(data, corcall = NULL)
+mkRTrms(data, correlation = NULL)
 }
 \arguments{
 \item{data}{a data frame with grouping factors and covariates.}
 
-\item{corcall}{a \code{call} object specifying the residual correlation structure.
+\item{correlation}{a \code{corStruct} object created by \link{corClasses} functions.
 If NULL, an identity matrix is assumed.}
 }
 \value{
 A list containing:
 \itemize{
-\item corcall
+\item corStruct: An initialized correlation structure.
 \item corframe: A processed data frame with indexed grouping variables and
 ordering for correlation structures.
 \item R: A block-diagonal residual variance-covariance structure, not yet scaled

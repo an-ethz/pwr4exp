@@ -4,7 +4,7 @@
 \alias{df.lsd}
 \title{Create a data frame for Latin square design}
 \usage{
-df.lsd(treatments, label, squares = 1, reuse = c("row", "col", "both"))
+df.lsd(treatments, label, squares = 1, reuse = c("row", "col", "none"))
 }
 \arguments{
 \item{treatments}{An integer vector where each element represents the number of levels
@@ -30,7 +30,7 @@ Label sets should be arranged so that the main plot factors come first, followed
 
 \item{reuse}{A character string specifying how to replicate squares when
 there are multiple squares. Options are: "row" for reusing row blocks, "col"
-for reusing column blocks, or "both" for reusing both row and column blocks
+for reusing column blocks, or "none" for reusing neither row nor column blocks
 to replicate a single square.}
 }
 \value{

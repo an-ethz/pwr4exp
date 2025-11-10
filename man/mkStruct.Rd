@@ -4,14 +4,14 @@
 \alias{mkStruct}
 \title{Building Design Matrices and Covariance Structures for Linear Mixed Models}
 \usage{
-mkStruct(formula, data, corcall)
+mkStruct(formula, data, correlation)
 }
 \arguments{
 \item{formula}{a model formula.}
 
 \item{data}{a data frame containing the variables used in the model.}
 
-\item{corcall}{a \code{call} object specifying the residual correlation structure.
+\item{correlation}{a \code{corStruct} object created by \link{corClasses} functions.
 If NULL, an identity matrix is assumed.}
 }
 \value{

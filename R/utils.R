@@ -28,7 +28,7 @@
 #'
 #' @param formula a model formula.
 #' @param data a data frame containing the variables used in the model.
-#' @param corcall a `call` object specifying the residual correlation structure.
+#' @param correlation a `corStruct` object created by [corClasses] functions.
 #' If NULL, an identity matrix is assumed.
 #' @return A list containing:
 #' - `data`: Processed data frame with NA values omitted.
@@ -39,8 +39,9 @@
 #' - `formula`: Expanded model formula.
 #' @importFrom stats reformulate model.matrix terms
 #' @keywords internal
-mkStruct <- function(formula, data, corcall) {
-  allvars <- c(all.vars(formula), all.vars(corcall$form))
+mkStruct <- function(formula, data, correlation) {
+  corform <- attr(correlation, "formula")
+  allvars <- unique(c(all.vars(formula), all.vars(corform)))
   data <- stats::model.frame(stats::reformulate(allvars), data)
   if (nrow(data) == 0L) stop("0 (non-NA) cases")
   attr(data, "terms") <- NULL
@@ -75,7 +76,7 @@ mkStruct <- function(formula, data, corcall) {
   } else reTrms <- NULL
 
   # residuals
-  rTrms <- mkRTrms(data, corcall)
+  rTrms <- mkRTrms(data, correlation)
 
   list(data = data, fxTrms = fxTrms, reTrms = reTrms, rTrms = rTrms, formula = formula)
 }
@@ -278,10 +279,10 @@ mkBlist <- function(x, frloc, drop.unused.levels = TRUE, reorder.vars = FALSE) {
 #' Residual Variance-Covariance Matrices
 #'
 #' @param data a data frame with grouping factors and covariates.
-#' @param corcall a `call` object specifying the residual correlation structure.
+#' @param correlation a `corStruct` object created by [corClasses] functions.
 #' If NULL, an identity matrix is assumed.
 #' @return A list containing:
-#' - corcall
+#' - corStruct: An initialized correlation structure.
 #' - corframe: A processed data frame with indexed grouping variables and
 #'   ordering for correlation structures.
 #' - R: A block-diagonal residual variance-covariance structure, not yet scaled
@@ -290,20 +291,14 @@ mkBlist <- function(x, frloc, drop.unused.levels = TRUE, reorder.vars = FALSE) {
 #' @importFrom nlme corMatrix Initialize
 #' @keywords internal
 mkRTrms <- function(data,
-                    corcall = NULL) {
-  if (is.null(corcall))
+                    correlation = NULL) {
+  if (is.null(correlation))
     return(list(
-      corcall = NULL,
+      corStruct = NULL,
       corframe = data,
       R = Matrix::Diagonal(nrow(data))))
-  correlation <- try(eval(corcall), silent = TRUE)
-  if (inherits(correlation, "try-error")) {
-    corcall <- parse(text = paste0("nlme::", deparse(corcall)))[[1]]
-    correlation <- try(eval(corcall), silent = TRUE)
-    if (inherits(correlation, "try-error")) stop(correlation)
-  }
 
-  corform <- corcall$form
+  corform <- attr(correlation, "formula")
   data <- data[, colnames(data) %in% all.vars(corform), drop = FALSE]
   grp.var <- strsplit(deparse1(corform[[2]]), " \\| ")[[1]][2]
   srt.var <- strsplit(deparse1(corform[[2]]), " \\| ")[[1]][1]
@@ -350,7 +345,7 @@ mkRTrms <- function(data,
     }
   }
 
-  if (any(class(correlation) %in% c("corExp", "corGaus", "corLin", "corRatio,", "corSpher."))) {
+  if (any(class(correlation) %in% c("corExp", "corGaus", "corLin", "corRatio", "corSpher"))) {
     srt.var <- strsplit(gsub("\\s", "", srt.var), "\\+")[[1]]
     corframe <- lapply(corframe, function(df){
       fr_d <- subset(df, select = colnames(df) %in% srt.var)
@@ -365,14 +360,14 @@ mkRTrms <- function(data,
   corframe[, "idx_R"] <- 1:nrow(corframe)
   corframe <- corframe[order(corframe$idx_R), ]
 
-  R_list <- nlme::corMatrix(nlme::Initialize(correlation, data = corframe))
+  corStruct <- nlme::Initialize(correlation, data = corframe)
+  R_list <- nlme::corMatrix(corStruct)
   corframe <- corframe[order(corframe$idx_data), ]
   # FIXME: more robust way of matching positions in data and in R_list?
   rownames(corframe) <- corframe$idx_data
-  # R <- Matrix::.bdiag(R_list)*sigma2
   R <- Matrix::.bdiag(R_list)
   R <- R[corframe$idx_R, corframe$idx_R]
-  rTrms <- list(corcall = corcall, corframe = corframe, R = R)
+  rTrms <- list(corStruct = corStruct, corframe = corframe, R = R)
   return(rTrms)
 }
 
@@ -803,7 +798,7 @@ wmsg <- function(n, cmp.val, allow.n, msg1 = "", msg2 = "", msg3 = "") {
 #' @noRd
 #' @keywords internal
 vcovb_vp <- function(vcomp = NULL, reTrms = NULL) {
-  if (is.null(vcomp) || is.null(reTrms)) return(NULL)
+  if (length(vcomp) == 0 || is.null(reTrms)) return(NULL)
   G <- reTrms$G
   G@x <- vcomp[reTrms$Gind]
   return(G)
@@ -815,11 +810,68 @@ vcovb_vp <- function(vcomp = NULL, reTrms = NULL) {
 #' Used for computing numerical derivatives.
 #' @noRd
 #' @keywords internal
-vcove_vp <- function(rho = NULL, sigma2, rTrms) {
-  corcall <- rTrms$corcall
+vcove_vp <- function(corr = NULL, sigma2, rTrms) {
+  if (is.null(rTrms$corStruct) || length(corr) == 0) {
+    R <- Matrix::Diagonal(nrow(rTrms$corframe))
+    return(sigma2 * R)
+  }
+
+  # Get correlation structure info
+  corStruct <- rTrms$corStruct
   data <- rTrms$corframe
-  corcall$value <- rho
-  R <- mkRTrms(data, corcall)$R
+  cor_class <- class(corStruct)[1]
+  cor_formula <- attr(corStruct, "formula")
+
+  # Recreate correlation structure with new parameter value
+  correlation <- switch(cor_class,
+                        "corAR1" = nlme::corAR1(value = corr, form = cor_formula),
+                        "corARMA" = {
+                          p <- attr(rTrms$correlation, "p")
+                          q <- attr(rTrms$correlation, "q")
+                          nlme::corARMA(value = corr, form = cor_formula, p = p, q = q)
+                        },
+                        "corCAR1" = nlme::corCAR1(value = corr, form = cor_formula),
+                        "corCompSymm" = nlme::corCompSymm(value = corr, form = cor_formula),
+                        "corSymm" = nlme::corSymm(value = corr, form = cor_formula),
+                        "corExp" = {
+                          metric <- attr(rTrms$correlation, "metric")
+                          nugget <- attr(rTrms$correlation, "nugget")
+                          nlme::corExp(value = corr, form = cor_formula,
+                                       metric = if (is.null(metric)) "euclidean" else metric,
+                                       nugget = if (is.null(nugget)) FALSE else nugget)
+                        },
+                        "corGaus" = {
+                          metric <- attr(rTrms$correlation, "metric")
+                          nugget <- attr(rTrms$correlation, "nugget")
+                          nlme::corGaus(value = corr, form = cor_formula,
+                                        metric = if (is.null(metric)) "euclidean" else metric,
+                                        nugget = if (is.null(nugget)) FALSE else nugget)
+                        },
+                        "corLin" = {
+                          metric <- attr(rTrms$correlation, "metric")
+                          nugget <- attr(rTrms$correlation, "nugget")
+                          nlme::corLin(value = corr, form = cor_formula,
+                                       metric = if (is.null(metric)) "euclidean" else metric,
+                                       nugget = if (is.null(nugget)) FALSE else nugget)
+                        },
+                        "corRatio" = {
+                          metric <- attr(rTrms$correlation, "metric")
+                          nugget <- attr(rTrms$correlation, "nugget")
+                          nlme::corRatio(value = corr, form = cor_formula,
+                                         metric = if (is.null(metric)) "euclidean" else metric,
+                                         nugget = if (is.null(nugget)) FALSE else nugget)
+                        },
+                        "corSpher" = {
+                          metric <- attr(rTrms$correlation, "metric")
+                          nugget <- attr(rTrms$correlation, "nugget")
+                          nlme::corSpher(value = corr, form = cor_formula,
+                                         metric = if (is.null(metric)) "euclidean" else metric,
+                                         nugget = if (is.null(nugget)) FALSE else nugget)
+                        },
+                        stop(sprintf("Unsupported correlation structure: %s", cor_class))
+  )
+
+  R <- mkRTrms(data, correlation)$R
   R <- sigma2 * R
   return(R)
 }
@@ -830,20 +882,17 @@ vcove_vp <- function(rho = NULL, sigma2, rTrms) {
 #' @noRd
 #' @keywords internal
 vcovy_vp <- function(varpar, reTrms, rTrms) {
-  if (is.null(reTrms)) {
-    vcomp <- NULL
-    if (is.null(rTrms$corcall))
-      rho <- NULL else
-        rho <- varpar[seq_along(eval(rTrms$corcall$value))]
-  } else {
-    vcomp <- varpar[1:max(reTrms$Gind)]
-    if (is.null(rTrms$corcall))
-      rho <- NULL else
-        rho <- varpar[max(reTrms$Gind) + (1:length(eval(rTrms$corcall$value)))]
-  }
-  sigma2 <- varpar[length(varpar)]
+
+  na <- attr(varpar, "vcomp")
+  nb <- attr(varpar, "corr")
+  nc <- attr(varpar, "sigma2")
+
+  vcomp <- varpar[seq_len(na)]
+  corr <- varpar[seq.int(na + 1, length.out = nb)]
+  sigma2 <- varpar[seq.int(na + nb + 1, length.out = nc)]
+
   G <- vcovb_vp(vcomp, reTrms)
-  R <- vcove_vp(rho, sigma2, rTrms)
+  R <- vcove_vp(corr, sigma2, rTrms)
   if (is.null(G) || is.null(reTrms))
     V <- R else V <- Matrix::t(reTrms$Zt) %*% G %*% reTrms$Zt + R
   # return(V)
