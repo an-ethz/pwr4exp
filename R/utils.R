@@ -28,7 +28,7 @@
 #'
 #' @param formula a model formula.
 #' @param data a data frame containing the variables used in the model.
-#' @param corcall a `call` object specifying the residual correlation structure.
+#' @param correlation a `corStruct` object created by [corClasses] functions.
 #' If NULL, an identity matrix is assumed.
 #' @return A list containing:
 #' - `data`: Processed data frame with NA values omitted.
@@ -279,10 +279,10 @@ mkBlist <- function(x, frloc, drop.unused.levels = TRUE, reorder.vars = FALSE) {
 #' Residual Variance-Covariance Matrices
 #'
 #' @param data a data frame with grouping factors and covariates.
-#' @param corcall a `call` object specifying the residual correlation structure.
+#' @param correlation a `corStruct` object created by [corClasses] functions.
 #' If NULL, an identity matrix is assumed.
 #' @return A list containing:
-#' - corcall
+#' - corStruct: An initialized correlation structure.
 #' - corframe: A processed data frame with indexed grouping variables and
 #'   ordering for correlation structures.
 #' - R: A block-diagonal residual variance-covariance structure, not yet scaled
@@ -297,12 +297,6 @@ mkRTrms <- function(data,
       corStruct = NULL,
       corframe = data,
       R = Matrix::Diagonal(nrow(data))))
-  # correlation <- try(eval(corcall), silent = TRUE)
-  # if (inherits(correlation, "try-error")) {
-  #   corcall <- parse(text = paste0("nlme::", deparse(corcall)))[[1]]
-  #   correlation <- try(eval(corcall), silent = TRUE)
-  #   if (inherits(correlation, "try-error")) stop(correlation)
-  # }
 
   corform <- attr(correlation, "formula")
   data <- data[, colnames(data) %in% all.vars(corform), drop = FALSE]
@@ -881,14 +875,6 @@ vcove_vp <- function(corr = NULL, sigma2, rTrms) {
   R <- sigma2 * R
   return(R)
 }
-# vcove_vp <- function(rho = NULL, sigma2, rTrms) {
-#   corcall <- rTrms$corcall
-#   data <- rTrms$corframe
-#   corcall$value <- rho
-#   R <- mkRTrms(data, corcall)$R
-#   R <- sigma2 * R
-#   return(R)
-# }
 
 #' Compute Variance-Covariance Matrix of y with Respect to Variance Parameters
 #'

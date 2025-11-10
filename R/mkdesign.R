@@ -70,10 +70,10 @@
 #'   - **Template for `vcomp`**: Represents a variance-covariance matrix, where integers indicate
 #'     the order of variance components in the input vector.
 #'
-#' - **correlation**: Various residual correlation structures can be specified following the instructions from [nlme::corClasses].
+#' - **correlation**: Various residual correlation structures can be specified following the instructions from \code{\link[nlme]{corClasses}} constructors.
 #'
-#'   Note: In [nlme::corAR1()] and [nlme::corARMA()] when `p=1` and `q=0`, the time variable must be an integer.
-#'   However, in `pwr4exp`, this restriction has been released, factor is also supported.
+#'   Note: In original [nlme::corAR1()] and [nlme::corARMA()] with `p=1` and `q=0`, the time variable must be an integer class.
+#'   In `pwr4exp`, the time variable can also be a factor class.
 #' @return A list object containing all essential components for power calculation.
 #' This includes:
 #' - Structural components (deStruct): including design matrices for fixed and random effects,

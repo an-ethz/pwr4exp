@@ -96,10 +96,10 @@ See the "Examples" for illustrative scenarios.
 \item \strong{Template for \code{vcomp}}: Represents a variance-covariance matrix, where integers indicate
 the order of variance components in the input vector.
 }
-\item \strong{correlation}: Various residual correlation structures can be specified following the instructions from \link[nlme:corClasses]{nlme::corClasses}.
+\item \strong{correlation}: Various residual correlation structures can be specified following the instructions from \code{\link[nlme]{corClasses}} constructors.
 
-Note: In \code{\link[nlme:corAR1]{nlme::corAR1()}} and \code{\link[nlme:corARMA]{nlme::corARMA()}} when \code{p=1} and \code{q=0}, the time variable must be an integer.
-However, in \code{pwr4exp}, this restriction has been released, factor is also supported.
+Note: In original \code{\link[nlme:corAR1]{nlme::corAR1()}} and \code{\link[nlme:corARMA]{nlme::corARMA()}} with \code{p=1} and \code{q=0}, the time variable must be an integer class.
+In \code{pwr4exp}, the time variable can also be a factor class.
 }
 }
 \examples{
