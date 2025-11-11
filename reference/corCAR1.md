@@ -26,6 +26,6 @@ corCAR1(value, form, fixed)
 
 ## See also
 
-[corClasses](https://an-ethz.github.io/pwr4exp/reference/corClasses.md).
+[corClasses](https://an-ethz.github.io/pwr4exp/reference/corClasses.md)
 See [nlme::corCAR1](https://rdrr.io/pkg/nlme/man/corCAR1.html) for
 original documentation.
