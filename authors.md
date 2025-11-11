@@ -11,7 +11,7 @@
 ## Citation
 
 Source:
-[`inst/CITATION`](https://github.com/an-ethz/pwr4exp/blob/v1.0.1/inst/CITATION)
+[`inst/CITATION`](https://github.com/an-ethz/pwr4exp/blob/main/inst/CITATION)
 
 Wang K, Arshad U, Niu M (2025). “Invited review: Enhancing quality of
 dairy cattle research through adequate power analysis.” *Journal of

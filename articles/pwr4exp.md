@@ -708,7 +708,7 @@ unique(rcbd$deStruct$fxTrms$fixedfr)
 #> 4    2    2
 rcbd$deStruct$formula
 #> ~facA * facB + (1 | block)
-#> <environment: 0x55ae42fc1438>
+#> <environment: 0x55ef8e327460>
 ```
 
 Treatment factors and factor levels can be renamed and relabeled, and

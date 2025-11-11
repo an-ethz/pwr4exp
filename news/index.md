@@ -1,5 +1,7 @@
 # Changelog
 
+## pwr4exp (development version)
+
 ## pwr4exp 1.0.1
 
 CRAN release: 2025-11-11
