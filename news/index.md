@@ -2,6 +2,8 @@
 
 ## pwr4exp 1.0.1
 
+CRAN release: 2025-11-11
+
 ### Bug fixes
 
 - Improved handling of the `correlation` argument in
