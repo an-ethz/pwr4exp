@@ -18,6 +18,6 @@ specifying a time covariate \code{t}, a grouping factor \code{g}, or both.}
 Re-exports \link[nlme:corCAR1]{nlme::corCAR1} from the \pkg{nlme} package.
 }
 \seealso{
-\link{corClasses}.
+\link{corClasses}
 See \link[nlme:corCAR1]{nlme::corCAR1} for original documentation.
 }
